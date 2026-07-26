@@ -1,28 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // ─── KOLEKSI: projects ────────────────────────────────
-    // Semua orang bisa baca (home & detail proyek).
-    // Hanya user yang sudah login (admin) yang bisa write.
+    // Semua orang bisa baca (untuk home & detail). Hanya admin (user login) yang bisa tambah/edit data.
     match /projects/{projectId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
-
-    // ─── KOLEKSI: transactions ────────────────────────────
-    // User hanya bisa baca transaksi milik dirinya sendiri.
-    // Write hanya dari backend (Firebase Admin SDK).
+    
+    // User hanya bisa baca transaksinya sendiri.
     match /transactions/{transactionId} {
-      allow read: if request.auth != null
-        && resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
       allow write: if false;
     }
-
-    // ─── Blokir semua koleksi lain ────────────────────────
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
   }
 }

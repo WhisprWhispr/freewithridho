@@ -45,10 +45,8 @@ const Checkout = () => {
       setProcessing(true);
       setError('');
       
-      // Request ke Netlify Function (production) / Vite proxy (development)
-      const endpoint = import.meta.env.PROD
-        ? '/.netlify/functions/create-transaction'
-        : '/api/create-transaction';
+      // Request ke API (Netlify akan mengarahkan /api ke folder functions)
+      const endpoint = '/api/create-transaction';
 
       const response = await fetch(endpoint, {
         method: 'POST',
