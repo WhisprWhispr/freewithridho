@@ -12,7 +12,7 @@ import 'highlight.js/styles/github-dark.css';
 import {
   Plus, Trash2, Upload, LogOut, FileText, Eye, Edit2, Settings, Key,
   ShieldCheck, BarChart3, TrendingUp, DollarSign, Briefcase,
-  Receipt, Users, Check, X, Download
+  Receipt, Users, Check, X, Download, Wallet
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -46,6 +46,7 @@ const Admin = () => {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [adminBalance, setAdminBalance] = useState(0);
   
   // Tab states
   const [activeAdminTab, setActiveAdminTab] = useState('projects'); // 'projects', 'partners', 'withdrawals'
@@ -135,8 +136,22 @@ const Admin = () => {
       setStats(newStats);
     });
 
+    // Listen to adminWallet for dynamic fee/balance updates
+    let unsubscribeWallet;
+    import('firebase/firestore').then(({ doc, onSnapshot }) => {
+      import('../firebase').then(({ db }) => {
+        const adminWalletRef = doc(db, 'settings', 'adminWallet');
+        unsubscribeWallet = onSnapshot(adminWalletRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setAdminBalance(docSnap.data().balance || 0);
+          }
+        });
+      });
+    });
+
     return () => {
       unsubscribeStats();
+      if (unsubscribeWallet) unsubscribeWallet();
     };
   }, [user, navigate]);
 
@@ -349,11 +364,21 @@ const Admin = () => {
           <div className="admin-stats-grid">
             <div className="admin-stat-card">
               <div className="admin-stat-icon green">
+                <Wallet size={20} />
+              </div>
+              <div className="admin-stat-data">
+                <span className="admin-stat-num">Rp {adminBalance.toLocaleString('id-ID')}</span>
+                <span className="admin-stat-label">Saldo Platform (Fee Penarikan)</span>
+              </div>
+            </div>
+            
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon blue">
                 <DollarSign size={20} />
               </div>
               <div className="admin-stat-data">
                 <span className="admin-stat-num">Rp {stats.totalEarnings.toLocaleString('id-ID')}</span>
-                <span className="admin-stat-label">Total Pendapatan (Lunas)</span>
+                <span className="admin-stat-label">Total Omset Platform</span>
               </div>
             </div>
             
@@ -846,7 +871,11 @@ const Admin = () => {
                       <tr key={w.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <td style={{ padding: '1rem', color: '#94a3b8', fontSize: '0.85rem' }}>{new Date(w.requestedAt).toLocaleDateString('id-ID')}</td>
                         <td style={{ padding: '1rem', fontWeight: 500 }}>{w.partnerName}</td>
-                        <td style={{ padding: '1rem', fontWeight: 700, color: '#10b981' }}>Rp {w.amount?.toLocaleString('id-ID')}</td>
+                        <td style={{ padding: '1rem' }}>
+                          <div style={{ fontWeight: 700, color: '#94a3b8', textDecoration: 'line-through', fontSize: '0.9rem' }}>Rp {w.amount?.toLocaleString('id-ID')}</div>
+                          <div style={{ fontWeight: 700, color: '#10b981' }}>Rp {(w.netAmount || w.amount)?.toLocaleString('id-ID')}</div>
+                          <div style={{ fontSize: '0.8rem', color: '#ef4444' }}>Potongan: Rp {(w.feeAmount || 0)?.toLocaleString('id-ID')}</div>
+                        </td>
                         <td style={{ padding: '1rem', fontSize: '0.85rem', color: '#94a3b8', maxWidth: '220px', whiteSpace: 'pre-wrap' }}>{w.bankDetails}</td>
                         <td style={{ padding: '1rem' }}>
                           <span style={{
@@ -863,7 +892,7 @@ const Admin = () => {
                         <td style={{ padding: '1rem', textAlign: 'right' }}>
                           {w.status === 'pending' && (
                             <button
-                              onClick={() => handleCompleteWithdrawal(w.id, w.partnerId, w.amount)}
+                              onClick={() => handleCompleteWithdrawal(w.id, w.partnerId, w.amount, w.feeAmount)}
                               style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}
                             >
                               ✅ Tandai Selesai

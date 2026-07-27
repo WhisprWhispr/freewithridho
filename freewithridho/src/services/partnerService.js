@@ -92,11 +92,28 @@ const WITHDRAWALS_COLLECTION = 'withdrawals';
 
 export async function submitWithdrawal(data) {
   const colRef = collection(db, WITHDRAWALS_COLLECTION);
+  const feeRate = data.amount < 500000 ? 0.05 : 0.10;
+  const feeAmount = Math.floor(data.amount * feeRate);
+  const netAmount = data.amount - feeAmount;
+
   await addDoc(colRef, {
     ...data,
+    feeRate,
+    feeAmount,
+    netAmount,
     status: 'pending',
     requestedAt: new Date().toISOString()
   });
+
+  // Deduct from partner balance immediately to hold funds
+  const partnerRef = doc(db, COLLECTION, data.partnerId);
+  const partnerSnap = await getDoc(partnerRef);
+  if (partnerSnap.exists()) {
+    const currentBalance = partnerSnap.data().balance || 0;
+    await updateDoc(partnerRef, {
+      balance: currentBalance - data.amount
+    });
+  }
 }
 
 export function listenToWithdrawals(callback) {
@@ -110,18 +127,23 @@ export function listenToWithdrawals(callback) {
   });
 }
 
-export async function completeWithdrawal(withdrawalId, partnerId, amount) {
+export async function completeWithdrawal(withdrawalId, partnerId, amount, feeAmount) {
   // Update withdrawal status
   const withdrawalRef = doc(db, WITHDRAWALS_COLLECTION, withdrawalId);
   await updateDoc(withdrawalRef, { status: 'completed' });
   
-  // Deduct from partner balance
-  const partnerRef = doc(db, COLLECTION, partnerId);
-  const partnerSnap = await getDoc(partnerRef);
-  if (partnerSnap.exists()) {
-    const currentBalance = partnerSnap.data().balance || 0;
-    await updateDoc(partnerRef, {
-      balance: currentBalance - amount
+  // Add fee to admin wallet
+  if (feeAmount > 0) {
+    const adminWalletRef = doc(db, 'settings', 'adminWallet');
+    const adminWalletDoc = await getDoc(adminWalletRef);
+    const currentBalance = adminWalletDoc.exists() ? (adminWalletDoc.data().balance || 0) : 0;
+    await updateDoc(adminWalletRef, {
+      balance: currentBalance + feeAmount
+    }).catch(async (e) => {
+      // If document doesn't exist, set it
+      if (e.code === 'not-found') {
+        await setDoc(adminWalletRef, { balance: feeAmount });
+      }
     });
   }
 }

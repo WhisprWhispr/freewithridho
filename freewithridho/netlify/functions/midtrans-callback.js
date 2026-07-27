@@ -80,16 +80,15 @@ exports.handler = async (event) => {
             });
             console.log(`✅ Transaction ${docId} updated to PAID`);
 
-            // ── Partner Balance Split: 90% Partner / 10% Admin ──
+            // ── Balance Allocation: 100% Partner or 100% Admin ──
             if (txData.projectId) {
               try {
                 const projectDoc = await db.collection('projects').doc(txData.projectId).get();
+                const amount = parseFloat(gross_amount) || 0;
+                
                 if (projectDoc.exists && projectDoc.data().ownerId) {
+                  // Project owned by partner
                   const ownerId = projectDoc.data().ownerId;
-                  const amount = parseFloat(gross_amount) || 0;
-                  const partnerShare = Math.floor(amount * 0.9); // 90% to partner
-
-                  // Find partner document by userId
                   const partnerSnap = await db.collection('partners')
                     .where('userId', '==', ownerId)
                     .where('status', '==', 'approved')
@@ -99,13 +98,20 @@ exports.handler = async (event) => {
                     const partnerDocId = partnerSnap.docs[0].id;
                     const currentBalance = partnerSnap.docs[0].data().balance || 0;
                     await db.collection('partners').doc(partnerDocId).update({
-                      balance: currentBalance + partnerShare,
+                      balance: currentBalance + amount,
                     });
-                    console.log(`💰 Credited Rp ${partnerShare} (90%) to partner ${partnerDocId}`);
+                    console.log(`💰 Credited Rp ${amount} (100%) to partner ${partnerDocId}`);
                   }
+                } else {
+                  // Project owned by admin
+                  const adminWalletRef = db.collection('settings').doc('adminWallet');
+                  const adminWalletDoc = await adminWalletRef.get();
+                  const currentBalance = adminWalletDoc.exists ? (adminWalletDoc.data().balance || 0) : 0;
+                  await adminWalletRef.set({ balance: currentBalance + amount }, { merge: true });
+                  console.log(`💰 Credited Rp ${amount} (100%) to Admin Wallet`);
                 }
               } catch (splitErr) {
-                console.error('Balance split error:', splitErr.message);
+                console.error('Balance allocation error:', splitErr.message);
               }
             }
           } else {

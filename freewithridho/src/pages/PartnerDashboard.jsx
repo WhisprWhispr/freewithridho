@@ -21,6 +21,7 @@ const PartnerDashboard = () => {
   const { user } = useAuth();
   const [partner, setPartner] = useState(null);
   const [projects, setProjects] = useState([]);
+  const [partnerWithdrawals, setPartnerWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('projects'); // 'projects', 'withdraw'
 
@@ -48,11 +49,20 @@ const PartnerDashboard = () => {
       setProjects(myProjects);
     });
 
+    let unsubscribeWithdrawals;
+    import('../services/partnerService').then(({ listenToWithdrawals }) => {
+      unsubscribeWithdrawals = listenToWithdrawals((allWithdrawals) => {
+        const myWithdrawals = allWithdrawals.filter(w => w.partnerId === partner?.id);
+        setPartnerWithdrawals(myWithdrawals);
+      });
+    });
+
     return () => {
       if (unsubscribePartner) unsubscribePartner();
       if (unsubscribeProjects) unsubscribeProjects();
+      if (unsubscribeWithdrawals) unsubscribeWithdrawals();
     };
-  }, [user]);
+  }, [user, partner?.id]);
 
   if (loading) {
     return <div className="partner-loading">Memuat Dashboard...</div>;
@@ -150,8 +160,8 @@ const PartnerDashboard = () => {
       toast.error('Saldo tidak mencukupi.');
       return;
     }
-    if (amount < 50000) {
-      toast.error('Minimal penarikan Rp 50.000');
+    if (amount < 100000) {
+      toast.error('Minimal penarikan Rp 100.000');
       return;
     }
     if (!withdrawForm.bankDetails) {
@@ -181,12 +191,40 @@ const PartnerDashboard = () => {
         <p>Selamat datang, {partner.fullName}</p>
       </div>
 
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <Wallet size={32} className="stat-icon" />
+      <div className="dashboard-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        <div className="stat-card" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Wallet size={32} style={{ color: '#10b981' }} />
           <div>
-            <h3>Saldo Aktif</h3>
-            <p className="stat-value">Rp {(partner.balance || 0).toLocaleString('id-ID')}</p>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Saldo Aktif</h3>
+            <p style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>Rp {(partner.balance || 0).toLocaleString('id-ID')}</p>
+          </div>
+        </div>
+
+        <div className="stat-card" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <DollarSign size={32} style={{ color: '#3b82f6' }} />
+          <div>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Total Pendapatan</h3>
+            <p style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>
+              Rp {((partner.balance || 0) + partnerWithdrawals.reduce((sum, w) => sum + w.amount, 0)).toLocaleString('id-ID')}
+            </p>
+          </div>
+        </div>
+
+        <div className="stat-card" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <CheckCircle size={32} style={{ color: '#8b5cf6' }} />
+          <div>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Total Penarikan</h3>
+            <p style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>
+              Rp {partnerWithdrawals.filter(w => w.status === 'completed').reduce((sum, w) => sum + w.amount, 0).toLocaleString('id-ID')}
+            </p>
+          </div>
+        </div>
+
+        <div className="stat-card" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Upload size={32} style={{ color: '#f59e0b' }} />
+          <div>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Proyek Diunggah</h3>
+            <p style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>{projects.length} Proyek</p>
           </div>
         </div>
       </div>
@@ -290,14 +328,17 @@ const PartnerDashboard = () => {
               <label>Jumlah Penarikan (Rp)</label>
               <input 
                 type="number" 
-                min="50000" 
+                min="100000" 
                 max={partner.balance || 0}
                 value={withdrawForm.amount}
                 onChange={e => setWithdrawForm({...withdrawForm, amount: e.target.value})}
-                placeholder="Minimal 50000"
+                placeholder="Minimal 100000"
                 required 
               />
-              <small style={{ color: '#94a3b8' }}>Maksimal: Rp {(partner.balance || 0).toLocaleString('id-ID')}</small>
+              <small style={{ color: '#94a3b8', display: 'block', marginTop: '4px' }}>Maksimal: Rp {(partner.balance || 0).toLocaleString('id-ID')}</small>
+              <small style={{ color: '#f59e0b', display: 'block', marginTop: '4px' }}>
+                * Biaya platform: 5% (penarikan &lt; Rp 500.000), 10% (penarikan ≥ Rp 500.000).
+              </small>
             </div>
             <div className="form-group">
               <label>Detail Bank / E-Wallet</label>
