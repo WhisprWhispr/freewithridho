@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   orderBy,
   query,
+  where,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -50,4 +51,26 @@ export async function addProject(projectData) {
  */
 export async function deleteProject(id) {
   await deleteDoc(doc(db, COLLECTION, id));
+}
+
+/**
+ * Check if a user has purchased a project (has a PAID transaction)
+ */
+export async function checkUserPurchase(userId, projectId) {
+  if (!userId || !projectId) return false;
+  
+  const q = query(
+    collection(db, 'transactions'),
+    where('userId', '==', userId),
+    where('projectId', '==', projectId),
+    where('status', '==', 'PAID')
+  );
+  
+  try {
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  } catch (error) {
+    console.error("Error checking user purchase:", error);
+    return false;
+  }
 }

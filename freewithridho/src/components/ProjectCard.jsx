@@ -24,10 +24,7 @@ const ProjectCard = ({ project }) => {
         <p className="card-description">{project.description}</p>
       </div>
       <div className="card-footer">
-        <a href={project.downloadUrl} className="btn btn-secondary icon-btn" target="_blank" rel="noopener noreferrer">
-          <Download size={16} />
-        </a>
-        <Link to={`/project/${project.id}`} className="btn btn-primary">
+        <Link to={`/project/${project.id}`} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
           View Details <ChevronRight size={16} />
         </Link>
       </div>

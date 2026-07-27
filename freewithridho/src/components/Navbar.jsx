@@ -6,7 +6,7 @@ import './Navbar.css';
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -31,13 +31,15 @@ const Navbar = () => {
 
           {user ? (
             <>
-              <Link
-                to="/admin"
-                className={`nav-link admin-link ${location.pathname === '/admin' ? 'active' : ''}`}
-              >
-                <LayoutDashboard size={16} />
-                Admin Panel
-              </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className={`nav-link admin-link ${location.pathname === '/admin' ? 'active' : ''}`}
+                >
+                  <LayoutDashboard size={16} />
+                  Admin Panel
+                </Link>
+              )}
               <div className="nav-user">
                 <span className="nav-email">{user.email}</span>
                 <button className="btn-logout" onClick={handleLogout} title="Logout">
@@ -52,7 +54,7 @@ const Navbar = () => {
               className={`nav-link admin-link ${location.pathname === '/login' ? 'active' : ''}`}
             >
               <LogIn size={16} />
-              Admin Login
+              Login
             </Link>
           )}
         </div>

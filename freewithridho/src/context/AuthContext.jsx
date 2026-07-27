@@ -7,12 +7,16 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true); // true while Firebase checks session
 
   useEffect(() => {
     // Listen to Firebase auth state changes (login/logout, page refresh)
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
+      // Cek apakah user adalah admin
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+      setIsAdmin(firebaseUser && firebaseUser.email === adminEmail);
       setLoading(false);
     });
     return () => unsubscribe();
@@ -31,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
