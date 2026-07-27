@@ -39,30 +39,36 @@ const ProjectCard = ({ project }) => {
 
       <div className="card-body">
         <h3 className="card-title">{project.title}</h3>
-        {project.developerName && (
-          <div className="card-developer">
-            <div className="dev-avatar">
-              {project.developerName[0].toUpperCase()}
-            </div>
-            <span className="dev-name">{project.developerName}</span>
-          </div>
-        )}
         <p className="card-description">{project.description}</p>
       </div>
 
       <div className="card-footer">
-        {/* Wishlist button */}
-        <button
-          className={`card-wishlist-btn ${wishlisted ? 'active' : ''}`}
-          onClick={handleWishlist}
-          title={wishlisted ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
-        >
-          <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
-        </button>
+        <div className="footer-left">
+          {project.developerName ? (
+            <div className="card-developer" title={`Developer: ${project.developerName}`}>
+              <div className="dev-avatar">
+                {project.developerName[0].toUpperCase()}
+              </div>
+              <span className="dev-name">{project.developerName}</span>
+            </div>
+          ) : (
+            <div className="card-developer empty" />
+          )}
+        </div>
 
-        <Link to={`/project/${project.id}`} className="btn btn-primary card-detail-btn">
-          Lihat Detail <ChevronRight size={16} />
-        </Link>
+        <div className="footer-actions">
+          <button
+            className={`card-wishlist-btn ${wishlisted ? 'active' : ''}`}
+            onClick={handleWishlist}
+            title={wishlisted ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+          >
+            <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
+          </button>
+
+          <Link to={`/project/${project.id}`} className="btn btn-primary card-detail-btn">
+            Detail <ChevronRight size={16} />
+          </Link>
+        </div>
       </div>
     </div>
   );
