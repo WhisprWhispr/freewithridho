@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { getAllProjects, addProject, deleteProject } from '../services/projectService';
 import { getAdminStats } from '../services/adminStatsService';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
+import ConfirmModal from '../components/ConfirmModal';
 import {
-  Plus, Trash2, Upload, CheckCircle, AlertCircle, LogOut,
+  Plus, Trash2, Upload, LogOut,
   ShieldCheck, BarChart3, TrendingUp, DollarSign, Briefcase,
-  AlertTriangle, Receipt
+  Receipt
 } from 'lucide-react';
 import './Admin.css';
 
@@ -37,17 +39,18 @@ const Admin = () => {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [toast, setToast] = useState(null); // { type: 'success'|'error', message }
+  
+  // Confirm Modal state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    id: null,
+    title: ''
+  });
   const [deletingId, setDeletingId] = useState(null);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
-  };
-
-  const showToast = (type, message) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3500);
   };
 
   const fetchProjectsAndStats = async () => {
@@ -60,7 +63,7 @@ const Admin = () => {
       setProjects(projectsData);
       setStats(statsData);
     } catch {
-      showToast('error', 'Gagal memuat daftar proyek dan statistik.');
+      toast.error('Gagal memuat daftar proyek dan statistik.');
     } finally {
       setFetching(false);
     }
@@ -92,9 +95,11 @@ const Admin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.description || !form.downloadUrl) {
-      showToast('error', 'Judul, Deskripsi, dan Link Unduh wajib diisi.');
+      toast.error('Judul, Deskripsi, dan Link Unduh wajib diisi.');
       return;
     }
+    
+    const loadingToast = toast.loading('Mengunggah proyek...');
     try {
       setLoading(true);
       const projectData = {
@@ -103,41 +108,47 @@ const Admin = () => {
       };
       await addProject(projectData);
       setForm(emptyForm);
-      showToast('success', `Proyek "${form.title}" berhasil ditambahkan!`);
+      toast.success(`Proyek "${form.title}" berhasil ditambahkan!`, { id: loadingToast });
       await fetchProjectsAndStats();
     } catch {
-      showToast('error', 'Gagal menyimpan proyek. Cek konfigurasi Firebase.');
+      toast.error('Gagal menyimpan proyek. Cek konfigurasi Firebase.', { id: loadingToast });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id, title) => {
-    if (!window.confirm(`Hapus proyek "${title}"?`)) return;
+  const initiateDelete = (id, title) => {
+    setConfirmModal({ isOpen: true, id, title });
+  };
+
+  const executeDelete = async () => {
+    const { id, title } = confirmModal;
+    const loadingToast = toast.loading(`Menghapus "${title}"...`);
     try {
       setDeletingId(id);
       await deleteProject(id);
-      showToast('success', `Proyek "${title}" berhasil dihapus.`);
+      toast.success(`Proyek "${title}" berhasil dihapus.`, { id: loadingToast });
       setProjects((prev) => prev.filter((p) => p.id !== id));
-      // Refresh stats also
       const updatedStats = await getAdminStats();
       setStats(updatedStats);
     } catch {
-      showToast('error', 'Gagal menghapus proyek.');
+      toast.error('Gagal menghapus proyek.', { id: loadingToast });
     } finally {
       setDeletingId(null);
+      setConfirmModal({ isOpen: false, id: null, title: '' });
     }
   };
 
   return (
     <div className="admin-page">
-      {/* Toast notification */}
-      {toast && (
-        <div className={`toast toast-${toast.type}`}>
-          {toast.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-          <span>{toast.message}</span>
-        </div>
-      )}
+      <ConfirmModal 
+        isOpen={confirmModal.isOpen}
+        title="Hapus Proyek?"
+        message={`Anda yakin ingin menghapus proyek "${confirmModal.title}"? Tindakan ini tidak dapat dibatalkan.`}
+        onClose={() => setConfirmModal({ isOpen: false, id: null, title: '' })}
+        onConfirm={executeDelete}
+        isLoading={deletingId === confirmModal.id}
+      />
 
       <div className="admin-container">
         {/* Admin user banner */}
@@ -362,7 +373,7 @@ const Admin = () => {
                   </div>
                   <button
                     className="btn-delete"
-                    onClick={() => handleDelete(project.id, project.title)}
+                    onClick={() => initiateDelete(project.id, project.title)}
                     disabled={deletingId === project.id}
                   >
                     {deletingId === project.id

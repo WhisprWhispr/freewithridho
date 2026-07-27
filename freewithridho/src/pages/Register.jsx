@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Code2, LogIn, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import './Login.css';
 
 const Register = () => {
@@ -12,7 +13,6 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   // If already logged in
   if (user) {
@@ -25,14 +25,16 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     if (!email || !password) {
-      setError('Email dan password wajib diisi.');
+      toast.error('Email dan password wajib diisi.');
       return;
     }
+    
+    const loadingToast = toast.loading('Sedang mendaftar...');
     try {
       setLoading(true);
       await register(email, password);
+      toast.success('Registrasi berhasil!', { id: loadingToast });
       if (email === import.meta.env.VITE_ADMIN_EMAIL) {
         navigate('/admin');
       } else {
@@ -40,19 +42,19 @@ const Register = () => {
       }
     } catch (err) {
       console.error(err);
+      let errMsg = 'Registrasi gagal. Cek koneksi Anda.';
       switch (err.code) {
         case 'auth/email-already-in-use':
-          setError('Email sudah terdaftar. Silakan login.');
+          errMsg = 'Email sudah terdaftar. Silakan login.';
           break;
         case 'auth/weak-password':
-          setError('Password terlalu lemah (minimal 6 karakter).');
+          errMsg = 'Password terlalu lemah (minimal 6 karakter).';
           break;
         case 'auth/invalid-email':
-          setError('Format email tidak valid.');
+          errMsg = 'Format email tidak valid.';
           break;
-        default:
-          setError('Registrasi gagal. Cek koneksi Anda.');
       }
+      toast.error(errMsg, { id: loadingToast });
     } finally {
       setLoading(false);
     }
@@ -71,12 +73,6 @@ const Register = () => {
           <h1>Daftar Akun</h1>
           <p>Buat akun baru untuk membeli source code</p>
         </div>
-
-        {error && (
-          <div className="login-error">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">

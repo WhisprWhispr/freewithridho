@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getProjectById } from '../services/projectService';
 import { useAuth } from '../context/AuthContext';
 import { ShoppingBag, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import './Checkout.css';
 
 const Checkout = () => {
@@ -41,9 +42,9 @@ const Checkout = () => {
   }, [id, user, navigate]);
 
   const handleCheckout = async () => {
+    const loadingToast = toast.loading('Mempersiapkan pembayaran...');
     try {
       setProcessing(true);
-      setError('');
       
       // Request ke API (Netlify akan mengarahkan /api ke folder functions)
       const endpoint = '/api/create-transaction';
@@ -66,12 +67,13 @@ const Checkout = () => {
         throw new Error(data.message || 'Gagal memproses pembayaran');
       }
 
+      toast.success('Berhasil! Mengalihkan ke halaman pembayaran...', { id: loadingToast });
       // Redirect user to Midtrans checkout page
       window.location.href = data.checkoutUrl;
       
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Terjadi kesalahan saat memproses pembayaran.');
+      toast.error(err.message || 'Terjadi kesalahan saat memproses pembayaran.', { id: loadingToast });
       setProcessing(false);
     }
   };

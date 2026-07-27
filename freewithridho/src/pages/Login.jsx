@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Code2, LogIn, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import './Login.css';
 
 const Login = () => {
@@ -12,7 +13,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   // If already logged in
   if (user) {
@@ -25,14 +25,16 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     if (!email || !password) {
-      setError('Email dan password wajib diisi.');
+      toast.error('Email dan password wajib diisi.');
       return;
     }
+    
+    const loadingToast = toast.loading('Sedang masuk...');
     try {
       setLoading(true);
       await login(email, password);
+      toast.success('Login berhasil!', { id: loadingToast });
       if (email === import.meta.env.VITE_ADMIN_EMAIL) {
         navigate('/admin');
       } else {
@@ -40,21 +42,21 @@ const Login = () => {
       }
     } catch (err) {
       console.error(err);
+      let errMsg = 'Login gagal. Cek koneksi Anda.';
       switch (err.code) {
         case 'auth/user-not-found':
         case 'auth/invalid-credential':
         case 'auth/wrong-password':
-          setError('Email atau password salah.');
+          errMsg = 'Email atau password salah.';
           break;
         case 'auth/invalid-email':
-          setError('Format email tidak valid.');
+          errMsg = 'Format email tidak valid.';
           break;
         case 'auth/too-many-requests':
-          setError('Terlalu banyak percobaan login. Coba lagi beberapa saat.');
+          errMsg = 'Terlalu banyak percobaan login. Coba lagi beberapa saat.';
           break;
-        default:
-          setError('Login gagal. Cek koneksi Anda.');
       }
+      toast.error(errMsg, { id: loadingToast });
     } finally {
       setLoading(false);
     }
@@ -73,12 +75,6 @@ const Login = () => {
           <h1>Selamat Datang</h1>
           <p>Silakan login ke akun Anda</p>
         </div>
-
-        {error && (
-          <div className="login-error">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
