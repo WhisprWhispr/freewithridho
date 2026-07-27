@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Checkout from './pages/Checkout';
 import Success from './pages/Success';
+import Profile from './pages/Profile';
 import './App.css';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
               <Route path="/project/:id" element={<ProjectDetail />} />
               <Route path="/checkout/:id" element={<Checkout />} />
               <Route path="/success" element={<Success />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route

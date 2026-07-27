@@ -74,3 +74,24 @@ export async function checkUserPurchase(userId, projectId) {
     return false;
   }
 }
+
+/**
+ * Get all transactions for a specific user, ordered by newest first
+ */
+export async function getUserTransactions(userId) {
+  if (!userId) return [];
+  
+  const q = query(
+    collection(db, 'transactions'),
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc')
+  );
+  
+  try {
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching user transactions:", error);
+    return [];
+  }
+}
