@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { submitPartnerApplication } from '../services/partnerService';
-import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle } from 'lucide-react';
+import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
 import './BecomePartner.css';
 
 const BecomePartner = () => {
@@ -43,6 +44,28 @@ const BecomePartner = () => {
     }
   };
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Bukti Pendaftaran Partner Developer', 20, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Nama Lengkap: ${form.fullName}`, 20, 40);
+    doc.text(`Email: ${form.email}`, 20, 50);
+    doc.text(`Nomor WhatsApp: ${form.phone}`, 20, 60);
+    doc.text(`Link Portofolio: ${form.portfolio}`, 20, 70);
+    doc.text(`Keahlian: ${form.skills || '-'}`, 20, 80);
+    
+    doc.text('Alasan Bergabung:', 20, 100);
+    const splitReason = doc.splitTextToSize(form.reason || '-', 170);
+    doc.text(splitReason, 20, 110);
+    
+    doc.text('Terima kasih telah mendaftar!', 20, 150);
+    doc.text('FREEWITHRIDHO Team', 20, 160);
+
+    doc.save(`Pendaftaran_Partner_${form.fullName.replace(/\s+/g, '_')}.pdf`);
+  };
+
   if (isSuccess) {
     return (
       <div className="partner-page success-view">
@@ -50,9 +73,14 @@ const BecomePartner = () => {
           <CheckCircle size={64} className="success-icon" />
           <h2>Pendaftaran Berhasil!</h2>
           <p>Terima kasih telah mendaftar sebagai Partner Developer. Tim kami akan meninjau pendaftaran Anda dan menghubungi Anda melalui email atau WhatsApp.</p>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
-            Kembali ke Beranda
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
+            <button className="btn btn-secondary" onClick={handleDownloadPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <Download size={18} /> Unduh Bukti PDF
+            </button>
+            <button className="btn btn-primary" onClick={() => navigate('/')}>
+              Kembali ke Beranda
+            </button>
+          </div>
         </div>
       </div>
     );
