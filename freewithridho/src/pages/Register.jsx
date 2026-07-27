@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Code2, LogIn, Eye, EyeOff } from 'lucide-react';
@@ -14,14 +14,17 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // If already logged in
-  if (user) {
-    if (user.email === import.meta.env.VITE_ADMIN_EMAIL) {
-      return <Navigate to="/admin" replace />;
-    } else {
-      return <Navigate to="/" replace />;
+  // If already logged in, redirect
+  useEffect(() => {
+    if (user) {
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
+      if (user.email === adminEmail) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     }
-  }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,14 +33,17 @@ const Register = () => {
       return;
     }
     
-    const loadingToast = toast.loading('Sedang mendaftar...');
+    const toastId = toast.loading('Sedang mendaftar...');
     try {
       setLoading(true);
       await register(email, password);
-      toast.success('Registrasi berhasil!', { id: loadingToast });
-      if (email === import.meta.env.VITE_ADMIN_EMAIL) {
+      
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
+      if (email === adminEmail) {
+        toast.success('Registrasi Admin berhasil!', { id: toastId });
         navigate('/admin');
       } else {
+        toast.success('Registrasi berhasil!', { id: toastId });
         navigate('/');
       }
     } catch (err) {

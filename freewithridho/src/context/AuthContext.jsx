@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       // Cek apakah user adalah admin
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
       setIsAdmin(firebaseUser && firebaseUser.email === adminEmail);
       setLoading(false);
     });

@@ -14,30 +14,36 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // If already logged in
-  if (user) {
-    if (user.email === import.meta.env.VITE_ADMIN_EMAIL) {
-      return <Navigate to="/admin" replace />;
-    } else {
-      return <Navigate to="/" replace />;
+  // If already logged in, redirect
+  useEffect(() => {
+    if (user) {
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
+      if (user.email === adminEmail) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     }
-  }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error('Email dan password wajib diisi.');
+      toast.error('Harap isi email dan password!');
       return;
     }
     
-    const loadingToast = toast.loading('Sedang masuk...');
+    const toastId = toast.loading('Memproses login...');
     try {
       setLoading(true);
       await login(email, password);
-      toast.success('Login berhasil!', { id: loadingToast });
-      if (email === import.meta.env.VITE_ADMIN_EMAIL) {
+      
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
+      if (email === adminEmail) {
+        toast.success('Login Admin berhasil!', { id: toastId });
         navigate('/admin');
       } else {
+        toast.success('Login berhasil!', { id: toastId });
         navigate('/');
       }
     } catch (err) {
