@@ -64,25 +64,25 @@ const PublicProfile = () => {
   return (
     <div className="public-profile-page">
       {/* Cover / Header Section */}
-      <div className="profile-header">
-        <div className="profile-cover"></div>
-        <div className="profile-info-container">
-          <div className="profile-avatar">
+      <div className="public-profile-header">
+        <div className="public-profile-cover"></div>
+        <div className="public-profile-info-container">
+          <div className="public-profile-avatar">
             {partner.fullName ? partner.fullName[0].toUpperCase() : 'D'}
           </div>
-          <div className="profile-details">
-            <h1 className="profile-name">{partner.fullName}</h1>
-            <p className="profile-badge">Partner Developer Resmi</p>
+          <div className="public-profile-details">
+            <h1 className="public-profile-name">{partner.fullName}</h1>
+            <p className="public-profile-badge">Partner Developer Resmi</p>
             
-            <div className="profile-meta">
+            <div className="public-profile-meta">
               {partner.skills && (
-                <div className="meta-item">
+                <div className="public-meta-item">
                   <Briefcase size={16} />
                   <span>{partner.skills}</span>
                 </div>
               )}
               {partner.portfolio && (
-                <a href={partner.portfolio} target="_blank" rel="noopener noreferrer" className="meta-item link">
+                <a href={partner.portfolio} target="_blank" rel="noopener noreferrer" className="public-meta-item link">
                   <ExternalLink size={16} />
                   <span>Portofolio</span>
                 </a>
@@ -90,24 +90,24 @@ const PublicProfile = () => {
             </div>
           </div>
           
-          <div className="profile-stats">
-            <div className="stat-box">
-              <span className="stat-value">{projects.length}</span>
-              <span className="stat-label">Proyek</span>
+          <div className="public-profile-stats">
+            <div className="public-stat-box">
+              <span className="public-stat-value">{projects.length}</span>
+              <span className="public-stat-label">Proyek</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Projects Grid Section */}
-      <div className="profile-content">
-        <h2 className="content-title">Karya {partner.fullName}</h2>
+      <div className="public-profile-content">
+        <h2 className="public-content-title">Karya {partner.fullName}</h2>
         {projects.length === 0 ? (
-          <div className="empty-projects">
+          <div className="public-empty-projects">
             <p>Developer ini belum mengunggah proyek apapun.</p>
           </div>
         ) : (
-          <div className="projects-grid">
+          <div className="public-projects-grid">
             {projects.map(project => (
               <ProjectCard key={project.id} project={project} />
             ))}
