@@ -88,7 +88,7 @@ const Admin = () => {
   const [editingId, setEditingId] = useState(null);
 
   // Settings state
-  const [midtransSettings, setMidtransSettings] = useState({ serverKey: '', clientKey: '' });
+  const [midtransSettings, setMidtransSettings] = useState({ serverKey: '', clientKey: '', environment: 'sandbox' });
   const [savingSettings, setSavingSettings] = useState(false);
 
   const handleLogout = async () => {
@@ -118,7 +118,8 @@ const Admin = () => {
         if (settingsData) {
           setMidtransSettings({
             serverKey: settingsData.serverKey || '',
-            clientKey: settingsData.clientKey || ''
+            clientKey: settingsData.clientKey || '',
+            environment: settingsData.environment || 'sandbox'
           });
         }
       } catch (error) {
@@ -782,6 +783,18 @@ const Admin = () => {
                   Kunci ini akan digunakan oleh sistem backend untuk memproses pembayaran.
                 </p>
                 <form onSubmit={handleSaveSettings} className="upload-form" style={{ paddingTop: 0 }}>
+                  <div className="form-group">
+                    <label htmlFor="environment">Lingkungan (Environment)</label>
+                    <select
+                      id="environment"
+                      value={midtransSettings.environment}
+                      onChange={(e) => setMidtransSettings(prev => ({ ...prev, environment: e.target.value }))}
+                      style={{ padding: '0.75rem', borderRadius: '8px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                    >
+                      <option value="sandbox">Sandbox (Pengujian)</option>
+                      <option value="production">Production (Live)</option>
+                    </select>
+                  </div>
                   <div className="form-group">
                     <label htmlFor="serverKey">Server Key <Key size={14} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} /></label>
                     <input

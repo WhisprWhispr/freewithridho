@@ -18,8 +18,15 @@ if (!admin.apps.length) {
 const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 const SITE_URL = process.env.URL || 'https://freewithridho.netlify.app';
 
-function getMidtransUrl(serverKey) {
-  const isSandbox = serverKey && (serverKey.startsWith('SB-') || serverKey.startsWith('sb-'));
+function getMidtransUrl(serverKey, environment) {
+  // Try to use environment setting first, fallback to checking prefix if environment is not provided
+  let isSandbox = true;
+  if (environment) {
+    isSandbox = environment === 'sandbox';
+  } else {
+    isSandbox = serverKey && (serverKey.startsWith('SB-') || serverKey.startsWith('sb-'));
+  }
+  
   return isSandbox
     ? 'https://app.sandbox.midtrans.com/snap/v1/transactions'
     : 'https://app.midtrans.com/snap/v1/transactions';
@@ -33,13 +40,20 @@ exports.handler = async (event) => {
   try {
     // Try to get server key from Firestore settings first
     let serverKey = FALLBACK_SERVER_KEY;
+    let environment = 'sandbox'; // default
     if (admin.apps.length) {
       try {
         const db = admin.firestore();
         const settingsDoc = await db.collection('settings').doc('midtrans').get();
-        if (settingsDoc.exists && settingsDoc.data().serverKey) {
-          serverKey = settingsDoc.data().serverKey;
-          console.log('✅ Using serverKey from Firestore settings');
+        if (settingsDoc.exists) {
+          if (settingsDoc.data().serverKey) {
+            serverKey = settingsDoc.data().serverKey;
+            console.log('✅ Using serverKey from Firestore settings');
+          }
+          if (settingsDoc.data().environment) {
+            environment = settingsDoc.data().environment;
+            console.log('✅ Using environment from Firestore settings:', environment);
+          }
         }
       } catch (e) {
         console.warn('Could not read settings from Firestore, using env key:', e.message);
@@ -88,7 +102,7 @@ exports.handler = async (event) => {
     };
 
     const authString = Buffer.from(`${serverKey}:`).toString('base64');
-    const MIDTRANS_URL = getMidtransUrl(serverKey);
+    const MIDTRANS_URL = getMidtransUrl(serverKey, environment);
     console.log('🌐 Midtrans URL:', MIDTRANS_URL);
 
     const midtransRes = await fetch(MIDTRANS_URL, {
