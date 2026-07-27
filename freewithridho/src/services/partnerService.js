@@ -149,26 +149,47 @@ export async function completeWithdrawal(withdrawalId, partnerId, amount, feeAmo
 }
 
 /**
- * Ban Partner: Set status to banned, delete their projects, and clear balance
+ * Ban Partner: Delete their projects, partner document, and Firebase Auth account
  */
 export async function banPartner(partnerId, userId) {
-  const { getDocs } = await import('firebase/firestore');
-  
-  // Update partner document to banned and clear balance
-  const docRef = doc(db, COLLECTION, partnerId);
-  await updateDoc(docRef, {
-    status: 'banned',
-    balance: 0,
-    bannedAt: new Date().toISOString()
-  });
+  const { getDocs, deleteDoc } = await import('firebase/firestore');
+  const { getAuth } = await import('firebase/auth');
   
   // Find and delete all projects by this user
   if (userId) {
-    const { deleteDoc } = await import('firebase/firestore');
-    const q = query(collection(db, 'projects'), where('userId', '==', userId));
+    const q = query(collection(db, 'projects'), where('ownerId', '==', userId));
     const snapshots = await getDocs(q);
     const deletePromises = snapshots.docs.map(d => deleteDoc(doc(db, 'projects', d.id)));
     await Promise.all(deletePromises);
+  }
+
+  // Delete the partner document completely
+  const docRef = doc(db, COLLECTION, partnerId);
+  await deleteDoc(docRef);
+
+  // Call backend to delete the Firebase Auth user account
+  if (userId) {
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const token = await currentUser.getIdToken();
+        const response = await fetch('/.netlify/functions/delete-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ userId })
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to delete auth user, status:', response.status);
+        }
+      }
+    } catch (e) {
+      console.error('Error calling delete-user function:', e);
+    }
   }
 }
 
