@@ -25,7 +25,7 @@ const PublicProfile = () => {
     // 2. Fetch partner's projects
     const fetchProjects = async () => {
       try {
-        const q = query(collection(db, 'projects'), where('userId', '==', userId));
+        const q = query(collection(db, 'projects'), where('ownerId', '==', userId));
         const snapshot = await getDocs(q);
         const projectsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setProjects(projectsData);
@@ -49,6 +49,29 @@ const PublicProfile = () => {
     );
   }
 
+  // Handle specific blocked/banned states
+  if (partner && partner.status === 'banned') {
+    return (
+      <div className="public-profile-page empty-state">
+        <User size={64} style={{ color: '#ef4444', marginBottom: '1rem' }} />
+        <h2 style={{ color: '#ef4444' }}>Akun Diblokir Permanen</h2>
+        <p>Profil developer ini tidak dapat diakses karena pelanggaran berat.</p>
+        <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>Kembali ke Beranda</Link>
+      </div>
+    );
+  }
+
+  if (partner && partner.status === 'suspended') {
+    return (
+      <div className="public-profile-page empty-state">
+        <User size={64} style={{ color: '#f59e0b', marginBottom: '1rem' }} />
+        <h2 style={{ color: '#f59e0b' }}>Akun Ditangguhkan</h2>
+        <p>Profil developer ini sedang ditangguhkan sementara waktu.</p>
+        <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>Kembali ke Beranda</Link>
+      </div>
+    );
+  }
+
   // If user is not an approved partner
   if (!partner || partner.status !== 'approved') {
     return (
@@ -56,7 +79,7 @@ const PublicProfile = () => {
         <User size={64} style={{ color: '#475569', marginBottom: '1rem' }} />
         <h2>Profil Tidak Ditemukan</h2>
         <p>Developer ini tidak ditemukan atau belum disetujui sebagai partner.</p>
-        <Link to="/" className="btn-primary" style={{ marginTop: '1rem' }}>Kembali ke Beranda</Link>
+        <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>Kembali ke Beranda</Link>
       </div>
     );
   }
