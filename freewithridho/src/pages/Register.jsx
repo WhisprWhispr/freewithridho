@@ -60,7 +60,7 @@ const Register = () => {
           errMsg = 'Format email tidak valid.';
           break;
       }
-      toast.error(errMsg, { id: loadingToast });
+      toast.error(errMsg, { id: toastId });
     } finally {
       setLoading(false);
     }

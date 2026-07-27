@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Code2, LogIn, Eye, EyeOff } from 'lucide-react';
@@ -62,7 +62,7 @@ const Login = () => {
           errMsg = 'Terlalu banyak percobaan login. Coba lagi beberapa saat.';
           break;
       }
-      toast.error(errMsg, { id: loadingToast });
+      toast.error(errMsg, { id: toastId });
     } finally {
       setLoading(false);
     }
