@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { getAllProjects } from '../services/projectService';
+import { listenToProjects } from '../services/projectService';
 import ProjectCard from '../components/ProjectCard';
 import { Search, Code2, Users, Star, Zap } from 'lucide-react';
 import './Home.css';
 
 const CATEGORIES = ['All', 'Basic', 'Premium', 'Web', 'Game', 'Mobile'];
 
-// Animated counter hook
-function useCountUp(target, duration = 1500, started = false) {
+// Animated counter — re-triggers on target change
+function useCountUp(target, duration = 1200) {
   const [count, setCount] = useState(0);
   useEffect(() => {
-    if (!started || target === 0) return;
+    if (target === 0) { setCount(0); return; }
     let start = 0;
     const step = Math.ceil(target / (duration / 16));
     const timer = setInterval(() => {
@@ -19,7 +19,7 @@ function useCountUp(target, duration = 1500, started = false) {
       else setCount(start);
     }, 16);
     return () => clearInterval(timer);
-  }, [target, duration, started]);
+  }, [target, duration]);
   return count;
 }
 
@@ -32,30 +32,35 @@ const Home = () => {
   const [statsVisible, setStatsVisible] = useState(false);
   const statsRef = useRef(null);
 
+  // Derived real-time stats
   const totalProjects = projects.length;
   const freeProjects = projects.filter(p => !p.price || p.price === 0).length;
 
-  const countProjects = useCountUp(totalProjects, 1200, statsVisible);
-  const countFree = useCountUp(freeProjects, 1200, statsVisible);
-  const countStar = useCountUp(49, 1000, statsVisible);
+  const countProjects = useCountUp(statsVisible ? totalProjects : 0);
+  const countFree    = useCountUp(statsVisible ? freeProjects : 0);
 
+  // ── Real-time Firestore listener ──────────────────────────────
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setLoading(true);
-        const data = await getAllProjects();
-        setProjects(data);
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-        setError('Gagal memuat proyek. Pastikan konfigurasi Firebase sudah benar.');
-      } finally {
-        setLoading(false);
-      }
+    setLoading(true);
+    const unsubscribe = listenToProjects((data) => {
+      setProjects(data);
+      setLoading(false);
+      setError(null);
+    });
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
     };
-    fetchProjects();
   }, []);
 
-  // Intersection Observer for stats animation
+  // Timeout fallback for slow connections
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) setError('Koneksi membutuhkan waktu lebih lama. Coba refresh halaman.');
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  // Intersection Observer — animate counters when stats section visible
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
@@ -68,7 +73,7 @@ const Home = () => {
   const filteredProjects = projects.filter(p => {
     const matchCategory = activeCategory === 'All' || p.category === activeCategory;
     const matchSearch = !searchQuery
-      || p.title.toLowerCase().includes(searchQuery.toLowerCase())
+      || p.title?.toLowerCase().includes(searchQuery.toLowerCase())
       || p.description?.toLowerCase().includes(searchQuery.toLowerCase())
       || p.category?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCategory && matchSearch;
@@ -107,7 +112,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Stats — real-time from Firestore */}
       {!loading && (
         <section className="stats-section" ref={statsRef}>
           <div className="stats-grid">
@@ -123,7 +128,7 @@ const Home = () => {
             </div>
             <div className="stat-item">
               <Star size={22} className="stat-icon yellow" />
-              <div className="stat-number">{countStar / 10}</div>
+              <div className="stat-number">4.9</div>
               <div className="stat-label">Rating Rata-rata</div>
             </div>
             <div className="stat-item">

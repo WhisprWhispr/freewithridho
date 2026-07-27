@@ -12,6 +12,7 @@ import {
   orderBy,
   query,
   where,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -24,6 +25,22 @@ export async function getAllProjects() {
   const q = query(collection(db, COLLECTION), orderBy('createdAt', 'desc'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+/**
+ * Listen to all projects in real-time
+ * @param {function} callback - called with updated projects array on every change
+ * @returns unsubscribe function
+ */
+export function listenToProjects(callback) {
+  const q = query(collection(db, COLLECTION), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(data);
+  }, (err) => {
+    console.error('Error listening to projects:', err);
+    callback([]);
+  });
 }
 
 /**
