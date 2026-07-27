@@ -94,6 +94,23 @@ exports.handler = async (event) => {
       };
     }
 
+    // Auto-save transaction record to Firestore as PENDING
+    if (admin.apps.length) {
+      const db = admin.firestore();
+      await db.collection('transactions').add({
+        merchantRef: orderId,
+        projectId,
+        projectTitle: projectTitle || 'Source Code Premium',
+        userId,
+        userEmail,
+        amount: Number(amount),
+        status: 'PENDING',
+        snapToken: midtransData.token || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log(`✅ Transaction ${orderId} saved to Firestore`);
+    }
+
     return {
       statusCode: 200,
       body: JSON.stringify({

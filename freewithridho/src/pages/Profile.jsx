@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   User, Mail, Calendar, ShoppingBag, Download, Clock,
   CheckCircle, XCircle, AlertCircle, LogOut, ChevronRight,
-  Package, Wallet, Star, ArrowLeft, ExternalLink
+  Package, Wallet, Star, ArrowLeft, ExternalLink,
+  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getUserTransactions } from '../services/projectService';
@@ -16,47 +17,137 @@ const STATUS_CONFIG = {
   FAILED: { label: 'Gagal', icon: XCircle, className: 'status-failed' },
 };
 
-const Profile = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
-  };
-
-  // Get user initials for avatar
+// ─── Admin Profile View ────────────────────────────────────────
+const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
   const getInitials = (email) => {
     if (!email) return '?';
     return email.substring(0, 2).toUpperCase();
   };
 
-  // Format date
-  const formatDate = (timestamp) => {
-    if (!timestamp) return '-';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('id-ID', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-  };
+  return (
+    <div className="profile-page">
+      <div className="profile-bg-glow top" />
+      <div className="profile-bg-glow bottom" />
 
-  // Format join date
-  const formatJoinDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit', month: 'long', year: 'numeric'
-    });
+      <div className="profile-container">
+        <Link to="/" className="back-link">
+          <ArrowLeft size={18} /> Kembali ke Home
+        </Link>
+
+        {/* Admin Hero Card */}
+        <div className="profile-hero-card admin-hero-card">
+          <div className="profile-avatar-ring admin-ring">
+            <div className="profile-avatar admin-avatar">
+              {getInitials(user.email)}
+            </div>
+          </div>
+          <div className="profile-info">
+            <h1 className="profile-name">{user.displayName || user.email.split('@')[0]}</h1>
+            <p className="profile-email">
+              <Mail size={14} /> {user.email}
+            </p>
+            <div className="profile-meta">
+              <span className="meta-chip">
+                <Calendar size={13} />
+                Bergabung {formatJoinDate(user.metadata?.creationTime)}
+              </span>
+              <span className="meta-chip admin-badge">
+                <ShieldCheck size={13} />
+                Administrator
+              </span>
+            </div>
+          </div>
+          <button className="btn-logout-profile" onClick={handleLogout}>
+            <LogOut size={16} /> Logout
+          </button>
+        </div>
+
+        {/* Admin Quick Actions */}
+        <div className="admin-quick-actions">
+          <h2 className="admin-section-title"><LayoutDashboard size={18}/> Panel Admin</h2>
+          <div className="admin-action-grid">
+            <Link to="/admin" className="admin-action-card">
+              <div className="action-icon blue">
+                <LayoutDashboard size={24} />
+              </div>
+              <div>
+                <div className="action-title">Dashboard Admin</div>
+                <div className="action-desc">Kelola proyek & statistik</div>
+              </div>
+              <ChevronRight size={18} className="action-arrow" />
+            </Link>
+            <Link to="/admin" className="admin-action-card">
+              <div className="action-icon purple">
+                <Package size={24} />
+              </div>
+              <div>
+                <div className="action-title">Kelola Proyek</div>
+                <div className="action-desc">Tambah, edit, hapus proyek</div>
+              </div>
+              <ChevronRight size={18} className="action-arrow" />
+            </Link>
+            <Link to="/admin" className="admin-action-card">
+              <div className="action-icon green">
+                <BarChart3 size={24} />
+              </div>
+              <div>
+                <div className="action-title">Laporan & Statistik</div>
+                <div className="action-desc">Pantau pendapatan & transaksi</div>
+              </div>
+              <ChevronRight size={18} className="action-arrow" />
+            </Link>
+            <Link to="/admin" className="admin-action-card">
+              <div className="action-icon yellow">
+                <Key size={24} />
+              </div>
+              <div>
+                <div className="action-title">Pengaturan API</div>
+                <div className="action-desc">Konfigurasi Midtrans API Key</div>
+              </div>
+              <ChevronRight size={18} className="action-arrow" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Admin Info Card */}
+        <div className="info-card" style={{ marginTop: '1.5rem' }}>
+          <h3 className="info-card-title">Informasi Akun Admin</h3>
+          <div className="info-rows">
+            <div className="info-row">
+              <span className="info-row-label"><Mail size={15}/> Email</span>
+              <span className="info-row-value">{user.email}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-row-label"><Calendar size={15}/> Tanggal Daftar</span>
+              <span className="info-row-value">{formatJoinDate(user.metadata?.creationTime)}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-row-label"><Clock size={15}/> Login Terakhir</span>
+              <span className="info-row-value">{formatJoinDate(user.metadata?.lastSignInTime)}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-row-label"><User size={15}/> User ID</span>
+              <span className="info-row-value uid">{user.uid}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Member Profile View ────────────────────────────────────────
+const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate }) => {
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const getInitials = (email) => {
+    if (!email) return '?';
+    return email.substring(0, 2).toUpperCase();
   };
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     const fetchTransactions = async () => {
       setLoading(true);
       try {
@@ -69,9 +160,7 @@ const Profile = () => {
       }
     };
     fetchTransactions();
-  }, [user, navigate]);
-
-  if (!user) return null;
+  }, [user.uid]);
 
   const paidTransactions = transactions.filter(t => t.status === 'PAID');
   const pendingTransactions = transactions.filter(t => t.status === 'PENDING');
@@ -83,7 +172,6 @@ const Profile = () => {
       <div className="profile-bg-glow bottom" />
 
       <div className="profile-container">
-        {/* Back */}
         <Link to="/" className="back-link">
           <ArrowLeft size={18} /> Kembali ke Home
         </Link>
@@ -340,4 +428,52 @@ const Profile = () => {
   );
 };
 
+// ─── Main Profile Component ────────────────────────────────────
+const Profile = () => {
+  const { user, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '-';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  };
+
+  const formatJoinDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: '2-digit', month: 'long', year: 'numeric'
+    });
+  };
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  if (!user) return null;
+
+  if (isAdmin) {
+    return <AdminProfile user={user} handleLogout={handleLogout} formatJoinDate={formatJoinDate} />;
+  }
+
+  return <MemberProfile user={user} handleLogout={handleLogout} formatJoinDate={formatJoinDate} formatDate={formatDate} />;
+};
+
 export default Profile;
+
+
+
+
+
+
+

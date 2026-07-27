@@ -693,3 +693,128 @@
     font-size: 1.25rem;
   }
 }
+
+/* ── Admin Profile Styles ─────────────────────────────────── */
+.admin-hero-card {
+  border-color: rgba(99, 102, 241, 0.25) !important;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(167, 139, 250, 0.04)) !important;
+}
+
+.admin-ring {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+}
+
+.admin-avatar {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+}
+
+.admin-badge {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  color: #a5b4fc !important;
+}
+
+/* Admin Quick Actions */
+.admin-quick-actions {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  padding: 1.5rem;
+  backdrop-filter: blur(12px);
+}
+
+.admin-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.admin-action-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-action-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(99,102,241,0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.admin-action-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.admin-action-card:hover::before {
+  opacity: 1;
+}
+
+.action-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action-icon.blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.action-icon.purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+.action-icon.green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+.action-icon.yellow { background: rgba(234, 179, 8, 0.15); color: #facc15; }
+
+.action-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.15rem;
+}
+
+.action-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.action-arrow {
+  margin-left: auto;
+  color: #334155;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.admin-action-card:hover .action-arrow {
+  transform: translateX(3px);
+  color: #818cf8;
+}
+
+@media (max-width: 640px) {
+  .admin-action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

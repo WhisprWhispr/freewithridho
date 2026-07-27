@@ -88,23 +88,45 @@ const Navbar = () => {
                       <div>
                         <div className="dropdown-name">{user.email.split('@')[0]}</div>
                         <div className="dropdown-email">{user.email}</div>
+                        {isAdmin && <div className="dropdown-role-badge">Administrator</div>}
                       </div>
                     </div>
                     <div className="dropdown-divider" />
-                    <Link
-                      to="/profile"
-                      className="dropdown-item"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      <User size={15} /> Profil & Transaksi
-                    </Link>
-                    <Link
-                      to="/profile"
-                      className="dropdown-item"
-                      onClick={() => { setDropdownOpen(false); }}
-                    >
-                      <Package size={15} /> Koleksi Saya
-                    </Link>
+                    {isAdmin ? (
+                      <>
+                        <Link
+                          to="/admin"
+                          className="dropdown-item"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <LayoutDashboard size={15} /> Dashboard Admin
+                        </Link>
+                        <Link
+                          to="/profile"
+                          className="dropdown-item"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <User size={15} /> Info Akun
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          to="/profile"
+                          className="dropdown-item"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <User size={15} /> Profil & Transaksi
+                        </Link>
+                        <Link
+                          to="/profile"
+                          className="dropdown-item"
+                          onClick={() => { setDropdownOpen(false); }}
+                        >
+                          <Package size={15} /> Koleksi Saya
+                        </Link>
+                      </>
+                    )}
                     <div className="dropdown-divider" />
                     <button className="dropdown-item danger" onClick={handleLogout}>
                       <LogOut size={15} /> Logout

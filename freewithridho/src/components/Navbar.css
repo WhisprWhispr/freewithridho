@@ -189,6 +189,20 @@
   max-width: 150px;
 }
 
+.dropdown-role-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  margin-top: 0.25rem;
+  display: inline-block;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .dropdown-divider {
   height: 1px;
   background: rgba(255,255,255,0.06);
