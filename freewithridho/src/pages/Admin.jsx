@@ -248,6 +248,41 @@ const Admin = () => {
     doc.save('daftar-partner-developer.pdf');
   };
 
+  const exportSinglePartnerPDF = (p) => {
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.setTextColor(59, 130, 246);
+    doc.text('FREEWITHRIDHO', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(16);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Formulir Pendaftaran Partner', 105, 30, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Tanggal Daftar: ${new Date(p.submittedAt).toLocaleDateString('id-ID')}`, 105, 38, { align: 'center' });
+
+    doc.setDrawColor(226, 232, 240);
+    doc.line(20, 45, 190, 45);
+
+    doc.setTextColor(30, 41, 59);
+    let y = 55;
+    const lineHeight = 10;
+    
+    doc.text(`Nama Lengkap   : ${p.fullName}`, 20, y); y += lineHeight;
+    doc.text(`Email          : ${p.email}`, 20, y); y += lineHeight;
+    doc.text(`No. WhatsApp   : ${p.phone}`, 20, y); y += lineHeight;
+    doc.text(`Keahlian       : ${p.skills || '-'}`, 20, y); y += lineHeight;
+    doc.text(`Link Portofolio: ${p.portfolio}`, 20, y); y += lineHeight;
+    doc.text(`Status         : ${p.status.toUpperCase()}`, 20, y);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Dicetak otomatis dari Admin Panel', 105, 280, { align: 'center' });
+    
+    doc.save(`Data_Partner_${p.fullName.replace(/\s+/g, '_')}.pdf`);
+  };
+
   const handleCompleteWithdrawal = async (withdrawalId, partnerId, amount) => {
     if (!window.confirm(`Tandai penarikan Rp ${amount.toLocaleString('id-ID')} sebagai SELESAI? Pastikan uang sudah ditransfer!`)) return;
     const loadingToast = toast.loading('Memproses...');
@@ -831,14 +866,21 @@ const Admin = () => {
                           </span>
                         </td>
                         <td style={{ padding: '1rem', textAlign: 'right' }}>
-                          {p.status === 'pending' ? (
-                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                              <button onClick={() => handlePartnerAction(p.id, 'approved')} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer' }} title="Setujui"><Check size={16} /></button>
-                              <button onClick={() => handlePartnerAction(p.id, 'rejected')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer' }} title="Tolak"><X size={16} /></button>
-                            </div>
-                          ) : (
-                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>-</span>
-                          )}
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            <button
+                              onClick={() => exportSinglePartnerPDF(p)}
+                              title="Unduh PDF"
+                              style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 500 }}
+                            >
+                              <Download size={14} /> PDF
+                            </button>
+                            {p.status === 'pending' && (
+                              <>
+                                <button onClick={() => handlePartnerAction(p.id, 'approved')} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Setujui"><Check size={14} /> Setujui</button>
+                                <button onClick={() => handlePartnerAction(p.id, 'rejected')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Tolak"><X size={14} /> Tolak</button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
