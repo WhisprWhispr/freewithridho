@@ -33,7 +33,9 @@ const PartnerDashboard = () => {
   // Withdraw states
   const [withdrawForm, setWithdrawForm] = useState({
     amount: '',
-    bankDetails: ''
+    bankName: '',
+    accountNumber: '',
+    accountName: ''
   });
 
   useEffect(() => {
@@ -164,20 +166,22 @@ const PartnerDashboard = () => {
       toast.error('Minimal penarikan Rp 100.000');
       return;
     }
-    if (!withdrawForm.bankDetails) {
-      toast.error('Harap isi detail bank/E-Wallet');
+    if (!withdrawForm.bankName || !withdrawForm.accountNumber || !withdrawForm.accountName) {
+      toast.error('Harap lengkapi semua detail bank/E-Wallet');
       return;
     }
+
+    const formattedBankDetails = `${withdrawForm.bankName} - ${withdrawForm.accountNumber} a.n ${withdrawForm.accountName}`;
 
     try {
       await submitWithdrawal({
         partnerId: partner.id,
         partnerName: partner.fullName,
         amount,
-        bankDetails: withdrawForm.bankDetails,
+        bankDetails: formattedBankDetails,
       });
       toast.success('Permintaan penarikan berhasil dikirim.');
-      setWithdrawForm({ amount: '', bankDetails: '' });
+      setWithdrawForm({ amount: '', bankName: '', accountNumber: '', accountName: '' });
     } catch (e) {
       console.error(e);
       toast.error('Gagal mengajukan penarikan');
@@ -341,12 +345,43 @@ const PartnerDashboard = () => {
               </small>
             </div>
             <div className="form-group">
-              <label>Detail Bank / E-Wallet</label>
-              <textarea 
-                rows="3"
-                value={withdrawForm.bankDetails}
-                onChange={e => setWithdrawForm({...withdrawForm, bankDetails: e.target.value})}
-                placeholder="Contoh: BCA 123456789 a.n Budi Santoso / DANA 081234567890 a.n Budi"
+              <label>Pilih Bank / E-Wallet</label>
+              <select 
+                value={withdrawForm.bankName}
+                onChange={e => setWithdrawForm({...withdrawForm, bankName: e.target.value})}
+                required 
+              >
+                <option value="">Pilih Bank atau E-Wallet...</option>
+                <option value="BCA">BCA</option>
+                <option value="Mandiri">Mandiri</option>
+                <option value="BNI">BNI</option>
+                <option value="BRI">BRI</option>
+                <option value="BSI">BSI (Bank Syariah Indonesia)</option>
+                <option value="DANA">DANA</option>
+                <option value="GoPay">GoPay</option>
+                <option value="OVO">OVO</option>
+                <option value="ShopeePay">ShopeePay</option>
+              </select>
+            </div>
+            
+            <div className="form-group">
+              <label>Nomor Rekening / No. HP E-Wallet</label>
+              <input 
+                type="text"
+                value={withdrawForm.accountNumber}
+                onChange={e => setWithdrawForm({...withdrawForm, accountNumber: e.target.value})}
+                placeholder="Contoh: 1234567890 / 081234567890"
+                required 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Atas Nama (Nama Pemilik Rekening)</label>
+              <input 
+                type="text"
+                value={withdrawForm.accountName}
+                onChange={e => setWithdrawForm({...withdrawForm, accountName: e.target.value})}
+                placeholder="Sesuai buku tabungan / E-Wallet"
                 required 
               />
             </div>
