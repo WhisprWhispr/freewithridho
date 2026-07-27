@@ -442,6 +442,31 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate }) => {
             )}
           </div>
         )}
+
+        {/* TAB: Favorites */}
+        {activeTab === 'favorites' && (
+          <div className="tab-content">
+            {loading ? (
+              <div className="tab-loading">
+                <div className="spinner-large" />
+                <p>Memuat favorit Anda...</p>
+              </div>
+            ) : favoriteProjects.length === 0 ? (
+              <div className="empty-tab">
+                <Heart size={52} className="empty-icon" />
+                <h3>Belum Ada Proyek Favorit</h3>
+                <p>Cari proyek menarik dan tambahkan ke daftar favorit Anda.</p>
+                <Link to="/" className="btn btn-primary">Eksplorasi Proyek</Link>
+              </div>
+            ) : (
+              <div className="projects-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+                {favoriteProjects.map(project => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

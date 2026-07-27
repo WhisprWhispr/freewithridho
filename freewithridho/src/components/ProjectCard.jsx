@@ -23,8 +23,8 @@ const ProjectCard = ({ project }) => {
   return (
     <div className="project-card">
       <div className="card-header">
-        <span className={`category-badge badge-${project.category.toLowerCase()}`}>
-          {project.category}
+        <span className={`category-badge badge-${project.category ? project.category.toLowerCase() : 'all'}`}>
+          {project.category || 'Uncategorized'}
         </span>
         <span className={`price-badge ${project.price > 0 ? 'paid' : 'free'}`}>
           {project.price > 0 ? `Rp ${project.price.toLocaleString('id-ID')}` : 'Gratis'}

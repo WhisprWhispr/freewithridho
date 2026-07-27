@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllProjects, addProject, deleteProject, updateProject, getSettings, saveSettings } from '../services/projectService';
-import { getAdminStats } from '../services/adminStatsService';
+import { getAdminStats, listenToAdminStats } from '../services/adminStatsService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -79,15 +79,11 @@ const Admin = () => {
 
     const fetchData = async () => {
       try {
-        const [data, adminStats, settingsData] = await Promise.all([
+        const [data, settingsData] = await Promise.all([
           getAllProjects(),
-          getAdminStats(),
           getSettings('midtrans')
         ]);
         setProjects(data);
-        if (adminStats) {
-          setStats(adminStats);
-        }
         if (settingsData) {
           setMidtransSettings({
             serverKey: settingsData.serverKey || '',
@@ -101,7 +97,17 @@ const Admin = () => {
         setFetching(false);
       }
     };
+    
     fetchData();
+
+    // Set up real-time listener for admin stats
+    const unsubscribeStats = listenToAdminStats((newStats) => {
+      setStats(newStats);
+    });
+
+    return () => {
+      unsubscribeStats();
+    };
   }, [user, navigate]);
 
   const handleChange = (e) => {
