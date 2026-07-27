@@ -11,33 +11,44 @@
 }
 
 .partner-header h1 {
-  font-size: 2.5rem;
+  font-size: 2.8rem;
   margin-bottom: 1rem;
+  line-height: 1.2;
 }
 
 .partner-header p {
   color: #94a3b8;
-  font-size: 1.1rem;
-  max-width: 600px;
+  font-size: 1.15rem;
+  max-width: 650px;
   margin: 0 auto;
+  line-height: 1.6;
 }
 
 .partner-content {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
-  gap: 4rem;
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+/* Glassmorphism Effect for Cards */
+.partner-benefits, .partner-form-container, .partner-success-card {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
 }
 
 .partner-benefits {
-  background: rgba(15, 23, 42, 0.4);
-  padding: 2rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  height: fit-content;
+  padding: 2.5rem;
+  position: sticky;
+  top: 100px; /* Sticks to the top on scroll on laptops */
 }
 
 .partner-benefits h3 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   margin-bottom: 2rem;
   color: #f8fafc;
 }
@@ -54,23 +65,29 @@
   display: flex;
   gap: 1.5rem;
   align-items: flex-start;
+  transition: transform 0.2s ease;
+}
+
+.partner-benefits li:hover {
+  transform: translateX(5px);
 }
 
 .benefit-icon {
-  font-size: 2rem;
+  font-size: 1.8rem;
   background: rgba(255, 255, 255, 0.05);
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 14px;
   flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .partner-benefits strong {
   display: block;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   margin-bottom: 0.5rem;
   color: #f8fafc;
 }
@@ -83,15 +100,11 @@
 }
 
 .partner-form-container {
-  background: rgba(15, 23, 42, 0.6);
-  padding: 2.5rem;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  padding: 3rem;
 }
 
 .partner-form .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.8rem;
 }
 
 .partner-form label {
@@ -99,7 +112,7 @@
   align-items: center;
   gap: 0.5rem;
   color: #e2e8f0;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.8rem;
   font-weight: 500;
   font-size: 0.95rem;
 }
@@ -107,30 +120,44 @@
 .partner-form input,
 .partner-form textarea {
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 1rem 1.25rem;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  border-radius: 12px;
   color: #f8fafc;
   font-size: 1rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-family: inherit;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.partner-form input::placeholder,
+.partner-form textarea::placeholder {
+  color: #64748b;
 }
 
 .partner-form input:focus,
 .partner-form textarea:focus {
   outline: none;
   border-color: #3b82f6;
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
 }
 
 .submit-btn {
   width: 100%;
-  padding: 1rem;
+  padding: 1.25rem;
   font-size: 1.1rem;
+  font-weight: 600;
   margin-top: 1rem;
   justify-content: center;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
 }
 
 /* Success View */
@@ -138,13 +165,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 60vh;
 }
 
 .partner-success-card {
-  background: rgba(15, 23, 42, 0.6);
   padding: 4rem 3rem;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
   max-width: 500px;
 }
@@ -152,21 +177,99 @@
 .success-icon {
   color: #10b981;
   margin-bottom: 1.5rem;
+  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
 }
 
 .partner-success-card h2 {
-  font-size: 2rem;
+  font-size: 2.2rem;
   margin-bottom: 1rem;
 }
 
 .partner-success-card p {
   color: #94a3b8;
-  line-height: 1.6;
-  margin-bottom: 2rem;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  font-size: 1.05rem;
 }
 
-@media (max-width: 900px) {
+/* --- RESPONSIVE MEDIA QUERIES --- */
+
+/* Tablets (iPad, dll) */
+@media (max-width: 992px) {
+  .partner-page {
+    padding: 3rem 1.5rem;
+  }
+  
   .partner-content {
     grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .partner-benefits {
+    position: static;
+  }
+}
+
+/* Mobile Phones (iPhone, dll) */
+@media (max-width: 576px) {
+  .partner-page {
+    padding: 2rem 1rem;
+  }
+
+  .partner-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .partner-header h1 {
+    font-size: 2rem;
+  }
+
+  .partner-header p {
+    font-size: 1rem;
+    padding: 0 0.5rem;
+  }
+
+  .partner-form-container {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .partner-benefits {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .benefit-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
+  }
+
+  .partner-benefits li {
+    gap: 1rem;
+  }
+
+  .partner-form input,
+  .partner-form textarea {
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .submit-btn {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .partner-success-card {
+    padding: 2.5rem 1.5rem;
+  }
+  
+  .partner-success-card h2 {
+    font-size: 1.8rem;
   }
 }
