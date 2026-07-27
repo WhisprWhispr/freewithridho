@@ -152,9 +152,24 @@ export async function completeWithdrawal(withdrawalId, partnerId, amount, feeAmo
  * Ban Partner: Delete their projects, partner document, and Firebase Auth account
  */
 export async function banPartner(partnerId, userId) {
-  const { getDocs, deleteDoc } = await import('firebase/firestore');
+  const { getDocs, deleteDoc, getDoc, setDoc } = await import('firebase/firestore');
   const { getAuth } = await import('firebase/auth');
   
+  const docRef = doc(db, COLLECTION, partnerId);
+  const partnerSnap = await getDoc(docRef);
+
+  if (partnerSnap.exists()) {
+    const data = partnerSnap.data();
+    // Add to banned_users blacklist
+    if (data.email) {
+      await setDoc(doc(db, 'banned_users', data.email.toLowerCase()), {
+        email: data.email,
+        phone: data.phone || '',
+        bannedAt: new Date().toISOString()
+      });
+    }
+  }
+
   // Find and delete all projects by this user
   if (userId) {
     const q = query(collection(db, 'projects'), where('ownerId', '==', userId));
@@ -164,7 +179,6 @@ export async function banPartner(partnerId, userId) {
   }
 
   // Delete the partner document completely
-  const docRef = doc(db, COLLECTION, partnerId);
   await deleteDoc(docRef);
 
   // Call backend to delete the Firebase Auth user account

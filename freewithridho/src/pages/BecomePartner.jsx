@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { submitPartnerApplication } from '../services/partnerService';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { useAuth } from '../context/AuthContext';
@@ -48,6 +50,16 @@ const BecomePartner = () => {
 
     try {
       setIsSubmitting(true);
+      
+      // Cek apakah nomor telepon ini pernah diblokir/banned
+      const qPhone = query(collection(db, 'banned_users'), where('phone', '==', form.phone));
+      const phoneSnap = await getDocs(qPhone);
+      if (!phoneSnap.empty) {
+        toast.error('Pendaftaran ditolak! Nomor telepon ini telah diblokir dari sistem kami.');
+        setIsSubmitting(false);
+        return;
+      }
+
       await submitPartnerApplication({
         ...form,
         userId: user.uid,
