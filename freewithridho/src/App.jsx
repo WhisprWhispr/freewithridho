@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import BecomePartner from './pages/BecomePartner';
 import PartnerDashboard from './pages/PartnerDashboard';
 import { PrivacyPolicy, TermsOfService } from './pages/Legal';
+import About from './pages/About';
 import Footer from './components/Footer';
 import './App.css';
 
@@ -69,6 +70,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/about" element={<About />} />
               <Route
                 path="/admin"
                 element={

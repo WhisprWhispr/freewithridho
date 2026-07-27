@@ -19,6 +19,17 @@ const Footer = () => {
           </p>
         </div>
 
+          <div className="footer-links">
+          <h4>Platform</h4>
+          <ul>
+            <li>
+              <Link to="/about">
+                <Code size={14} /> Tentang Kami
+              </Link>
+            </li>
+          </ul>
+        </div>
+
         <div className="footer-links">
           <h4>Komunitas</h4>
           <ul>
