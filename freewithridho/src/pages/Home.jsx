@@ -180,7 +180,7 @@ const Home = () => {
             ) : (
               <>
                 <p>Belum ada proyek untuk kategori ini.</p>
-                <p>Upload proyek pertama melalui <a href="/admin">Admin Panel</a>.</p>
+                <p>Coba pilih kategori lain atau cari dengan kata kunci berbeda.</p>
               </>
             )}
           </div>
