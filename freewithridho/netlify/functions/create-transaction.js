@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const admin = require('firebase-admin');
+import crypto from 'crypto';
+import admin from 'firebase-admin';
 
 // Initialize Firebase Admin once
 if (!admin.apps.length) {
@@ -18,7 +18,7 @@ const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 const MIDTRANS_URL = process.env.MIDTRANS_URL || 'https://app.sandbox.midtrans.com/snap/v1/transactions';
 const SITE_URL = process.env.URL || 'http://localhost:5173'; // Netlify sets $URL automatically
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   // Only allow POST
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ message: 'Method Not Allowed' }) };

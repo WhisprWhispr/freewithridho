@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const admin = require('firebase-admin');
+import crypto from 'crypto';
+import admin from 'firebase-admin';
 
 // Initialize Firebase Admin once
 if (!admin.apps.length) {
@@ -15,7 +15,7 @@ if (!admin.apps.length) {
 
 const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ message: 'Method Not Allowed' }) };
   }
