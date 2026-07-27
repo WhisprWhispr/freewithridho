@@ -162,6 +162,10 @@ const PartnerDashboard = () => {
       toast.error('Saldo tidak mencukupi.');
       return;
     }
+    if (amount > 5000000) {
+      toast.error('Maksimal penarikan Rp 5.000.000 per transaksi.');
+      return;
+    }
     if (amount < 100000) {
       toast.error('Minimal penarikan Rp 100.000');
       return;
@@ -331,15 +335,16 @@ const PartnerDashboard = () => {
             <div className="form-group">
               <label>Jumlah Penarikan (Rp)</label>
               <input 
-                type="number" 
-                min="100000" 
-                max={partner.balance || 0}
-                value={withdrawForm.amount}
-                onChange={e => setWithdrawForm({...withdrawForm, amount: e.target.value})}
-                placeholder="Minimal 100000"
+                type="text" 
+                value={withdrawForm.amount ? Number(withdrawForm.amount).toLocaleString('id-ID') : ''}
+                onChange={e => {
+                  const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                  setWithdrawForm({...withdrawForm, amount: rawValue});
+                }}
+                placeholder="Minimal 100.000"
                 required 
               />
-              <small style={{ color: '#94a3b8', display: 'block', marginTop: '4px' }}>Maksimal: Rp {(partner.balance || 0).toLocaleString('id-ID')}</small>
+              <small style={{ color: '#94a3b8', display: 'block', marginTop: '4px' }}>Maksimal: Rp {Math.min(partner.balance || 0, 5000000).toLocaleString('id-ID')}</small>
               <small style={{ color: '#f59e0b', display: 'block', marginTop: '4px' }}>
                 * Biaya platform: 5% (penarikan &lt; Rp 500.000), 10% (penarikan ≥ Rp 500.000).
               </small>
