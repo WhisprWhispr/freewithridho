@@ -4,7 +4,6 @@
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: dark;
   background-color: var(--bg-color);
   color: var(--text-color);
@@ -21,15 +20,13 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background: var(--bg-color);
-  background-image: 
+  background-image:
     radial-gradient(circle at 15% 50%, rgba(96, 165, 250, 0.05), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(167, 139, 250, 0.05), transparent 25%);
   background-attachment: fixed;
 }
 
-#root {
-  min-height: 100vh;
-}
+#root { min-height: 100vh; }
 
 .app-container {
   display: flex;
@@ -37,26 +34,15 @@ body {
   min-height: 100vh;
 }
 
-.main-content {
-  flex: 1;
-}
+.main-content { flex: 1; }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #0f172a;
-}
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-/* Global Buttons */
+/* ── Global Buttons ──────────────────────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -69,6 +55,7 @@ body {
   border: none;
   text-decoration: none;
   font-size: 0.95rem;
+  font-family: inherit;
 }
 
 .btn-primary {
@@ -76,7 +63,6 @@ body {
   color: white;
   box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39);
 }
-
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
@@ -88,7 +74,6 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
 }
-
 .btn-secondary:hover {
   background: rgba(30, 41, 59, 1);
   border-color: rgba(255, 255, 255, 0.2);
@@ -100,91 +85,108 @@ body {
   color: white;
   box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
 }
-
 .btn-success:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
 }
 
-/* Modal Styles */
+/* ── Ad Modal ────────────────────────────────────────────── */
 .ad-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(2, 6, 23, 0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(2, 6, 23, 0.82);
+  backdrop-filter: blur(10px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.25s ease-out;
 }
 
 .ad-modal-content {
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(13, 20, 40, 0.98);
   border: 1px solid rgba(255,255,255,0.1);
-  padding: 2.5rem;
-  border-radius: 16px;
-  max-width: 450px;
+  padding: 2.25rem 2rem 2rem;
+  border-radius: 20px;
+  max-width: 440px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative; /* diperlukan agar close btn bisa absolute */
+}
+
+/* Tombol X — pojok kanan atas, tidak bertabrakan dengan konten */
+.ad-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+.ad-modal-close:hover {
+  background: rgba(239,68,68,0.1);
+  border-color: rgba(239,68,68,0.25);
+  color: #f87171;
 }
 
 .ad-modal-icon {
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: #ef4444;
 }
 
-.pulse-animation {
-  animation: pulse 2s infinite;
-}
+.pulse-animation { animation: pulse 2s ease-in-out infinite; }
 
 .ad-modal-content h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
   color: #f8fafc;
 }
 
 .ad-modal-content p {
   color: #94a3b8;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  margin-bottom: 1.75rem;
 }
 
 .ad-modal-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   justify-content: center;
 }
 
-@media (max-width: 640px) {
-  .ad-modal-actions {
-    flex-direction: column;
-  }
-  .ad-modal-actions .btn {
-    width: 100%;
-    justify-content: center;
-  }
+@media (max-width: 480px) {
+  .ad-modal-actions { flex-direction: column; }
+  .ad-modal-actions .btn { width: 100%; justify-content: center; }
 }
 
-/* Animations */
+/* ── Animations ──────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
+  0%, 100% { transform: scale(1); }
   50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
 }
