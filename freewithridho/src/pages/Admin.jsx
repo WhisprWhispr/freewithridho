@@ -778,12 +778,12 @@ const Admin = () => {
 
         {activeAdminTab === 'partners' && (
           <section className="admin-partners-section" style={{ background: 'rgba(15, 23, 42, 0.4)', padding: '2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div className="section-header" style={{ marginBottom: 0 }}>
-                <Users size={20} />
-                <h2>Daftar Pendaftar Partner</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Users size={24} style={{ color: '#60a5fa' }} />
+                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Daftar Pendaftar Partner</h2>
               </div>
-              <button onClick={exportPartnersPDF} className="btn-banner-logout" style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button onClick={exportPartnersPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.6rem 1.25rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '0.5rem', alignItems: 'center', fontWeight: 500, fontSize: '0.9rem', transition: 'background 0.2s' }}>
                 <Download size={16} /> Unduh PDF
               </button>
             </div>
@@ -831,11 +831,13 @@ const Admin = () => {
                           </span>
                         </td>
                         <td style={{ padding: '1rem', textAlign: 'right' }}>
-                          {p.status === 'pending' && (
+                          {p.status === 'pending' ? (
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                               <button onClick={() => handlePartnerAction(p.id, 'approved')} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer' }} title="Setujui"><Check size={16} /></button>
                               <button onClick={() => handlePartnerAction(p.id, 'rejected')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer' }} title="Tolak"><X size={16} /></button>
                             </div>
+                          ) : (
+                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>-</span>
                           )}
                         </td>
                       </tr>
@@ -850,7 +852,10 @@ const Admin = () => {
         {/* ── Withdrawals Tab ── */}
         {activeAdminTab === 'withdrawals' && (
           <section style={{ background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '2rem' }}>
-            <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Permintaan Penarikan Dana Partner</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+              <DollarSign size={24} style={{ color: '#f59e0b' }} />
+              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Permintaan Penarikan Dana</h2>
+            </div>
             {withdrawals.length === 0 ? (
               <p style={{ color: '#94a3b8', textAlign: 'center', padding: '3rem 0' }}>Tidak ada permintaan penarikan saat ini.</p>
             ) : (
@@ -890,13 +895,15 @@ const Admin = () => {
                           </span>
                         </td>
                         <td style={{ padding: '1rem', textAlign: 'right' }}>
-                          {w.status === 'pending' && (
+                          {w.status === 'pending' ? (
                             <button
                               onClick={() => handleCompleteWithdrawal(w.id, w.partnerId, w.amount, w.feeAmount)}
                               style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}
                             >
                               ✅ Tandai Selesai
                             </button>
+                          ) : (
+                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>-</span>
                           )}
                         </td>
                       </tr>
