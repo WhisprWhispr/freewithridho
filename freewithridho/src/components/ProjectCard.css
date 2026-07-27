@@ -108,6 +108,44 @@
   line-height: 1.4;
 }
 
+.card-developer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  width: fit-content;
+  margin: 0.25rem 0 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.card-developer:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dev-avatar {
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+}
+
+.dev-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
 .card-description {
   margin: 0;
   color: #94a3b8;
