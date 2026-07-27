@@ -70,11 +70,57 @@ const PartnerDashboard = () => {
     return <div className="partner-loading">Memuat Dashboard...</div>;
   }
 
-  if (!partner || partner.status !== 'approved') {
+  if (!partner) {
     return (
       <div className="partner-access-denied">
         <h2>Akses Ditolak</h2>
         <p>Anda belum menjadi partner yang disetujui. Silakan tunggu proses peninjauan dari tim kami.</p>
+      </div>
+    );
+  }
+
+  if (partner.status === 'banned') {
+    return (
+      <div className="partner-access-denied" style={{ borderColor: '#ef4444', background: 'rgba(69, 10, 10, 0.4)' }}>
+        <h2 style={{ color: '#ef4444' }}>🚨 Akun Dibanned Permanen</h2>
+        <p>Akun partner Anda telah dihapus beserta seluruh proyek karena pelanggaran berat. Keputusan ini bersifat mutlak.</p>
+      </div>
+    );
+  }
+
+  if (partner.status === 'suspended') {
+    const handleAppeal = async () => {
+      try {
+        const { appealSuspension } = await import('../services/partnerService');
+        await appealSuspension(partner.id);
+        toast.success('Pengajuan banding berhasil dikirim. Tim kami akan segera meninjaunya.', { duration: 4000 });
+      } catch (err) {
+        toast.error('Gagal mengajukan banding: ' + err.message);
+      }
+    };
+
+    return (
+      <div className="partner-access-denied" style={{ borderColor: '#f59e0b', background: 'rgba(30, 41, 59, 0.8)' }}>
+        <h2 style={{ color: '#f59e0b' }}>⚠️ Akun Disuspend Sementara</h2>
+        <p>Dashboard Partner Anda dikunci sementara karena terindikasi melanggar pedoman komunitas.</p>
+        {partner.appealRequested ? (
+          <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6', borderRadius: '8px', color: '#93c5fd' }}>
+            ⏳ Pengajuan banding Anda sedang dalam proses peninjauan oleh Admin.
+          </div>
+        ) : (
+          <button onClick={handleAppeal} style={{ marginTop: '1.5rem', background: '#f59e0b', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem' }}>
+            Ajukan Banding Sekarang
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (partner.status !== 'approved') {
+    return (
+      <div className="partner-access-denied">
+        <h2>Menunggu Persetujuan</h2>
+        <p>Aplikasi Anda masih dalam tahap peninjauan. Mohon bersabar.</p>
       </div>
     );
   }

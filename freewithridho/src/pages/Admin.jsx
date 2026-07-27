@@ -992,8 +992,8 @@ const Admin = () => {
                               borderRadius: '20px', 
                               fontSize: '0.8rem',
                               fontWeight: 500,
-                              background: p.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : p.status === 'suspended' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                              color: p.status === 'approved' ? '#10b981' : p.status === 'rejected' ? '#ef4444' : p.status === 'suspended' ? '#f59e0b' : '#f59e0b'
+                              background: p.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : p.status === 'rejected' || p.status === 'banned' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                              color: p.status === 'approved' ? '#10b981' : p.status === 'rejected' || p.status === 'banned' ? '#ef4444' : '#f59e0b'
                             }}>
                               {p.status.toUpperCase()}
                             </span>

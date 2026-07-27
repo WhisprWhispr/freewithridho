@@ -149,15 +149,22 @@ export async function completeWithdrawal(withdrawalId, partnerId, amount, feeAmo
 }
 
 /**
- * Ban Partner: Delete partner doc and their projects
+ * Ban Partner: Set status to banned, delete their projects, and clear balance
  */
 export async function banPartner(partnerId, userId) {
-  const { deleteDoc, getDocs } = await import('firebase/firestore');
-  // Delete partner document
-  await deleteDoc(doc(db, COLLECTION, partnerId));
+  const { getDocs } = await import('firebase/firestore');
+  
+  // Update partner document to banned and clear balance
+  const docRef = doc(db, COLLECTION, partnerId);
+  await updateDoc(docRef, {
+    status: 'banned',
+    balance: 0,
+    bannedAt: new Date().toISOString()
+  });
   
   // Find and delete all projects by this user
   if (userId) {
+    const { deleteDoc } = await import('firebase/firestore');
     const q = query(collection(db, 'projects'), where('userId', '==', userId));
     const snapshots = await getDocs(q);
     const deletePromises = snapshots.docs.map(d => deleteDoc(doc(db, 'projects', d.id)));
