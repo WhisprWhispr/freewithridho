@@ -8,7 +8,7 @@ import {
   Download, ArrowLeft, FileText, ShoppingCart, LockOpen,
   Heart, Tag, Star, ZoomIn, X, ChevronLeft, ChevronRight,
   Shield, Zap, Package, User, Share2, Link2, MessageCircle,
-  Twitter, Eye, Copy, Check
+  Hash, Eye, Copy, Check
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -258,7 +258,7 @@ const ProjectDetail = () => {
                 <span>WhatsApp</span>
               </button>
               <button className="share-option twitter" onClick={handleShareTwitter}>
-                <Twitter size={20} />
+                <Hash size={20} />
                 <span>Twitter / X</span>
               </button>
               <button className="share-option copylink" onClick={handleCopyLink}>
