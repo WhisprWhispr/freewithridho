@@ -1,6 +1,19 @@
 const crypto = require('crypto');
+const admin = require('firebase-admin');
 
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
+// Initialize Firebase Admin once
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+  } catch (error) {
+    console.error('Firebase Admin initialization error:', error);
+  }
+}
+
+const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -8,6 +21,22 @@ exports.handler = async (event) => {
   }
 
   try {
+    let serverKey = FALLBACK_SERVER_KEY;
+    const db = admin.firestore();
+    if (admin.apps.length) {
+      const settingsDoc = await db.collection('settings').doc('midtrans').get();
+      if (settingsDoc.exists && settingsDoc.data().serverKey) {
+        serverKey = settingsDoc.data().serverKey;
+      }
+    }
+
+    if (!serverKey) {
+       return {
+        statusCode: 500,
+        body: JSON.stringify({ success: false, message: 'Midtrans Server Key not configured' }),
+      };
+    }
+
     const rawBody = event.body;
     const data = JSON.parse(rawBody);
 
@@ -17,7 +46,7 @@ exports.handler = async (event) => {
     // SHA512(order_id+status_code+gross_amount+ServerKey)
     const expectedSignature = crypto
       .createHash('sha512')
-      .update(`${order_id}${status_code}${gross_amount}${MIDTRANS_SERVER_KEY}`)
+      .update(`${order_id}${status_code}${gross_amount}${serverKey}`)
       .digest('hex');
 
     if (expectedSignature !== signature_key) {
@@ -33,18 +62,24 @@ exports.handler = async (event) => {
     if (transaction_status === 'capture' || transaction_status === 'settlement') {
       console.log(`✅ Payment PAID for order: ${order_id}`);
 
-      // TODO: Update Firestore transaction status to PAID via Admin SDK
-      // const admin = require('firebase-admin');
-      // if (!admin.apps.length) {
-      //   admin.initializeApp({
-      //     credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
-      //   });
-      // }
-      // const db = admin.firestore();
-      // await db.collection('transactions').doc(order_id).update({
-      //   status: 'PAID',
-      //   paidAt: admin.firestore.FieldValue.serverTimestamp(),
-      // });
+      if (admin.apps.length) {
+        // Find transaction by orderId / merchantRef
+        // Since we don't have the transaction document ID directly, we query by merchantRef
+        const transactionsRef = db.collection('transactions');
+        const q = transactionsRef.where('merchantRef', '==', order_id);
+        const snapshot = await q.get();
+
+        if (!snapshot.empty) {
+          const docId = snapshot.docs[0].id;
+          await transactionsRef.doc(docId).update({
+            status: 'PAID',
+            paidAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          console.log(`✅ Firestore transaction ${docId} updated to PAID`);
+        } else {
+           console.log(`❌ Transaction not found in Firestore for order: ${order_id}`);
+        }
+      }
     }
 
     return {

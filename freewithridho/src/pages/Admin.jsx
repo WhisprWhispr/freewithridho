@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllProjects, addProject, deleteProject } from '../services/projectService';
+import { getAllProjects, addProject, deleteProject, updateProject, getSettings, saveSettings } from '../services/projectService';
 import { getAdminStats } from '../services/adminStatsService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -10,7 +10,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import {
-  Plus, Trash2, Upload, LogOut, FileText, Eye,
+  Plus, Trash2, Upload, LogOut, FileText, Eye, Edit2, Settings, Key,
   ShieldCheck, BarChart3, TrendingUp, DollarSign, Briefcase,
   Receipt
 } from 'lucide-react';
@@ -52,31 +52,56 @@ const Admin = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [readmeTab, setReadmeTab] = useState('edit'); // 'edit' | 'preview'
   const fileInputRef = useRef(null);
+  
+  // Edit state
+  const [editingId, setEditingId] = useState(null);
+
+  // Settings state
+  const [midtransSettings, setMidtransSettings] = useState({ serverKey: '', clientKey: '' });
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
 
-  const fetchProjectsAndStats = async () => {
-    try {
-      setFetching(true);
-      const [projectsData, statsData] = await Promise.all([
-        getAllProjects(),
-        getAdminStats()
-      ]);
-      setProjects(projectsData);
-      setStats(statsData);
-    } catch {
-      toast.error('Gagal memuat daftar proyek dan statistik.');
-    } finally {
-      setFetching(false);
-    }
-  };
-
   useEffect(() => {
-    fetchProjectsAndStats();
-  }, []);
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (user.email !== import.meta.env.VITE_ADMIN_EMAIL) {
+      navigate('/');
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const [data, adminStats, settingsData] = await Promise.all([
+          getAllProjects(),
+          getAdminStats(),
+          getSettings('midtrans')
+        ]);
+        setProjects(data);
+        if (adminStats) {
+          setStats(adminStats);
+        }
+        if (settingsData) {
+          setMidtransSettings({
+            serverKey: settingsData.serverKey || '',
+            clientKey: settingsData.clientKey || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Gagal memuat daftar proyek dan statistik.');
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchData();
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -115,6 +140,36 @@ const Admin = () => {
     // reset input so the same file can be re-uploaded
     e.target.value = '';
   };
+  
+  const fetchProjectsList = async () => {
+    try {
+      const projectsData = await getAllProjects();
+      setProjects(projectsData);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleEditClick = (project) => {
+    setForm(project);
+    setEditingId(project.id);
+    setReadmeTab('edit');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      await saveSettings('midtrans', midtransSettings);
+      toast.success('Pengaturan API Midtrans berhasil disimpan!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Gagal menyimpan pengaturan.');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -123,18 +178,28 @@ const Admin = () => {
       return;
     }
     
-    const loadingToast = toast.loading('Mengunggah proyek...');
+    const loadingToast = toast.loading(editingId ? 'Menyimpan perubahan...' : 'Mengunggah proyek...');
     try {
       setLoading(true);
       const projectData = {
         ...form,
         price: Number(form.price) || 0,
       };
-      await addProject(projectData);
+      
+      if (editingId) {
+        await updateProject(editingId, projectData);
+        toast.success(`Proyek "${form.title}" berhasil diperbarui!`, { id: loadingToast });
+        setEditingId(null);
+      } else {
+        await addProject(projectData);
+        toast.success(`Proyek "${form.title}" berhasil ditambahkan!`, { id: loadingToast });
+      }
+      
       setForm(emptyForm);
-      toast.success(`Proyek "${form.title}" berhasil ditambahkan!`, { id: loadingToast });
-      await fetchProjectsAndStats();
-    } catch {
+      setReadmeTab('edit');
+      fetchProjectsList();
+    } catch (err) {
+      console.error(err);
       toast.error('Gagal menyimpan proyek. Cek konfigurasi Firebase.', { id: loadingToast });
     } finally {
       setLoading(false);
@@ -450,9 +515,9 @@ const Admin = () => {
 
             <button type="submit" className="btn-upload" disabled={loading}>
               {loading ? (
-                <><span className="btn-spinner"></span> Menyimpan...</>
+                <><span className="btn-spinner"></span> {editingId ? 'Menyimpan...' : 'Menyimpan...'}</>
               ) : (
-                <><Upload size={18} /> Upload ke Firestore</>
+                <><Upload size={18} /> {editingId ? 'Update Proyek' : 'Upload ke Firestore'}</>
               )}
             </button>
           </form>
@@ -486,20 +551,66 @@ const Admin = () => {
                       <p className="list-item-desc">{project.description}</p>
                     </div>
                   </div>
-                  <button
-                    className="btn-delete"
-                    onClick={() => initiateDelete(project.id, project.title)}
-                    disabled={deletingId === project.id}
-                  >
-                    {deletingId === project.id
-                      ? <span className="btn-spinner"></span>
-                      : <Trash2 size={16} />
-                    }
-                  </button>
+                  <div className="list-item-actions">
+                    <button
+                      className="btn-edit"
+                      onClick={() => handleEditClick(project)}
+                      title="Edit Proyek"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
+                      className="btn-delete"
+                      onClick={() => initiateDelete(project.id, project.title)}
+                      disabled={deletingId === project.id}
+                      title="Hapus Proyek"
+                    >
+                      {deletingId === project.id
+                        ? <span className="btn-spinner"></span>
+                        : <Trash2 size={16} />
+                      }
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+        </section>
+
+        {/* API Settings Section */}
+        <section className="admin-card">
+          <div className="admin-card-header">
+            <Settings size={20} />
+            <h2>Pengaturan API Midtrans</h2>
+          </div>
+          <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: '0 1.25rem 1rem' }}>
+            Kunci ini akan digunakan oleh sistem backend untuk memproses pembayaran.
+          </p>
+          <form onSubmit={handleSaveSettings} className="upload-form" style={{ paddingTop: 0 }}>
+            <div className="form-group">
+              <label htmlFor="serverKey">Server Key <Key size={14} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} /></label>
+              <input
+                id="serverKey"
+                type="text"
+                placeholder="SB-Mid-server-..."
+                value={midtransSettings.serverKey}
+                onChange={(e) => setMidtransSettings(prev => ({ ...prev, serverKey: e.target.value }))}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="clientKey">Client Key <Key size={14} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} /></label>
+              <input
+                id="clientKey"
+                type="text"
+                placeholder="SB-Mid-client-..."
+                value={midtransSettings.clientKey}
+                onChange={(e) => setMidtransSettings(prev => ({ ...prev, clientKey: e.target.value }))}
+              />
+            </div>
+            <button type="submit" className="btn-upload" disabled={savingSettings} style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.4)', color: '#818cf8', marginTop: '1rem' }}>
+              {savingSettings ? 'Menyimpan...' : 'Simpan Pengaturan'}
+            </button>
+          </form>
         </section>
       </div>
     </div>

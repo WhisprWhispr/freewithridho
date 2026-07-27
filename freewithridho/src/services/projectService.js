@@ -5,6 +5,8 @@ import {
   getDoc,
   addDoc,
   deleteDoc,
+  updateDoc,
+  setDoc,
   doc,
   serverTimestamp,
   orderBy,
@@ -44,6 +46,19 @@ export async function addProject(projectData) {
     createdAt: serverTimestamp(),
   });
   return docRef.id;
+}
+
+/**
+ * Update an existing project in Firestore
+ * @param {string} id - The document ID of the project
+ * @param {Object} projectData - The data to update
+ */
+export async function updateProject(id, projectData) {
+  const docRef = doc(db, COLLECTION, id);
+  await updateDoc(docRef, {
+    ...projectData,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 /**
@@ -94,4 +109,22 @@ export async function getUserTransactions(userId) {
     console.error("Error fetching user transactions:", error);
     return [];
   }
+}
+
+/**
+ * Get settings document from Firestore
+ */
+export async function getSettings(docId) {
+  const ref = doc(db, 'settings', docId);
+  const snapshot = await getDoc(ref);
+  if (!snapshot.exists()) return null;
+  return snapshot.data();
+}
+
+/**
+ * Save settings document to Firestore
+ */
+export async function saveSettings(docId, data) {
+  const ref = doc(db, 'settings', docId);
+  await setDoc(ref, data, { merge: true });
 }

@@ -1,7 +1,20 @@
 const crypto = require('crypto');
+const admin = require('firebase-admin');
 
-// Midtrans config from environment variables
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
+// Initialize Firebase Admin once
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+  } catch (error) {
+    console.error('Firebase Admin initialization error:', error);
+  }
+}
+
+// Midtrans config from environment variables (fallback)
+const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 const MIDTRANS_URL = process.env.MIDTRANS_URL || 'https://app.sandbox.midtrans.com/snap/v1/transactions';
 const SITE_URL = process.env.URL || 'http://localhost:5173'; // Netlify sets $URL automatically
 
@@ -12,6 +25,21 @@ exports.handler = async (event) => {
   }
 
   try {
+    let serverKey = FALLBACK_SERVER_KEY;
+    if (admin.apps.length) {
+      const db = admin.firestore();
+      const settingsDoc = await db.collection('settings').doc('midtrans').get();
+      if (settingsDoc.exists && settingsDoc.data().serverKey) {
+        serverKey = settingsDoc.data().serverKey;
+      }
+    }
+
+    if (!serverKey) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ success: false, message: 'Midtrans Server Key not configured' }),
+      };
+    }
     const { projectId, userId, userEmail, projectTitle, amount } = JSON.parse(event.body);
 
     if (!projectId || !userId || !userEmail || !amount) {
@@ -45,7 +73,7 @@ exports.handler = async (event) => {
       }
     };
 
-    const authString = Buffer.from(`${MIDTRANS_SERVER_KEY}:`).toString('base64');
+    const authString = Buffer.from(`${serverKey}:`).toString('base64');
 
     const midtransRes = await fetch(MIDTRANS_URL, {
       method: 'POST',
