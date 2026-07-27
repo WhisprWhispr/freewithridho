@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllProjects, addProject, deleteProject } from '../services/projectService';
+import { getAdminStats } from '../services/adminStatsService';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Trash2, Upload, CheckCircle, AlertCircle, LogOut, ShieldCheck } from 'lucide-react';
+import {
+  Plus, Trash2, Upload, CheckCircle, AlertCircle, LogOut,
+  ShieldCheck, BarChart3, TrendingUp, DollarSign, Briefcase,
+  AlertTriangle, Receipt
+} from 'lucide-react';
 import './Admin.css';
 
 const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile'];
@@ -21,6 +26,14 @@ const Admin = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    totalTransactions: 0,
+    paidTransactionsCount: 0,
+    pendingTransactionsCount: 0,
+    totalEarnings: 0,
+    totalRevenuePending: 0
+  });
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -37,20 +50,24 @@ const Admin = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const fetchProjects = async () => {
+  const fetchProjectsAndStats = async () => {
     try {
       setFetching(true);
-      const data = await getAllProjects();
-      setProjects(data);
+      const [projectsData, statsData] = await Promise.all([
+        getAllProjects(),
+        getAdminStats()
+      ]);
+      setProjects(projectsData);
+      setStats(statsData);
     } catch {
-      showToast('error', 'Gagal memuat daftar proyek.');
+      showToast('error', 'Gagal memuat daftar proyek dan statistik.');
     } finally {
       setFetching(false);
     }
   };
 
   useEffect(() => {
-    fetchProjects();
+    fetchProjectsAndStats();
   }, []);
 
   const handleChange = (e) => {
@@ -87,7 +104,7 @@ const Admin = () => {
       await addProject(projectData);
       setForm(emptyForm);
       showToast('success', `Proyek "${form.title}" berhasil ditambahkan!`);
-      await fetchProjects();
+      await fetchProjectsAndStats();
     } catch {
       showToast('error', 'Gagal menyimpan proyek. Cek konfigurasi Firebase.');
     } finally {
@@ -102,6 +119,9 @@ const Admin = () => {
       await deleteProject(id);
       showToast('success', `Proyek "${title}" berhasil dihapus.`);
       setProjects((prev) => prev.filter((p) => p.id !== id));
+      // Refresh stats also
+      const updatedStats = await getAdminStats();
+      setStats(updatedStats);
     } catch {
       showToast('error', 'Gagal menghapus proyek.');
     } finally {
@@ -130,6 +150,55 @@ const Admin = () => {
             <LogOut size={15} /> Logout
           </button>
         </div>
+
+        {/* ── Dashboard Stats Board ── */}
+        <section className="admin-stats-board">
+          <div className="admin-stats-header">
+            <BarChart3 size={20} />
+            <h2>Dashboard Ringkasan Admin</h2>
+          </div>
+          <div className="admin-stats-grid">
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon green">
+                <DollarSign size={20} />
+              </div>
+              <div className="admin-stat-data">
+                <span className="admin-stat-num">Rp {stats.totalEarnings.toLocaleString('id-ID')}</span>
+                <span className="admin-stat-label">Total Pendapatan (Lunas)</span>
+              </div>
+            </div>
+            
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon yellow">
+                <TrendingUp size={20} />
+              </div>
+              <div className="admin-stat-data">
+                <span className="admin-stat-num">Rp {stats.totalRevenuePending.toLocaleString('id-ID')}</span>
+                <span className="admin-stat-label">Pendapatan Tertunda</span>
+              </div>
+            </div>
+
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon blue">
+                <Briefcase size={20} />
+              </div>
+              <div className="admin-stat-data">
+                <span className="admin-stat-num">{stats.totalProjects}</span>
+                <span className="admin-stat-label">Total Proyek Terunggah</span>
+              </div>
+            </div>
+
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon purple">
+                <Receipt size={20} />
+              </div>
+              <div className="admin-stat-data">
+                <span className="admin-stat-num">{stats.paidTransactionsCount}</span>
+                <span className="admin-stat-label">Transaksi Lunas ({stats.totalTransactions} Total)</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Upload Form */}
         <section className="admin-card">

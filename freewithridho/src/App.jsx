@@ -10,6 +10,8 @@ import Register from './pages/Register';
 import Checkout from './pages/Checkout';
 import Success from './pages/Success';
 import Profile from './pages/Profile';
+import { PrivacyPolicy, TermsOfService } from './pages/Legal';
+import Footer from './components/Footer';
 import './App.css';
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route
                 path="/admin"
                 element={
@@ -37,6 +41,7 @@ function App() {
               />
             </Routes>
           </main>
+          <Footer />
         </div>
       </Router>
     </AuthProvider>

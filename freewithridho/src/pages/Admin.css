@@ -64,6 +64,95 @@
   gap: 2.5rem;
 }
 
+/* ── Admin Stats Board ── */
+.admin-stats-board {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.admin-stats-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.3);
+}
+
+.admin-stats-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.admin-stats-header svg {
+  color: #60a5fa;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+.admin-stat-card {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.admin-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-stat-icon.green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.admin-stat-icon.yellow { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.admin-stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.admin-stat-icon.purple { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+
+.admin-stat-data {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-stat-num {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f8fafc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+
 /* ── Toast ── */
 .toast {
   position: fixed;
