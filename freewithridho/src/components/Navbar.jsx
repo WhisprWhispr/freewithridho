@@ -2,15 +2,26 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Code2, LayoutDashboard, LogOut, LogIn, User, ChevronDown, Package, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { listenToPartnerByUserId } from '../services/partnerService';
 import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, logout } = useAuth();
+  const [partner, setPartner] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (user && !isAdmin) {
+      const unsubscribe = listenToPartnerByUserId(user.uid, (data) => {
+        setPartner(data);
+      });
+      return () => unsubscribe();
+    }
+  }, [user, isAdmin]);
 
   const handleLogout = async () => {
     setDropdownOpen(false);
@@ -111,6 +122,16 @@ const Navbar = () => {
                       </>
                     ) : (
                       <>
+                        {partner && partner.status === 'approved' && (
+                          <Link
+                            to="/partner-dashboard"
+                            className="dropdown-item"
+                            style={{ color: '#60a5fa' }}
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            <LayoutDashboard size={15} /> Dashboard Partner
+                          </Link>
+                        )}
                         <Link
                           to="/profile"
                           className="dropdown-item"

@@ -17,6 +17,13 @@ const Login = () => {
   // If already logged in, redirect
   useEffect(() => {
     if (user) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirect = searchParams.get('redirect');
+      if (redirect) {
+        navigate(redirect);
+        return;
+      }
+
       const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
       if (user.email === adminEmail) {
         navigate('/admin');

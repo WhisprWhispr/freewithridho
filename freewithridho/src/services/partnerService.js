@@ -6,7 +6,8 @@ import {
   onSnapshot,
   query,
   orderBy,
-  where
+  where,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -63,4 +64,64 @@ export function listenToApprovedDevCount(callback) {
     console.error('Error getting dev count:', err);
     callback(1000);
   });
+}
+
+/**
+ * Get partner details by user ID
+ */
+export function listenToPartnerByUserId(userId, callback) {
+  if (!userId) {
+    callback(null);
+    return () => {};
+  }
+  const q = query(collection(db, COLLECTION), where('userId', '==', userId));
+  return onSnapshot(q, (snapshot) => {
+    if (snapshot.empty) {
+      callback(null);
+    } else {
+      const docData = snapshot.docs[0];
+      callback({ id: docData.id, ...docData.data() });
+    }
+  }, (err) => {
+    console.error('Error getting partner info:', err);
+    callback(null);
+  });
+}
+
+const WITHDRAWALS_COLLECTION = 'withdrawals';
+
+export async function submitWithdrawal(data) {
+  const colRef = collection(db, WITHDRAWALS_COLLECTION);
+  await addDoc(colRef, {
+    ...data,
+    status: 'pending',
+    requestedAt: new Date().toISOString()
+  });
+}
+
+export function listenToWithdrawals(callback) {
+  const q = query(collection(db, WITHDRAWALS_COLLECTION), orderBy('requestedAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(data);
+  }, (err) => {
+    console.error('Error listening to withdrawals:', err);
+    callback([]);
+  });
+}
+
+export async function completeWithdrawal(withdrawalId, partnerId, amount) {
+  // Update withdrawal status
+  const withdrawalRef = doc(db, WITHDRAWALS_COLLECTION, withdrawalId);
+  await updateDoc(withdrawalRef, { status: 'completed' });
+  
+  // Deduct from partner balance
+  const partnerRef = doc(db, COLLECTION, partnerId);
+  const partnerSnap = await getDoc(partnerRef);
+  if (partnerSnap.exists()) {
+    const currentBalance = partnerSnap.data().balance || 0;
+    await updateDoc(partnerRef, {
+      balance: currentBalance - amount
+    });
+  }
 }

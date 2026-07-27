@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { submitPartnerApplication } from '../services/partnerService';
-import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download } from 'lucide-react';
+import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { useAuth } from '../context/AuthContext';
 import './BecomePartner.css';
 
 const BecomePartner = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -19,6 +22,13 @@ const BecomePartner = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Auto-fill email if logged in
+  useEffect(() => {
+    if (user && user.email) {
+      setForm(prev => ({ ...prev, email: user.email }));
+    }
+  }, [user]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -26,6 +36,11 @@ const BecomePartner = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      toast.error('Anda harus login terlebih dahulu.');
+      return;
+    }
+
     if (!form.fullName || !form.email || !form.phone || !form.portfolio) {
       toast.error('Mohon lengkapi data yang wajib diisi.');
       return;
@@ -33,7 +48,11 @@ const BecomePartner = () => {
 
     try {
       setIsSubmitting(true);
-      await submitPartnerApplication(form);
+      await submitPartnerApplication({
+        ...form,
+        userId: user.uid,
+        balance: 0,
+      });
       setIsSuccess(true);
       toast.success('Pendaftaran berhasil dikirim!');
     } catch (error) {
@@ -122,6 +141,17 @@ const BecomePartner = () => {
         </div>
 
         <div className="partner-form-container">
+          {!user && (
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <AlertCircle size={24} style={{ color: '#ef4444', flexShrink: 0 }} />
+              <div>
+                <strong style={{ color: '#ef4444', display: 'block', marginBottom: '0.25rem' }}>Anda belum login!</strong>
+                <p style={{ color: '#f8fafc', margin: 0, fontSize: '0.9rem' }}>Silakan login atau daftar akun terlebih dahulu agar kami bisa menautkan pendaftaran ini ke akun Anda.</p>
+                <button className="btn btn-primary" style={{ marginTop: '1rem', padding: '0.5rem 1rem' }} onClick={() => navigate('/login?redirect=/become-partner')}>Login Sekarang</button>
+              </div>
+            </div>
+          )}
+
           <form className="partner-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label><User size={16} /> Nama Lengkap *</label>

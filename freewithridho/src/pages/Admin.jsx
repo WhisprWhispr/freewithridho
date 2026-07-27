@@ -48,21 +48,29 @@ const Admin = () => {
   const [fetching, setFetching] = useState(true);
   
   // Tab states
-  const [activeAdminTab, setActiveAdminTab] = useState('projects'); // 'projects', 'partners'
+  const [activeAdminTab, setActiveAdminTab] = useState('projects'); // 'projects', 'partners', 'withdrawals'
   
   // Partners state
   const [partners, setPartners] = useState([]);
+
+  // Withdrawals state
+  const [withdrawals, setWithdrawals] = useState([]);
   
-  // Real-time listener for partners
+  // Real-time listener for partners and withdrawals
   useEffect(() => {
     let unsubscribePartners;
-    import('../services/partnerService').then(({ listenToPartners }) => {
+    let unsubscribeWithdrawals;
+    import('../services/partnerService').then(({ listenToPartners, listenToWithdrawals }) => {
       unsubscribePartners = listenToPartners((data) => {
         setPartners(data);
+      });
+      unsubscribeWithdrawals = listenToWithdrawals((data) => {
+        setWithdrawals(data);
       });
     });
     return () => {
       if (unsubscribePartners) unsubscribePartners();
+      if (unsubscribeWithdrawals) unsubscribeWithdrawals();
     };
   }, []);
   
@@ -223,6 +231,19 @@ const Admin = () => {
     });
     
     doc.save('daftar-partner-developer.pdf');
+  };
+
+  const handleCompleteWithdrawal = async (withdrawalId, partnerId, amount) => {
+    if (!window.confirm(`Tandai penarikan Rp ${amount.toLocaleString('id-ID')} sebagai SELESAI? Pastikan uang sudah ditransfer!`)) return;
+    const loadingToast = toast.loading('Memproses...');
+    try {
+      const { completeWithdrawal } = await import('../services/partnerService');
+      await completeWithdrawal(withdrawalId, partnerId, amount);
+      toast.success('Penarikan SELESAI. Saldo partner telah dikurangi.', { id: loadingToast });
+    } catch (e) {
+      console.error(e);
+      toast.error('Gagal memproses penarikan', { id: loadingToast });
+    }
   };
 
   const handleSaveSettings = async (e) => {
@@ -386,6 +407,18 @@ const Admin = () => {
             {partners.filter(p => p.status === 'pending').length > 0 && (
               <span style={{ background: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
                 {partners.filter(p => p.status === 'pending').length}
+              </span>
+            )}
+          </button>
+          <button 
+            className={`admin-tab-btn ${activeAdminTab === 'withdrawals' ? 'active' : ''}`}
+            onClick={() => setActiveAdminTab('withdrawals')}
+            style={{ background: activeAdminTab === 'withdrawals' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: 'none', color: '#fff', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
+          >
+            <DollarSign size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Penarikan Dana
+            {withdrawals.filter(w => w.status === 'pending').length > 0 && (
+              <span style={{ background: '#f59e0b', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+                {withdrawals.filter(w => w.status === 'pending').length}
               </span>
             )}
           </button>
@@ -778,6 +811,63 @@ const Admin = () => {
                               <button onClick={() => handlePartnerAction(p.id, 'approved')} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer' }} title="Setujui"><Check size={16} /></button>
                               <button onClick={() => handlePartnerAction(p.id, 'rejected')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer' }} title="Tolak"><X size={16} /></button>
                             </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Withdrawals Tab ── */}
+        {activeAdminTab === 'withdrawals' && (
+          <section style={{ background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '2rem' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Permintaan Penarikan Dana Partner</h2>
+            {withdrawals.length === 0 ? (
+              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '3rem 0' }}>Tidak ada permintaan penarikan saat ini.</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
+                      <th style={{ padding: '1rem' }}>Tanggal</th>
+                      <th style={{ padding: '1rem' }}>Nama Partner</th>
+                      <th style={{ padding: '1rem' }}>Jumlah</th>
+                      <th style={{ padding: '1rem' }}>Detail Transfer</th>
+                      <th style={{ padding: '1rem' }}>Status</th>
+                      <th style={{ padding: '1rem', textAlign: 'right' }}>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {withdrawals.map(w => (
+                      <tr key={w.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <td style={{ padding: '1rem', color: '#94a3b8', fontSize: '0.85rem' }}>{new Date(w.requestedAt).toLocaleDateString('id-ID')}</td>
+                        <td style={{ padding: '1rem', fontWeight: 500 }}>{w.partnerName}</td>
+                        <td style={{ padding: '1rem', fontWeight: 700, color: '#10b981' }}>Rp {w.amount?.toLocaleString('id-ID')}</td>
+                        <td style={{ padding: '1rem', fontSize: '0.85rem', color: '#94a3b8', maxWidth: '220px', whiteSpace: 'pre-wrap' }}>{w.bankDetails}</td>
+                        <td style={{ padding: '1rem' }}>
+                          <span style={{
+                            padding: '4px 10px',
+                            borderRadius: '20px',
+                            fontSize: '0.8rem',
+                            fontWeight: 500,
+                            background: w.status === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                            color: w.status === 'completed' ? '#10b981' : '#f59e0b'
+                          }}>
+                            {w.status === 'completed' ? 'SELESAI' : 'PENDING'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>
+                          {w.status === 'pending' && (
+                            <button
+                              onClick={() => handleCompleteWithdrawal(w.id, w.partnerId, w.amount)}
+                              style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}
+                            >
+                              ✅ Tandai Selesai
+                            </button>
                           )}
                         </td>
                       </tr>

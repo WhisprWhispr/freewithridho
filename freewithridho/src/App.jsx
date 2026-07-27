@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout';
 import Success from './pages/Success';
 import Profile from './pages/Profile';
 import BecomePartner from './pages/BecomePartner';
+import PartnerDashboard from './pages/PartnerDashboard';
 import { PrivacyPolicy, TermsOfService } from './pages/Legal';
 import Footer from './components/Footer';
 import './App.css';
@@ -56,6 +57,14 @@ function App() {
               <Route path="/success" element={<Success />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/become-partner" element={<BecomePartner />} />
+              <Route 
+                path="/partner-dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <PartnerDashboard />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
