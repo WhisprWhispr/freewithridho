@@ -22,23 +22,16 @@
 .navbar-logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   text-decoration: none;
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: -0.02em;
-  background: linear-gradient(to right, #60a5fa, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   transition: opacity 0.2s ease;
 }
 
 .navbar-logo:hover { opacity: 0.8; }
 
-.logo-icon {
-  color: #60a5fa;
-  -webkit-text-fill-color: initial;
-  flex-shrink: 0;
+.logo-img {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
 }
 
 /* ── Nav Links ─────────────────────────────────────────────── */

@@ -83,7 +83,7 @@ const Login = () => {
       <div className="login-card">
         <div className="login-header">
           <div className="login-logo">
-            <Code2 size={32} />
+            <img src="/FREEWITHRIDHO.jpeg" alt="Logo" style={{ height: '40px', borderRadius: '8px', objectFit: 'contain' }} />
           </div>
           <h1>Selamat Datang</h1>
           <p>Silakan login ke akun Anda</p>

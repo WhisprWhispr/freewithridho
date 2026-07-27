@@ -26,18 +26,13 @@
 .footer-logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 800;
-  font-size: 1.1rem;
   text-decoration: none;
-  background: linear-gradient(to right, #60a5fa, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
-.footer-logo svg {
-  color: #60a5fa;
-  -webkit-text-fill-color: initial;
+.footer-logo .logo-img {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
 }
 
 .footer-desc {

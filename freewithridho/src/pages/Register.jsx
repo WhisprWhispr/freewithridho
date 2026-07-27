@@ -74,7 +74,7 @@ const Register = () => {
       <div className="login-card">
         <div className="login-header">
           <div className="login-logo">
-            <Code2 size={32} />
+            <img src="/FREEWITHRIDHO.jpeg" alt="Logo" style={{ height: '40px', borderRadius: '8px', objectFit: 'contain' }} />
           </div>
           <h1>Daftar Akun</h1>
           <p>Buat akun baru untuk membeli source code</p>

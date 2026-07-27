@@ -95,7 +95,7 @@ const About = () => {
         {/* Footer/CTA in About */}
         <div className="about-footer">
           <p className="made-with-love">
-            Diciptakan dengan <Heart size={16} className="heart-icon" /> oleh Tim SukaCoding
+          Create by: Team SukaCoding
           </p>
         </div>
       </div>

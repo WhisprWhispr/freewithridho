@@ -55,8 +55,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          <Code2 className="logo-icon" size={22} />
-          <span>FREEWITHRIDHO</span>
+          <img src="/FREEWITHRIDHO.jpeg" alt="FREEWITHRIDHO Logo" className="logo-img" />
         </Link>
 
         {/* Desktop Links */}
