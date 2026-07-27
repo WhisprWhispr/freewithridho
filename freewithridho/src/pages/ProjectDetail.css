@@ -584,20 +584,67 @@
   color: #93c5fd;
 }
 
-.markdown-body pre {
-  background: rgba(2, 6, 23, 0.8);
-  border: 1px solid rgba(255,255,255,0.07);
+.markdown-body pre.markdown-pre {
+  background: transparent;
+  border: none;
   padding: 1.25rem;
-  border-radius: 10px;
+  margin: 0;
   overflow-x: auto;
-  margin-bottom: 1.5rem;
 }
 
-.markdown-body pre code {
+.markdown-body pre.markdown-pre code {
   background: transparent;
   padding: 0;
   font-size: 0.875rem;
   color: #e2e8f0;
+  white-space: pre;
+}
+
+/* ── Code Block with Copy Button ── */
+.code-block-wrapper {
+  background: rgba(2, 6, 23, 0.8);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.9);
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.code-lang {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.copy-code-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.copy-code-btn:hover {
+  color: #f8fafc;
+  background: rgba(255,255,255,0.1);
 }
 
 .markdown-body blockquote {

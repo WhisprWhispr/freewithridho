@@ -12,6 +12,7 @@ const Footer = () => {
         <div className="footer-brand">
           <Link to="/" className="footer-logo">
             <img src="/FREEWITHRIDHO.jpeg" alt="FREEWITHRIDHO Logo" className="logo-img" />
+            <span className="logo-text">FREEWITHRIDHO</span>
           </Link>
           <p className="footer-desc">
             Penyedia source code gratis dan premium berkualitas untuk membantu mewujudkan ide digital Anda lebih cepat.

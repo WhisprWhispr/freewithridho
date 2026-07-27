@@ -490,6 +490,36 @@ const ProjectDetail = () => {
                     img: ({ src, alt }) => (
                       <img src={src} alt={alt} style={{ maxWidth: '100%', borderRadius: '8px' }} />
                     ),
+                    code({node, inline, className, children, ...props}) {
+                      const match = /language-(\w+)/.exec(className || '');
+                      const codeString = String(children).replace(/\n$/, '');
+                      if (!inline) {
+                        return (
+                          <div className="code-block-wrapper">
+                            <div className="code-block-header">
+                              <span className="code-lang">{match ? match[1] : 'text'}</span>
+                              <button 
+                                className="copy-code-btn"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(codeString);
+                                  toast.success('Kode disalin!');
+                                }}
+                                title="Copy code"
+                              >
+                                <Copy size={14} /> Copy
+                              </button>
+                            </div>
+                            <pre className="markdown-pre">
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            </pre>
+                          </div>
+                        )
+                      }
+                      return <code className={className} {...props}>{children}</code>
+                    },
+                    pre: ({ children }) => <>{children}</>
                   }}
                 >
                   {project.readme}

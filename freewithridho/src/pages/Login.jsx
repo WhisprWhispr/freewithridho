@@ -82,8 +82,9 @@ const Login = () => {
 
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo">
-            <img src="/FREEWITHRIDHO.jpeg" alt="Logo" style={{ height: '40px', borderRadius: '8px', objectFit: 'contain' }} />
+          <div className="login-logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+            <img src="/FREEWITHRIDHO.jpeg" alt="Logo" style={{ height: '36px', borderRadius: '8px', objectFit: 'contain' }} />
+            <span style={{ fontWeight: 800, fontSize: '1.5rem', background: 'linear-gradient(to right, #22d3ee, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>FREEWITHRIDHO</span>
           </div>
           <h1>Selamat Datang</h1>
           <p>Silakan login ke akun Anda</p>

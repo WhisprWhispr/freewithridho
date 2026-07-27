@@ -34,6 +34,15 @@
   object-fit: contain;
 }
 
+.logo-text {
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(to right, #22d3ee, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 /* ── Nav Links ─────────────────────────────────────────────── */
 .navbar-links {
   display: flex;

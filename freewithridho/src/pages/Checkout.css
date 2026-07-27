@@ -59,9 +59,11 @@
 }
 
 .summary-value {
-  color: #f1f5f9;
+  color: #f8fafc;
   font-weight: 500;
   text-align: right;
+  word-break: break-all;
+  max-width: 60%;
 }
 
 .summary-item.total {
