@@ -36,7 +36,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="footer-bottom">
-        <p>&copy; {currentYear} FREEWITHRIDHO. Hak Cipta Dilindungi.</p>
+        <p>&copy; {currentYear} FREEWITHRIDHO - All rights reserved.</p>
       </div>
     </footer>
   );

@@ -4,10 +4,12 @@ import {
   User, Mail, Calendar, ShoppingBag, Download, Clock,
   CheckCircle, XCircle, AlertCircle, LogOut, ChevronRight,
   Package, Wallet, Star, ArrowLeft, ExternalLink,
-  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key
+  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key, Heart
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getUserTransactions } from '../services/projectService';
+import { getUserTransactions, getAllProjects } from '../services/projectService';
+import { getWishlist } from '../services/wishlistService';
+import ProjectCard from '../components/ProjectCard';
 import './Profile.css';
 
 const STATUS_CONFIG = {
@@ -139,6 +141,7 @@ const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
 // ─── Member Profile View ────────────────────────────────────────
 const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate }) => {
   const [transactions, setTransactions] = useState([]);
+  const [favoriteProjects, setFavoriteProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -148,18 +151,25 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate }) => {
   };
 
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const data = await getUserTransactions(user.uid);
-        setTransactions(data);
+        const [transData, allProjects] = await Promise.all([
+          getUserTransactions(user.uid),
+          getAllProjects()
+        ]);
+        setTransactions(transData);
+        
+        const wishlistIds = getWishlist();
+        const favs = allProjects.filter(p => wishlistIds.includes(p.id));
+        setFavoriteProjects(favs);
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchTransactions();
+    fetchData();
   }, [user.uid]);
 
   const paidTransactions = transactions.filter(t => t.status === 'PAID');
@@ -268,6 +278,15 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate }) => {
             <Download size={16} /> Koleksi Saya
             {paidTransactions.length > 0 && (
               <span className="tab-badge green">{paidTransactions.length}</span>
+            )}
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
+            onClick={() => setActiveTab('favorites')}
+          >
+            <Heart size={16} /> Favorit
+            {favoriteProjects.length > 0 && (
+              <span className="tab-badge" style={{ background: '#f43f5e', color: '#fff' }}>{favoriteProjects.length}</span>
             )}
           </button>
         </div>
