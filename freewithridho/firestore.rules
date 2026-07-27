@@ -39,5 +39,11 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null && request.auth.token.email == 'ridhosandhika18022022@gmail.com';
     }
+
+    // Banned Users: Public read (needed for login/register blacklist check), admin write only
+    match /banned_users/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'ridhosandhika18022022@gmail.com';
+    }
   }
 }
