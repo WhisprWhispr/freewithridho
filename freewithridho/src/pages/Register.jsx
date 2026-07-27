@@ -73,9 +73,6 @@ const Register = () => {
 
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo-icon">
-            <Code2 size={28} />
-          </div>
           <h2>Daftar Akun</h2>
           <p>Buat akun baru untuk membeli source code</p>
         </div>

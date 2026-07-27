@@ -82,9 +82,6 @@ const Login = () => {
 
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo-icon">
-            <Code2 size={28} />
-          </div>
           <h2>Selamat Datang</h2>
           <p>Silakan login ke akun Anda</p>
         </div>
