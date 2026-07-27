@@ -4,6 +4,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import ProjectCard from '../components/ProjectCard';
 import { listenToPartnerByUserId } from '../services/partnerService';
+import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import { User, Briefcase, ExternalLink, ShieldCheck, Star, Crown } from 'lucide-react';
 import './PublicProfile.css';
 
@@ -88,6 +89,7 @@ const PublicProfile = () => {
                 <span className="admin-verified-badge">
                   <ShieldCheck size={14} /> Verified
                 </span>
+                <PartnerBadge tier="admin" />
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                 <span className="admin-role-badge">
@@ -178,7 +180,12 @@ const PublicProfile = () => {
           </div>
           <div className="public-profile-details">
             <h1 className="public-profile-name">{partner.fullName}</h1>
-            <p className="public-profile-badge">Partner Developer Resmi</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+              <p className="public-profile-badge" style={{ margin: 0 }}>Partner Developer Resmi</p>
+              {getBadgeTier(partner.totalEarnings) > 0 && (
+                <PartnerBadge tier={getBadgeTier(partner.totalEarnings)} />
+              )}
+            </div>
 
             <div className="public-profile-meta">
               {partner.skills && (

@@ -4,6 +4,7 @@ import { listenToPartnerByUserId, submitWithdrawal } from '../services/partnerSe
 import { listenToProjects, addProject, deleteProject, updateProject } from '../services/projectService';
 import { toast } from 'react-hot-toast';
 import { DollarSign, Upload, Trash2, Edit2, Wallet, Clock, CheckCircle } from 'lucide-react';
+import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import './PartnerDashboard.css';
 
 const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile'];
@@ -296,7 +297,12 @@ const PartnerDashboard = () => {
     <div className="partner-dashboard-page">
       <div className="dashboard-header">
         <h1>Dashboard Partner</h1>
-        <p>Selamat datang, {partner.fullName}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem', color: '#94a3b8' }}>
+          <span>Selamat datang, {partner.fullName}</span>
+          {getBadgeTier(partner.totalEarnings) > 0 && (
+            <PartnerBadge tier={getBadgeTier(partner.totalEarnings)} size="sm" />
+          )}
+        </div>
       </div>
 
       <div className="dashboard-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>

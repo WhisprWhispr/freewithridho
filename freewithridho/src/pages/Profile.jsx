@@ -8,8 +8,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getUserTransactions, getAllProjects } from '../services/projectService';
+import { listenToPartnerByUserId } from '../services/partnerService';
 import { getWishlist } from '../services/wishlistService';
 import ProjectCard from '../components/ProjectCard';
+import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import './Profile.css';
 
 const STATUS_CONFIG = {
@@ -57,6 +59,7 @@ const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
                 <ShieldCheck size={13} />
                 Administrator
               </span>
+              <PartnerBadge tier="admin" size="sm" />
             </div>
           </div>
           <button className="btn-logout-profile" onClick={handleLogout}>
@@ -139,7 +142,7 @@ const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
 };
 
 // ─── Member Profile View ────────────────────────────────────────
-const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate }) => {
+const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner }) => {
   const [transactions, setTransactions] = useState([]);
   const [favoriteProjects, setFavoriteProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -207,6 +210,9 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate }) => {
                 <Star size={13} />
                 Member
               </span>
+              {partner && getBadgeTier(partner.totalEarnings) > 0 && (
+                <PartnerBadge tier={getBadgeTier(partner.totalEarnings)} size="sm" />
+              )}
             </div>
           </div>
           <button className="btn-logout-profile" onClick={handleLogout}>
@@ -476,6 +482,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate }) => {
 const Profile = () => {
   const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
+  const [partner, setPartner] = useState(null);
 
   const handleLogout = async () => {
     await logout();
@@ -501,7 +508,17 @@ const Profile = () => {
   useEffect(() => {
     if (!user) {
       navigate('/login');
+      return;
     }
+    
+    // Listen to partner status
+    const unsubscribe = listenToPartnerByUserId(user.uid, (data) => {
+      setPartner(data);
+    });
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [user, navigate]);
 
   if (!user) return null;
@@ -510,7 +527,7 @@ const Profile = () => {
     return <AdminProfile user={user} handleLogout={handleLogout} formatJoinDate={formatJoinDate} />;
   }
 
-  return <MemberProfile user={user} handleLogout={handleLogout} formatJoinDate={formatJoinDate} formatDate={formatDate} />;
+  return <MemberProfile user={user} handleLogout={handleLogout} formatJoinDate={formatJoinDate} formatDate={formatDate} partner={partner} />;
 };
 
 export default Profile;

@@ -96,9 +96,12 @@ exports.handler = async (event) => {
 
                   if (!partnerSnap.empty) {
                     const partnerDocId = partnerSnap.docs[0].id;
-                    const currentBalance = partnerSnap.docs[0].data().balance || 0;
+                    const partnerData = partnerSnap.docs[0].data();
+                    const currentBalance = partnerData.balance || 0;
+                    const currentTotalEarnings = partnerData.totalEarnings || 0;
                     await db.collection('partners').doc(partnerDocId).update({
                       balance: currentBalance + amount,
+                      totalEarnings: currentTotalEarnings + amount,
                     });
                     console.log(`💰 Credited Rp ${amount} (100%) to partner ${partnerDocId}`);
                   }

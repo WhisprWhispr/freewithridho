@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import './Admin.css';
 
 const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile'];
@@ -491,9 +492,10 @@ const Admin = () => {
       <div className="admin-container">
         {/* Admin user banner */}
         <div className="admin-user-banner">
-          <div className="admin-user-info">
+          <div className="admin-user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ShieldCheck size={18} />
             <span>Login sebagai: <strong>{user?.email}</strong></span>
+            <PartnerBadge tier="admin" size="sm" />
           </div>
           <button className="btn-banner-logout" onClick={handleLogout}>
             <LogOut size={15} /> Logout
@@ -977,7 +979,14 @@ const Admin = () => {
                     {partners.map(p => (
                       <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <td style={{ padding: '1rem' }}>{new Date(p.submittedAt).toLocaleDateString('id-ID')}</td>
-                        <td style={{ padding: '1rem', fontWeight: 500 }}>{p.fullName}</td>
+                        <td style={{ padding: '1rem', fontWeight: 500 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {p.fullName}
+                            {getBadgeTier(p.totalEarnings) > 0 && (
+                              <PartnerBadge tier={getBadgeTier(p.totalEarnings)} size="sm" />
+                            )}
+                          </div>
+                        </td>
                         <td style={{ padding: '1rem' }}>
                           <div style={{ fontSize: '0.85rem' }}>{p.email}</div>
                           <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{p.phone}</div>
