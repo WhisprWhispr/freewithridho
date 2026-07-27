@@ -977,3 +977,124 @@
 .cta-fav-btn.wishlisted { color: #f43f5e; background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.25); }
 .cta-share-btn:hover { color: #60a5fa; background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.25); }
 
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Tablet (≤ 1024px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .detail-image-col {
+    order: -1;
+  }
+
+  .detail-page {
+    padding: 5rem 1.5rem 8rem;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 768px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .detail-page {
+    padding: 4rem 1.25rem 7rem;
+  }
+
+  .detail-title {
+    font-size: 1.6rem;
+  }
+
+  .detail-price-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .detail-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .markdown-body {
+    padding: 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .detail-cta-bar {
+    padding: 0.875rem 1.25rem;
+    margin: 0 -1.25rem -6rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .cta-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cta-title {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lightbox-nav.prev { left: 0.5rem; }
+  .lightbox-nav.next { right: 0.5rem; }
+}
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Small Mobile (≤ 480px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .detail-page {
+    padding: 3.5rem 1rem 7rem;
+  }
+
+  .detail-title {
+    font-size: 1.35rem;
+  }
+
+  .detail-gallery {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .markdown-body {
+    padding: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .section-heading {
+    font-size: 0.95rem;
+  }
+
+  .detail-cta-bar {
+    padding: 0.75rem 1rem;
+    margin: 0 -1rem -6rem;
+  }
+
+  .cta-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .action-btn {
+    font-size: 0.85rem;
+    padding: 0.65rem 1.1rem;
+  }
+
+  .share-options {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .code-block-header {
+    padding: 0.4rem 0.75rem;
+  }
+}

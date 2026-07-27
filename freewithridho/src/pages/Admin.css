@@ -516,10 +516,206 @@
 .badge-web     { background: rgba(96, 165, 250, 0.1);  color: #60a5fa; }
 .badge-mobile  { background: rgba(251, 146, 60, 0.1);  color: #fb923c; }
 
-@media (max-width: 640px) {
-  .form-row { grid-template-columns: 1fr; }
-  .btn-upload { width: 100%; }
-  .list-item-desc { max-width: 180px; }
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Tablet (≤ 1024px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .admin-container {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .list-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 768px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .admin-page {
+    padding: 1.5rem 1rem;
+  }
+
+  .admin-container {
+    gap: 1.5rem;
+  }
+
+  .admin-user-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .admin-stat-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .admin-stat-num {
+    font-size: 1.1rem;
+  }
+
+  /* Tabs — scrollable horizontal */
+  .admin-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    gap: 0.5rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .admin-tab-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Form */
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  /* Project list */
+  .list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .list-item-actions {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .list-item-actions .btn-edit,
+  .list-item-actions .btn-delete {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .list-item-desc {
+    max-width: 100%;
+  }
+
+  /* Partner table — card layout */
+  .partners-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .partners-table th,
+  .partners-table td {
+    white-space: nowrap;
+    min-width: 120px;
+    font-size: 0.8rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  /* Withdrawals table */
+  .withdrawals-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .withdrawals-table th,
+  .withdrawals-table td {
+    white-space: nowrap;
+    min-width: 100px;
+    font-size: 0.8rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  /* Settings grid */
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-upload {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Small Mobile (≤ 480px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .admin-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .admin-stat-card {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .admin-stat-num {
+    font-size: 1rem;
+  }
+
+  .admin-stat-label {
+    font-size: 0.72rem;
+  }
+
+  .admin-stat-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .admin-stats-header h2 {
+    font-size: 0.95rem;
+  }
+
+  .login-card, .form-card {
+    padding: 1.25rem;
+  }
+
+  .section-title {
+    font-size: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .partner-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── README Editor UI ─────────────────────────── */

@@ -73,11 +73,10 @@ const Register = () => {
 
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-            <img src="/FREEWITHRIDHO.jpeg" alt="Logo" style={{ height: '36px', borderRadius: '8px', objectFit: 'contain' }} />
-            <span style={{ fontWeight: 800, fontSize: '1.5rem', background: 'linear-gradient(to right, #22d3ee, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>FREEWITHRIDHO</span>
+          <div className="login-logo-icon">
+            <Code2 size={28} />
           </div>
-          <h1>Daftar Akun</h1>
+          <h2>Daftar Akun</h2>
           <p>Buat akun baru untuk membeli source code</p>
         </div>
 

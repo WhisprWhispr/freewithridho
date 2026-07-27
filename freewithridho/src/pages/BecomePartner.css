@@ -273,3 +273,65 @@
     font-size: 1.8rem;
   }
 }
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 768px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .partner-page {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .partner-header h1 {
+    font-size: 2rem;
+  }
+
+  .partner-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .partner-benefits {
+    position: static;
+    padding: 1.5rem;
+  }
+
+  .partner-form-container {
+    padding: 1.5rem;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Small Mobile (≤ 480px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .partner-page {
+    padding: 2rem 1rem;
+  }
+
+  .partner-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .partner-header p {
+    font-size: 0.95rem;
+  }
+
+  .partner-benefits,
+  .partner-form-container {
+    border-radius: 14px;
+    padding: 1.25rem;
+  }
+
+  .partner-form input,
+  .partner-form textarea,
+  .partner-form select {
+    font-size: 0.9rem;
+    padding: 0.75rem 0.875rem;
+  }
+
+  .submit-btn {
+    font-size: 0.95rem;
+    padding: 0.875rem;
+  }
+}

@@ -126,3 +126,58 @@
 .checkout-error {
   color: #f87171;
 }
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 640px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .checkout-page {
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  .checkout-container {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .checkout-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .summary-item {
+    font-size: 0.85rem;
+  }
+
+  .summary-label {
+    max-width: 40%;
+    flex-shrink: 0;
+  }
+
+  .btn-pay {
+    font-size: 0.95rem;
+    padding: 0.875rem;
+  }
+
+  .checkout-security {
+    font-size: 0.8rem;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Small Mobile (≤ 480px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .checkout-container {
+    padding: 1.25rem 1rem;
+    border-radius: 1rem;
+  }
+
+  .checkout-summary {
+    padding: 1.125rem;
+  }
+
+  .checkout-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
