@@ -344,7 +344,7 @@ const PartnerDashboard = () => {
                 placeholder="Minimal 100.000"
                 required 
               />
-              <small style={{ color: '#94a3b8', display: 'block', marginTop: '4px' }}>Maksimal: Rp {Math.min(partner.balance || 0, 5000000).toLocaleString('id-ID')}</small>
+              <small style={{ color: '#94a3b8', display: 'block', marginTop: '4px' }}>Maksimal: Rp 5.000.000</small>
               <small style={{ color: '#f59e0b', display: 'block', marginTop: '4px' }}>
                 * Biaya platform: 5% (penarikan &lt; Rp 500.000), 10% (penarikan ≥ Rp 500.000).
               </small>
