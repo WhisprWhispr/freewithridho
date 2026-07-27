@@ -14,12 +14,16 @@ if (!admin.apps.length) {
   }
 }
 
-// Midtrans config
+// Midtrans config — URL auto-detected based on server key prefix
 const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-const MIDTRANS_URL =
-  process.env.MIDTRANS_URL ||
-  'https://app.sandbox.midtrans.com/snap/v1/transactions';
 const SITE_URL = process.env.URL || 'https://freewithridho.netlify.app';
+
+function getMidtransUrl(serverKey) {
+  const isSandbox = serverKey && (serverKey.startsWith('SB-') || serverKey.startsWith('sb-'));
+  return isSandbox
+    ? 'https://app.sandbox.midtrans.com/snap/v1/transactions'
+    : 'https://app.midtrans.com/snap/v1/transactions';
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -84,6 +88,8 @@ exports.handler = async (event) => {
     };
 
     const authString = Buffer.from(`${serverKey}:`).toString('base64');
+    const MIDTRANS_URL = getMidtransUrl(serverKey);
+    console.log('🌐 Midtrans URL:', MIDTRANS_URL);
 
     const midtransRes = await fetch(MIDTRANS_URL, {
       method: 'POST',
