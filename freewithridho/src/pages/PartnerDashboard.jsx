@@ -142,16 +142,35 @@ const PartnerDashboard = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Yakin ingin menghapus proyek ini?')) {
-      const toastId = toast.loading('Menghapus...');
-      try {
-        await deleteProject(id);
-        toast.success('Berhasil dihapus', { id: toastId });
-      } catch (e) {
-        toast.error('Gagal menghapus', { id: toastId });
-      }
-    }
+  const handleDelete = (id) => {
+    toast((t) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '250px' }}>
+        <p style={{ margin: 0, fontWeight: 500, fontSize: '0.95rem' }}>Yakin ingin menghapus proyek ini?</p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+          <button 
+            onClick={() => toast.dismiss(t.id)}
+            style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#cbd5e1', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+          >
+            Batal
+          </button>
+          <button 
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const toastId = toast.loading('Menghapus...');
+              try {
+                await deleteProject(id);
+                toast.success('Berhasil dihapus', { id: toastId });
+              } catch (e) {
+                toast.error('Gagal menghapus', { id: toastId });
+              }
+            }}
+            style={{ padding: '0.4rem 0.8rem', background: '#ef4444', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}
+          >
+            Hapus
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   const handleWithdrawSubmit = async (e) => {

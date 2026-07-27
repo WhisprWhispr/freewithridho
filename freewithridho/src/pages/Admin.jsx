@@ -285,17 +285,40 @@ const Admin = () => {
     doc.save(`Data_Partner_${p.fullName.replace(/\s+/g, '_')}.pdf`);
   };
 
-  const handleCompleteWithdrawal = async (withdrawalId, partnerId, amount) => {
-    if (!window.confirm(`Tandai penarikan Rp ${amount.toLocaleString('id-ID')} sebagai SELESAI? Pastikan uang sudah ditransfer!`)) return;
-    const loadingToast = toast.loading('Memproses...');
-    try {
-      const { completeWithdrawal } = await import('../services/partnerService');
-      await completeWithdrawal(withdrawalId, partnerId, amount);
-      toast.success('Penarikan SELESAI. Saldo partner telah dikurangi.', { id: loadingToast });
-    } catch (e) {
-      console.error(e);
-      toast.error('Gagal memproses penarikan', { id: loadingToast });
-    }
+  const handleCompleteWithdrawal = (withdrawalId, partnerId, amount) => {
+    toast((t) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '250px' }}>
+        <p style={{ margin: 0, fontWeight: 500, fontSize: '0.95rem' }}>
+          Tandai penarikan Rp {amount.toLocaleString('id-ID')} sebagai SELESAI?<br/><br/>
+          <span style={{fontSize: '0.8rem', color: '#f59e0b'}}>Pastikan uang sudah ditransfer!</span>
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+          <button 
+            onClick={() => toast.dismiss(t.id)}
+            style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#cbd5e1', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+          >
+            Batal
+          </button>
+          <button 
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const loadingToast = toast.loading('Memproses...');
+              try {
+                const { completeWithdrawal } = await import('../services/partnerService');
+                await completeWithdrawal(withdrawalId, partnerId, amount);
+                toast.success('Penarikan SELESAI. Saldo partner telah dikurangi.', { id: loadingToast });
+              } catch (e) {
+                console.error(e);
+                toast.error('Gagal memproses penarikan', { id: loadingToast });
+              }
+            }}
+            style={{ padding: '0.4rem 0.8rem', background: '#10b981', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}
+          >
+            Selesai
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   };
 
   const handleSaveSettings = async (e) => {
