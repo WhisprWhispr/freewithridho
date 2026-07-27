@@ -1,12 +1,13 @@
-import crypto from 'crypto';
-import admin from 'firebase-admin';
+'use strict';
+const crypto = require('crypto');
+const admin = require('firebase-admin');
 
 // Initialize Firebase Admin once
 if (!admin.apps.length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+      credential: admin.credential.cert(serviceAccount),
     });
   } catch (error) {
     console.error('Firebase Admin initialization error:', error);
@@ -15,35 +16,36 @@ if (!admin.apps.length) {
 
 const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ message: 'Method Not Allowed' }) };
   }
 
   try {
     let serverKey = FALLBACK_SERVER_KEY;
-    const db = admin.firestore();
     if (admin.apps.length) {
-      const settingsDoc = await db.collection('settings').doc('midtrans').get();
-      if (settingsDoc.exists && settingsDoc.data().serverKey) {
-        serverKey = settingsDoc.data().serverKey;
+      try {
+        const db = admin.firestore();
+        const settingsDoc = await db.collection('settings').doc('midtrans').get();
+        if (settingsDoc.exists && settingsDoc.data().serverKey) {
+          serverKey = settingsDoc.data().serverKey;
+        }
+      } catch (e) {
+        console.warn('Could not read settings from Firestore:', e.message);
       }
     }
 
     if (!serverKey) {
-       return {
+      return {
         statusCode: 500,
         body: JSON.stringify({ success: false, message: 'Midtrans Server Key not configured' }),
       };
     }
 
-    const rawBody = event.body;
-    const data = JSON.parse(rawBody);
-
+    const data = JSON.parse(event.body);
     const { order_id, status_code, gross_amount, signature_key, transaction_status } = data;
 
-    // Verify signature from Midtrans
-    // SHA512(order_id+status_code+gross_amount+ServerKey)
+    // Verify Midtrans signature: SHA512(order_id + status_code + gross_amount + serverKey)
     const expectedSignature = crypto
       .createHash('sha512')
       .update(`${order_id}${status_code}${gross_amount}${serverKey}`)
@@ -57,27 +59,29 @@ export const handler = async (event) => {
       };
     }
 
-    console.log(`Callback received — Order ID: ${order_id}, Status: ${transaction_status}`);
+    console.log(`Callback — Order: ${order_id}, Status: ${transaction_status}`);
 
     if (transaction_status === 'capture' || transaction_status === 'settlement') {
-      console.log(`✅ Payment PAID for order: ${order_id}`);
-
       if (admin.apps.length) {
-        // Find transaction by orderId / merchantRef
-        // Since we don't have the transaction document ID directly, we query by merchantRef
-        const transactionsRef = db.collection('transactions');
-        const q = transactionsRef.where('merchantRef', '==', order_id);
-        const snapshot = await q.get();
+        try {
+          const db = admin.firestore();
+          const snapshot = await db
+            .collection('transactions')
+            .where('merchantRef', '==', order_id)
+            .get();
 
-        if (!snapshot.empty) {
-          const docId = snapshot.docs[0].id;
-          await transactionsRef.doc(docId).update({
-            status: 'PAID',
-            paidAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-          console.log(`✅ Firestore transaction ${docId} updated to PAID`);
-        } else {
-           console.log(`❌ Transaction not found in Firestore for order: ${order_id}`);
+          if (!snapshot.empty) {
+            const docId = snapshot.docs[0].id;
+            await db.collection('transactions').doc(docId).update({
+              status: 'PAID',
+              paidAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            console.log(`✅ Transaction ${docId} updated to PAID`);
+          } else {
+            console.log(`❌ No transaction found for order: ${order_id}`);
+          }
+        } catch (e) {
+          console.error('Firestore update error:', e.message);
         }
       }
     }

@@ -1,46 +1,56 @@
-import crypto from 'crypto';
-import admin from 'firebase-admin';
+'use strict';
+const crypto = require('crypto');
+const admin = require('firebase-admin');
 
 // Initialize Firebase Admin once
 if (!admin.apps.length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+      credential: admin.credential.cert(serviceAccount),
     });
   } catch (error) {
     console.error('Firebase Admin initialization error:', error);
   }
 }
 
-// Midtrans config from environment variables (fallback)
+// Midtrans config
 const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-const MIDTRANS_URL = process.env.MIDTRANS_URL || 'https://app.sandbox.midtrans.com/snap/v1/transactions';
-const SITE_URL = process.env.URL || 'http://localhost:5173'; // Netlify sets $URL automatically
+const MIDTRANS_URL =
+  process.env.MIDTRANS_URL ||
+  'https://app.sandbox.midtrans.com/snap/v1/transactions';
+const SITE_URL = process.env.URL || 'https://freewithridho.netlify.app';
 
-export const handler = async (event) => {
-  // Only allow POST
+exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ message: 'Method Not Allowed' }) };
   }
 
   try {
+    // Try to get server key from Firestore settings first
     let serverKey = FALLBACK_SERVER_KEY;
     if (admin.apps.length) {
-      const db = admin.firestore();
-      const settingsDoc = await db.collection('settings').doc('midtrans').get();
-      if (settingsDoc.exists && settingsDoc.data().serverKey) {
-        serverKey = settingsDoc.data().serverKey;
+      try {
+        const db = admin.firestore();
+        const settingsDoc = await db.collection('settings').doc('midtrans').get();
+        if (settingsDoc.exists && settingsDoc.data().serverKey) {
+          serverKey = settingsDoc.data().serverKey;
+          console.log('✅ Using serverKey from Firestore settings');
+        }
+      } catch (e) {
+        console.warn('Could not read settings from Firestore, using env key:', e.message);
       }
     }
 
     if (!serverKey) {
       return {
         statusCode: 500,
-        body: JSON.stringify({ success: false, message: 'Midtrans Server Key not configured' }),
+        body: JSON.stringify({ success: false, message: 'Midtrans Server Key not configured. Please set it in Admin Panel or Netlify environment variables.' }),
       };
     }
-    const { projectId, userId, userEmail, projectTitle, amount } = JSON.parse(event.body);
+
+    const body = JSON.parse(event.body);
+    const { projectId, userId, userEmail, projectTitle, amount } = body;
 
     if (!projectId || !userId || !userEmail || !amount) {
       return {
@@ -65,12 +75,12 @@ export const handler = async (event) => {
           id: projectId,
           price: Number(amount),
           quantity: 1,
-          name: projectTitle || 'Source Code Premium',
+          name: (projectTitle || 'Source Code Premium').substring(0, 50),
         },
       ],
       callbacks: {
-        finish: `${SITE_URL}/success`
-      }
+        finish: `${SITE_URL}/success`,
+      },
     };
 
     const authString = Buffer.from(`${serverKey}:`).toString('base64');
@@ -78,44 +88,53 @@ export const handler = async (event) => {
     const midtransRes = await fetch(MIDTRANS_URL, {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${authString}`,
+        Authorization: `Basic ${authString}`,
       },
       body: JSON.stringify(payload),
     });
 
     const midtransData = await midtransRes.json();
+    console.log('Midtrans response status:', midtransRes.status);
 
     if (!midtransRes.ok) {
+      const errMsg = midtransData.error_messages
+        ? midtransData.error_messages[0]
+        : JSON.stringify(midtransData);
+      console.error('Midtrans error:', errMsg);
       return {
         statusCode: 400,
-        body: JSON.stringify({ success: false, message: midtransData.error_messages ? midtransData.error_messages[0] : 'Failed to create transaction' }),
+        body: JSON.stringify({ success: false, message: errMsg }),
       };
     }
 
-    // Auto-save transaction record to Firestore as PENDING
+    // Auto-save transaction to Firestore as PENDING
     if (admin.apps.length) {
-      const db = admin.firestore();
-      await db.collection('transactions').add({
-        merchantRef: orderId,
-        projectId,
-        projectTitle: projectTitle || 'Source Code Premium',
-        userId,
-        userEmail,
-        amount: Number(amount),
-        status: 'PENDING',
-        snapToken: midtransData.token || null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-      console.log(`✅ Transaction ${orderId} saved to Firestore`);
+      try {
+        const db = admin.firestore();
+        await db.collection('transactions').add({
+          merchantRef: orderId,
+          projectId,
+          projectTitle: projectTitle || 'Source Code Premium',
+          userId,
+          userEmail,
+          amount: Number(amount),
+          status: 'PENDING',
+          snapToken: midtransData.token || null,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        console.log(`✅ Transaction ${orderId} saved to Firestore`);
+      } catch (e) {
+        console.warn('Could not save to Firestore:', e.message);
+      }
     }
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         success: true,
-        checkoutUrl: midtransData.redirect_url, // URL halaman Snap
+        checkoutUrl: midtransData.redirect_url,
         reference: midtransData.token,
         merchantRef: orderId,
       }),
@@ -124,7 +143,7 @@ export const handler = async (event) => {
     console.error('create-transaction error:', err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: 'Internal server error' }),
+      body: JSON.stringify({ success: false, message: 'Internal server error: ' + err.message }),
     };
   }
 };
