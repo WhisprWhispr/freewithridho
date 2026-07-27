@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Scale, Code } from 'lucide-react';
+import { Shield, Scale, Code, Users } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -17,6 +17,17 @@ const Footer = () => {
           <p className="footer-desc">
             Penyedia source code gratis dan premium berkualitas untuk membantu mewujudkan ide digital Anda lebih cepat.
           </p>
+        </div>
+
+        <div className="footer-links">
+          <h4>Komunitas</h4>
+          <ul>
+            <li>
+              <Link to="/become-partner">
+                <Users size={14} /> Jadi Partner
+              </Link>
+            </li>
+          </ul>
         </div>
 
         <div className="footer-links">

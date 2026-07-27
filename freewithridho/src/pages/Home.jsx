@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { listenToProjects } from '../services/projectService';
+import { listenToAvgRating, submitRating } from '../services/ratingService';
+import { listenToApprovedDevCount } from '../services/partnerService';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 import ProjectCard from '../components/ProjectCard';
 import { Search, Code2, Users, Star, Zap } from 'lucide-react';
 import './Home.css';
@@ -27,6 +31,8 @@ const Home = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState([]);
+  const [avgRating, setAvgRating] = useState(4.9);
+  const [devCount, setDevCount] = useState(1000);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statsVisible, setStatsVisible] = useState(false);
@@ -38,17 +44,30 @@ const Home = () => {
 
   const countProjects = useCountUp(statsVisible ? totalProjects : 0);
   const countFree    = useCountUp(statsVisible ? freeProjects : 0);
+  const countDevs    = useCountUp(statsVisible ? devCount : 0);
+  const displayRating = avgRating.toFixed(1);
 
   // ── Real-time Firestore listener ──────────────────────────────
   useEffect(() => {
     setLoading(true);
-    const unsubscribe = listenToProjects((data) => {
+    const unsubscribeProjects = listenToProjects((data) => {
       setProjects(data);
       setLoading(false);
       setError(null);
     });
+    
+    const unsubscribeRating = listenToAvgRating(({ average }) => {
+      setAvgRating(average);
+    });
+
+    const unsubscribeDevs = listenToApprovedDevCount((count) => {
+      setDevCount(count);
+    });
+
     return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
+      if (typeof unsubscribeProjects === 'function') unsubscribeProjects();
+      if (typeof unsubscribeRating === 'function') unsubscribeRating();
+      if (typeof unsubscribeDevs === 'function') unsubscribeDevs();
     };
   }, []);
 
@@ -128,12 +147,12 @@ const Home = () => {
             </div>
             <div className="stat-item">
               <Star size={22} className="stat-icon yellow" />
-              <div className="stat-number">4.9</div>
+              <div className="stat-number">{displayRating}</div>
               <div className="stat-label">Rating Rata-rata</div>
             </div>
             <div className="stat-item">
               <Users size={22} className="stat-icon purple" />
-              <div className="stat-number">1K+</div>
+              <div className="stat-number">{countDevs > 1000 ? `${(countDevs/1000).toFixed(1).replace('.0', '')}K+` : countDevs}</div>
               <div className="stat-label">Developer</div>
             </div>
           </div>
@@ -199,7 +218,60 @@ const Home = () => {
           </div>
         )}
       </section>
+
+      {/* RATING WIDGET */}
+      <RatingWidget />
     </div>
+  );
+};
+
+// ── Rating Widget Component ──────────────────────────────────
+const RatingWidget = () => {
+  const { user } = useAuth();
+  const [hovered, setHovered] = useState(0);
+  const [rating, setRating] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRate = async (star) => {
+    if (!user) {
+      toast.error('Silakan login untuk memberikan rating.');
+      return;
+    }
+    setRating(star);
+    try {
+      setIsSubmitting(true);
+      await submitRating(user.uid, star);
+      toast.success('Terima kasih atas rating Anda!');
+    } catch (err) {
+      toast.error('Gagal mengirim rating.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <section className="rating-section" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+      <h3 style={{ marginBottom: '1rem', color: '#f8fafc' }}>Beri nilai untuk website kami</h3>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            disabled={isSubmitting}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: (hovered || rating) >= star ? '#fbbf24' : '#334155',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={() => setHovered(star)}
+            onMouseLeave={() => setHovered(0)}
+            onClick={() => handleRate(star)}
+          >
+            <Star size={32} fill={(hovered || rating) >= star ? '#fbbf24' : 'transparent'} />
+          </button>
+        ))}
+      </div>
+      {!user && <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#94a3b8' }}>Login untuk memberi rating</p>}
+    </section>
   );
 };
 

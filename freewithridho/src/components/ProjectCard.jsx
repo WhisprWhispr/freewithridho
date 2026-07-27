@@ -39,6 +39,12 @@ const ProjectCard = ({ project }) => {
 
       <div className="card-body">
         <h3 className="card-title">{project.title}</h3>
+        {project.developerName && (
+          <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '4px 0 8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ display: 'inline-block', width: '16px', height: '16px', background: '#3b82f6', borderRadius: '50%', color: 'white', textAlign: 'center', lineHeight: '16px', fontSize: '0.6rem' }}>{project.developerName[0].toUpperCase()}</span>
+            {project.developerName}
+          </p>
+        )}
         <p className="card-description">{project.description}</p>
       </div>
 

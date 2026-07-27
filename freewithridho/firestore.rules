@@ -20,5 +20,17 @@ service cloud.firestore {
     match /settings/{document=**} {
       allow read, write: if request.auth != null;
     }
+
+    // Ratings: Anyone can read, logged-in users can write their own rating
+    match /ratings/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Partners: Anyone can create, admin can read and update
+    match /partners/{partnerId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null && request.auth.token.email == 'ridhosandhika18022022@gmail.com';
+    }
   }
 }
