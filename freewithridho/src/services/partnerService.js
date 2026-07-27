@@ -57,12 +57,12 @@ export async function updatePartnerStatus(id, newStatus) {
 export function listenToApprovedDevCount(callback) {
   const q = query(collection(db, COLLECTION), where('status', '==', 'approved'));
   return onSnapshot(q, (snapshot) => {
-    // Add 1000 to the count to simulate a large community, as the static value was 1K+
     const actualCount = snapshot.docs.length;
-    callback(1000 + actualCount);
+    // Add +1 so it includes the Admin as the first developer
+    callback(1 + actualCount);
   }, (err) => {
     console.error('Error getting dev count:', err);
-    callback(1000);
+    callback(1);
   });
 }
 
