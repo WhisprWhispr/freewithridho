@@ -510,3 +510,287 @@
   .btn-upload { width: 100%; }
   .list-item-desc { max-width: 180px; }
 }
+
+/* ── README Editor UI ─────────────────────────── */
+.readme-editor-group {
+  gap: 0;
+}
+
+.readme-dropzone {
+  border: 2px dashed rgba(99, 102, 241, 0.35);
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.04);
+  padding: 1.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-bottom: 0.75rem;
+  user-select: none;
+}
+
+.readme-dropzone:hover,
+.readme-dropzone.dragging {
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.1);
+  transform: scale(1.005);
+}
+
+.readme-dropzone-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.readme-dropzone-inner svg {
+  color: #818cf8;
+}
+
+.readme-dropzone-inner code {
+  background: rgba(99,102,241,0.15);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: #a5b4fc;
+}
+
+.readme-loaded-hint {
+  color: #34d399;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* Tabs */
+.readme-tabs {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-wrap: wrap;
+}
+
+.readme-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 1rem;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.readme-tab-btn:hover {
+  color: #94a3b8;
+  background: rgba(255,255,255,0.04);
+}
+
+.readme-tab-btn.active {
+  color: #818cf8;
+  border-color: rgba(99,102,241,0.2);
+  border-bottom-color: #818cf8;
+  background: rgba(99,102,241,0.07);
+}
+
+.readme-tab-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #f87171;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.readme-tab-clear:hover { background: rgba(239,68,68,0.08); }
+
+/* Preview panel */
+.readme-preview-wrap {
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.readme-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  background: rgba(30, 41, 59, 0.8);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.readme-header-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+.readme-header-dot.red    { background: #ef4444; }
+.readme-header-dot.yellow { background: #eab308; }
+.readme-header-dot.green  { background: #22c55e; }
+
+.readme-filename {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.readme-preview-body {
+  background: #0f172a;
+  padding: 2rem;
+  min-height: 200px;
+}
+
+.readme-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: #475569;
+  background: rgba(15,23,42,0.5);
+  text-align: center;
+}
+
+/* ── GitHub-style Markdown body ─────────────────── */
+.markdown-body {
+  color: #e2e8f0;
+  line-height: 1.75;
+  font-size: 0.95rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  word-break: break-word;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 1.5em 0 0.75em;
+  padding-bottom: 0.3em;
+}
+
+.markdown-body h1 {
+  font-size: 2em;
+  border-bottom: 2px solid rgba(99,102,241,0.3);
+  padding-bottom: 0.4em;
+  color: #f1f5f9;
+}
+.markdown-body h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #e2e8f0;
+}
+.markdown-body h3 { font-size: 1.25em; color: #cbd5e1; }
+.markdown-body h4 { font-size: 1.1em;  color: #94a3b8; }
+
+.markdown-body p { margin: 0 0 1em; }
+
+.markdown-body a {
+  color: #818cf8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-body a:hover { color: #a5b4fc; }
+
+.markdown-body code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85em;
+  background: rgba(99,102,241,0.12);
+  padding: 0.15em 0.45em;
+  border-radius: 5px;
+  color: #a5b4fc;
+}
+
+.markdown-body pre {
+  background: #0d1117 !important;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  overflow-x: auto;
+  padding: 1.25rem 1.5rem;
+  margin: 1.25em 0;
+}
+.markdown-body pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 0.88em;
+}
+
+.markdown-body blockquote {
+  border-left: 4px solid #818cf8;
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  background: rgba(99,102,241,0.07);
+  border-radius: 0 8px 8px 0;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.8em;
+  margin: 0.5em 0 1em;
+}
+.markdown-body li { margin-bottom: 0.3em; }
+
+/* GFM task list */
+.markdown-body input[type="checkbox"] {
+  accent-color: #818cf8;
+  margin-right: 0.4em;
+}
+
+/* GFM table */
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25em 0;
+  font-size: 0.9em;
+  overflow-x: auto;
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.markdown-body th {
+  background: rgba(99,102,241,0.15);
+  color: #c7d2fe;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+  text-align: left;
+  border-bottom: 2px solid rgba(99,102,241,0.25);
+}
+.markdown-body td {
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: #cbd5e1;
+}
+.markdown-body tr:last-child td { border-bottom: none; }
+.markdown-body tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin: 2em 0;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.5em 0;
+}

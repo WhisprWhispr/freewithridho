@@ -1,12 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllProjects, addProject, deleteProject } from '../services/projectService';
 import { getAdminStats } from '../services/adminStatsService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import ConfirmModal from '../components/ConfirmModal';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 import {
-  Plus, Trash2, Upload, LogOut,
+  Plus, Trash2, Upload, LogOut, FileText, Eye,
   ShieldCheck, BarChart3, TrendingUp, DollarSign, Briefcase,
   Receipt
 } from 'lucide-react';
@@ -40,13 +44,14 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   
-  // Confirm Modal state
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     id: null,
     title: ''
   });
   const [deletingId, setDeletingId] = useState(null);
+  const [readmeTab, setReadmeTab] = useState('edit'); // 'edit' | 'preview'
+  const fileInputRef = useRef(null);
 
   const handleLogout = async () => {
     await logout();
@@ -90,6 +95,25 @@ const Admin = () => {
   const removeImageInput = (index) => {
     const newImages = form.images.filter((_, i) => i !== index);
     setForm((prev) => ({ ...prev, images: newImages }));
+  };
+
+  // Handle .md file upload
+  const handleReadmeFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith('.md') && file.type !== 'text/markdown' && file.type !== 'text/plain') {
+      toast.error('Hanya file .md yang diperbolehkan!');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setForm((prev) => ({ ...prev, readme: ev.target.result }));
+      setReadmeTab('preview');
+      toast.success(`File "${file.name}" berhasil diunggah! Cek preview di bawah.`);
+    };
+    reader.readAsText(file, 'UTF-8');
+    // reset input so the same file can be re-uploaded
+    e.target.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -319,18 +343,109 @@ const Admin = () => {
               </button>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="readme">Konten README.md</label>
-              <p className="field-hint">Paste isi file README.md dalam format Markdown di sini.</p>
-              <textarea
-                id="readme"
-                name="readme"
-                rows={12}
-                placeholder={`# Judul Proyek\n\nDeskripsi proyek...\n\n## Fitur\n- Fitur 1\n- Fitur 2\n\n## Cara Penggunaan\n\`\`\`bash\nnpm install\nnpm start\n\`\`\``}
-                value={form.readme}
-                onChange={handleChange}
-                className="readme-textarea"
-              />
+            <div className="form-group readme-editor-group">
+              <label>README.md</label>
+              <p className="field-hint">Upload file .md dari komputer, atau ketik markdown langsung. Preview akan tampil seperti GitHub.</p>
+
+              {/* Drag-drop / file upload zone */}
+              <div
+                className="readme-dropzone"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('dragging'); }}
+                onDragLeave={(e) => e.currentTarget.classList.remove('dragging')}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove('dragging');
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) handleReadmeFile({ target: { files: [file], value: '' } });
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".md,text/markdown,text/plain"
+                  style={{ display: 'none' }}
+                  onChange={handleReadmeFile}
+                />
+                <div className="readme-dropzone-inner">
+                  <FileText size={28} />
+                  <span>Klik atau <strong>drag & drop</strong> file <code>.md</code> ke sini</span>
+                  {form.readme && <span className="readme-loaded-hint">✓ Konten dimuat — lihat di tab Preview</span>}
+                </div>
+              </div>
+
+              {/* Editor / Preview Tabs */}
+              <div className="readme-tabs">
+                <button
+                  type="button"
+                  className={`readme-tab-btn ${readmeTab === 'edit' ? 'active' : ''}`}
+                  onClick={() => setReadmeTab('edit')}
+                >
+                  <FileText size={14} /> Edit
+                </button>
+                <button
+                  type="button"
+                  className={`readme-tab-btn ${readmeTab === 'preview' ? 'active' : ''}`}
+                  onClick={() => setReadmeTab('preview')}
+                >
+                  <Eye size={14} /> Preview
+                </button>
+                {form.readme && (
+                  <button
+                    type="button"
+                    className="readme-tab-clear"
+                    onClick={() => { setForm(prev => ({ ...prev, readme: '' })); setReadmeTab('edit'); }}
+                  >
+                    Hapus konten
+                  </button>
+                )}
+              </div>
+
+              {readmeTab === 'edit' ? (
+                <textarea
+                  id="readme"
+                  name="readme"
+                  rows={14}
+                  placeholder={`# Judul Proyek\n\nDeskripsi proyek...\n\n## Fitur\n- Fitur 1\n- [x] Fitur 2 (checklist)\n\n## Cara Penggunaan\n\`\`\`bash\nnpm install\nnpm start\n\`\`\`\n\n| Kolom 1 | Kolom 2 |\n|---------|----------|\n| Data 1  | Data 2  |`}
+                  value={form.readme}
+                  onChange={handleChange}
+                  className="readme-textarea"
+                />
+              ) : (
+                <div className="readme-preview-wrap">
+                  {form.readme ? (
+                    <>
+                      <div className="readme-preview-header">
+                        <div className="readme-header-dot red" />
+                        <div className="readme-header-dot yellow" />
+                        <div className="readme-header-dot green" />
+                        <span className="readme-filename">README.md</span>
+                      </div>
+                      <div className="markdown-body readme-preview-body">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeHighlight]}
+                          components={{
+                            a: ({ href, children }) => (
+                              <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+                            ),
+                            img: ({ src, alt }) => (
+                              <img src={src} alt={alt} style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                            ),
+                          }}
+                        >
+                          {form.readme}
+                        </ReactMarkdown>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="readme-preview-empty">
+                      <FileText size={36} />
+                      <p>Belum ada konten README. Upload file atau ketik di tab Edit.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <button type="submit" className="btn-upload" disabled={loading}>

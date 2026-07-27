@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 import {
   Download, ArrowLeft, FileText, ShoppingCart, LockOpen,
   Heart, Tag, Star, ZoomIn, X, ChevronLeft, ChevronRight,
@@ -324,7 +327,20 @@ const ProjectDetail = () => {
                 <span className="readme-filename">README.md</span>
               </div>
               <div className="markdown-body">
-                <ReactMarkdown>{project.readme}</ReactMarkdown>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeHighlight]}
+                  components={{
+                    a: ({ href, children }) => (
+                      <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+                    ),
+                    img: ({ src, alt }) => (
+                      <img src={src} alt={alt} style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                    ),
+                  }}
+                >
+                  {project.readme}
+                </ReactMarkdown>
               </div>
             </div>
           ) : (
