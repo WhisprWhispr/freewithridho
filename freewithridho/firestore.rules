@@ -30,7 +30,7 @@ service cloud.firestore {
     // Partners: Anyone can create, users can read their own. Admin can read/update all.
     match /partners/{partnerId} {
       allow create: if true;
-      allow read: if request.auth != null;
+      allow read: if request.auth != null || resource.data.status == 'approved';
       allow update, delete: if request.auth != null && request.auth.token.email == 'ridhosandhika18022022@gmail.com';
     }
 

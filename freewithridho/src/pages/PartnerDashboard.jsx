@@ -211,6 +211,41 @@ const PartnerDashboard = () => {
     }
   };
 
+  const handleAppeal = async () => {
+    const loadingToast = toast.loading('Mengirim ajuan banding...');
+    try {
+      const { appealSuspension } = await import('../services/partnerService');
+      await appealSuspension(partner.id);
+      toast.success('Ajuan banding terkirim. Admin akan meninjau kembali profil Anda.', { id: loadingToast });
+    } catch (e) {
+      console.error(e);
+      toast.error('Gagal mengirim ajuan banding', { id: loadingToast });
+    }
+  };
+
+  if (partner.status === 'suspended') {
+    return (
+      <div className="partner-dashboard-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center' }}>
+        <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2rem', borderRadius: '16px', maxWidth: '500px' }}>
+          <h2 style={{ color: '#f59e0b', fontSize: '1.5rem', marginBottom: '1rem' }}>Akun Anda Ditangguhkan (Suspended)</h2>
+          <p style={{ color: '#cbd5e1', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+            Akses ke dasbor dan fitur partner telah dinonaktifkan sementara karena adanya indikasi pelanggaran aturan. 
+            Proyek Anda masih aman, namun Anda tidak dapat melakukan perubahan atau penarikan saldo.
+          </p>
+          {partner.appealRequested ? (
+            <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              Ajuan banding Anda sedang ditinjau oleh Admin. Mohon tunggu proses pemeriksaan selesai.
+            </div>
+          ) : (
+            <button onClick={handleAppeal} className="btn-primary" style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+              Ajukan Banding
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="partner-dashboard-page">
       <div className="dashboard-header">

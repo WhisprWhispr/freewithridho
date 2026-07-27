@@ -147,3 +147,55 @@ export async function completeWithdrawal(withdrawalId, partnerId, amount, feeAmo
     });
   }
 }
+
+/**
+ * Ban Partner: Delete partner doc and their projects
+ */
+export async function banPartner(partnerId, userId) {
+  const { deleteDoc, getDocs } = await import('firebase/firestore');
+  // Delete partner document
+  await deleteDoc(doc(db, COLLECTION, partnerId));
+  
+  // Find and delete all projects by this user
+  if (userId) {
+    const q = query(collection(db, 'projects'), where('userId', '==', userId));
+    const snapshots = await getDocs(q);
+    const deletePromises = snapshots.docs.map(d => deleteDoc(doc(db, 'projects', d.id)));
+    await Promise.all(deletePromises);
+  }
+}
+
+/**
+ * Suspend Partner: Temporarily disable account
+ */
+export async function suspendPartner(partnerId) {
+  const docRef = doc(db, COLLECTION, partnerId);
+  await updateDoc(docRef, {
+    status: 'suspended',
+    appealRequested: false,
+    suspendedAt: new Date().toISOString()
+  });
+}
+
+/**
+ * Appeal Suspension: Partner requests review
+ */
+export async function appealSuspension(partnerId) {
+  const docRef = doc(db, COLLECTION, partnerId);
+  await updateDoc(docRef, {
+    appealRequested: true,
+    appealedAt: new Date().toISOString()
+  });
+}
+
+/**
+ * Restore Partner: Admin restores suspended account
+ */
+export async function restorePartner(partnerId) {
+  const docRef = doc(db, COLLECTION, partnerId);
+  await updateDoc(docRef, {
+    status: 'approved',
+    appealRequested: false,
+    restoredAt: new Date().toISOString()
+  });
+}

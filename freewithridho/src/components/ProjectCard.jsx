@@ -45,12 +45,12 @@ const ProjectCard = ({ project }) => {
       <div className="card-footer">
         <div className="footer-left">
           {project.developerName ? (
-            <div className="card-developer" title={`Developer: ${project.developerName}`}>
+            <Link to={`/user/${project.userId}`} className="card-developer" title={`Lihat Profil Developer: ${project.developerName}`} style={{ textDecoration: 'none' }}>
               <div className="dev-avatar">
                 {project.developerName[0].toUpperCase()}
               </div>
               <span className="dev-name">{project.developerName}</span>
-            </div>
+            </Link>
           ) : (
             <div className="card-developer empty" />
           )}

@@ -343,6 +343,19 @@ const ProjectDetail = () => {
             {/* Description */}
             <p className="detail-desc">{project.description}</p>
 
+            {/* Developer Info */}
+            {project.developerName && (
+              <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Dibuat oleh:</span>
+                <Link to={`/user/${project.userId}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', background: 'rgba(255,255,255,0.05)', padding: '0.4rem 1rem 0.4rem 0.4rem', borderRadius: '50px', border: '1px solid rgba(255,255,255,0.1)', transition: 'background 0.2s' }} className="detail-dev-link">
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                    {project.developerName[0].toUpperCase()}
+                  </div>
+                  <span style={{ color: '#f8fafc', fontWeight: 500, fontSize: '0.9rem' }}>{project.developerName}</span>
+                </Link>
+              </div>
+            )}
+
             {/* Price Box */}
             <div className="detail-price-box">
               <div className="price-left">

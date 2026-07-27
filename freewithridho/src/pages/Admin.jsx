@@ -223,6 +223,90 @@ const Admin = () => {
     }
   };
 
+  const handleBanPartner = (partnerId, userId, partnerName) => {
+    toast((t) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '250px' }}>
+        <p style={{ margin: 0, fontWeight: 500, fontSize: '0.95rem' }}>
+          BANNED PERMANEN partner "{partnerName}"?<br/><br/>
+          <span style={{fontSize: '0.8rem', color: '#ef4444'}}>Semua data dan proyeknya akan DIHAPUS. Tidak dapat dibatalkan!</span>
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+          <button onClick={() => toast.dismiss(t.id)} style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#cbd5e1', borderRadius: '6px', cursor: 'pointer' }}>Batal</button>
+          <button 
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const toastId = toast.loading('Menghapus data partner...');
+              try {
+                const { banPartner } = await import('../services/partnerService');
+                await banPartner(partnerId, userId);
+                toast.success('Partner berhasil di-Banned', { id: toastId });
+              } catch (e) {
+                toast.error('Gagal melakukan Banned', { id: toastId });
+              }
+            }}
+            style={{ padding: '0.4rem 0.8rem', background: '#dc2626', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >Banned Permanen</button>
+        </div>
+      </div>
+    ), { duration: Infinity, icon: '🚨' });
+  };
+
+  const handleSuspendPartner = (partnerId, partnerName) => {
+    toast((t) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '250px' }}>
+        <p style={{ margin: 0, fontWeight: 500, fontSize: '0.95rem' }}>
+          SUSPEND partner "{partnerName}"?<br/><br/>
+          <span style={{fontSize: '0.8rem', color: '#f59e0b'}}>Akses mereka akan dinonaktifkan sementara.</span>
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+          <button onClick={() => toast.dismiss(t.id)} style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#cbd5e1', borderRadius: '6px', cursor: 'pointer' }}>Batal</button>
+          <button 
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const toastId = toast.loading('Melakukan suspend...');
+              try {
+                const { suspendPartner } = await import('../services/partnerService');
+                await suspendPartner(partnerId);
+                toast.success('Partner di-Suspend', { id: toastId });
+              } catch (e) {
+                toast.error('Gagal Suspend', { id: toastId });
+              }
+            }}
+            style={{ padding: '0.4rem 0.8rem', background: '#f59e0b', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >Suspend</button>
+        </div>
+      </div>
+    ), { duration: Infinity, icon: '⚠️' });
+  };
+
+  const handleRestorePartner = (partnerId, partnerName) => {
+    toast((t) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '250px' }}>
+        <p style={{ margin: 0, fontWeight: 500, fontSize: '0.95rem' }}>
+          PULIHKAN partner "{partnerName}"?<br/><br/>
+          <span style={{fontSize: '0.8rem', color: '#10b981'}}>Akses mereka akan dikembalikan seperti semula.</span>
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+          <button onClick={() => toast.dismiss(t.id)} style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#cbd5e1', borderRadius: '6px', cursor: 'pointer' }}>Batal</button>
+          <button 
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const toastId = toast.loading('Memulihkan akun...');
+              try {
+                const { restorePartner } = await import('../services/partnerService');
+                await restorePartner(partnerId);
+                toast.success('Akun Dipulihkan', { id: toastId });
+              } catch (e) {
+                toast.error('Gagal Memulihkan', { id: toastId });
+              }
+            }}
+            style={{ padding: '0.4rem 0.8rem', background: '#10b981', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
+          >Pulihkan</button>
+        </div>
+      </div>
+    ), { duration: Infinity });
+  };
+
   const exportPartnersPDF = () => {
     const doc = new jsPDF();
     doc.text('Daftar Pendaftar Partner Developer', 14, 15);
@@ -902,16 +986,23 @@ const Admin = () => {
                           <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.skills}</div>
                         </td>
                         <td style={{ padding: '1rem' }}>
-                          <span style={{ 
-                            padding: '4px 10px', 
-                            borderRadius: '20px', 
-                            fontSize: '0.8rem',
-                            fontWeight: 500,
-                            background: p.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                            color: p.status === 'approved' ? '#10b981' : p.status === 'rejected' ? '#ef4444' : '#f59e0b'
-                          }}>
-                            {p.status.toUpperCase()}
-                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
+                            <span style={{ 
+                              padding: '4px 10px', 
+                              borderRadius: '20px', 
+                              fontSize: '0.8rem',
+                              fontWeight: 500,
+                              background: p.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : p.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)' : p.status === 'suspended' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                              color: p.status === 'approved' ? '#10b981' : p.status === 'rejected' ? '#ef4444' : p.status === 'suspended' ? '#f59e0b' : '#f59e0b'
+                            }}>
+                              {p.status.toUpperCase()}
+                            </span>
+                            {p.status === 'suspended' && p.appealRequested && (
+                              <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}>
+                                Aju Banding
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '1rem', textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -926,6 +1017,18 @@ const Admin = () => {
                               <>
                                 <button onClick={() => handlePartnerAction(p.id, 'approved')} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Setujui"><Check size={14} /> Setujui</button>
                                 <button onClick={() => handlePartnerAction(p.id, 'rejected')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Tolak"><X size={14} /> Tolak</button>
+                              </>
+                            )}
+                            {p.status === 'approved' && (
+                              <>
+                                <button onClick={() => handleSuspendPartner(p.id, p.fullName)} style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Suspend Sementara">Suspend</button>
+                                <button onClick={() => handleBanPartner(p.id, p.userId, p.fullName)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Ban Permanen"><X size={14} /> Ban</button>
+                              </>
+                            )}
+                            {p.status === 'suspended' && (
+                              <>
+                                <button onClick={() => handleRestorePartner(p.id, p.fullName)} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Pulihkan Akun"><Check size={14} /> Pulihkan</button>
+                                <button onClick={() => handleBanPartner(p.id, p.userId, p.fullName)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Ban Permanen"><X size={14} /> Ban</button>
                               </>
                             )}
                           </div>
