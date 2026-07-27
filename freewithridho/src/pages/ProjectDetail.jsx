@@ -7,11 +7,40 @@ import 'highlight.js/styles/github-dark.css';
 import {
   Download, ArrowLeft, FileText, ShoppingCart, LockOpen,
   Heart, Tag, Star, ZoomIn, X, ChevronLeft, ChevronRight,
-  Shield, Zap, Package, User
+  Shield, Zap, Package, User, Share2, Link2, MessageCircle,
+  Twitter, Eye, Copy, Check
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getProjectById, checkUserPurchase } from '../services/projectService';
+import { isWishlisted, toggleWishlist } from '../services/wishlistService';
 import './ProjectDetail.css';
+
+// Professional share text generator
+const generateShareText = (project) => {
+  const isFree = !project.price || project.price === 0;
+  const priceText = isFree ? 'GRATIS 🎉' : `Rp ${project.price.toLocaleString('id-ID')}`;
+  const categoryEmojis = {
+    Web: '🌐', Mobile: '📱', Game: '🎮', Basic: '💡', Premium: '⭐', default: '💻'
+  };
+  const emoji = categoryEmojis[project.category] || categoryEmojis.default;
+
+  return `${emoji} *${project.title}*
+
+📁 Kategori: ${project.category}
+💰 Harga: ${priceText}
+
+${project.description?.slice(0, 120)}${project.description?.length > 120 ? '...' : ''}
+
+✅ Source code berkualitas tinggi
+✅ Dokumentasi lengkap
+✅ Siap pakai & dikembangkan
+
+🔗 Lihat selengkapnya:
+${window.location.href}
+
+_FreeWithRidho — Source Code For Everyone_`;
+};
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -23,6 +52,13 @@ const ProjectDetail = () => {
   const [hasPurchased, setHasPurchased] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, index: 0 });
+
+  // Wishlist state
+  const [wishlisted, setWishlisted] = useState(false);
+
+  // Share menu state
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleBuy = () => {
     if (!user) navigate('/login');
@@ -37,6 +73,67 @@ const ProjectDetail = () => {
   const proceedToDownload = () => {
     setShowAdModal(false);
     window.open(project.downloadUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  // Toggle wishlist
+  const handleWishlist = () => {
+    const nowWishlisted = toggleWishlist(id);
+    setWishlisted(nowWishlisted);
+    if (nowWishlisted) {
+      toast.success('❤️ Ditambahkan ke Favorit!', {
+        style: { background: '#1e1b4b', border: '1px solid rgba(139,92,246,0.3)' }
+      });
+    } else {
+      toast('💔 Dihapus dari Favorit', { icon: null });
+    }
+  };
+
+  // Copy link
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      toast.success('🔗 Link berhasil disalin!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Gagal menyalin link');
+    }
+    setShowShareMenu(false);
+  };
+
+  // Share to WhatsApp
+  const handleShareWhatsApp = () => {
+    if (!project) return;
+    const text = generateShareText(project);
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setShowShareMenu(false);
+  };
+
+  // Share to Twitter/X
+  const handleShareTwitter = () => {
+    if (!project) return;
+    const isFree = !project.price || project.price === 0;
+    const text = `🔥 ${project.title} — Source code ${isFree ? 'GRATIS' : `Rp ${project.price?.toLocaleString('id-ID')}`} di FreeWithRidho!\n\n${window.location.href}`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setShowShareMenu(false);
+  };
+
+  // Native share (mobile)
+  const handleNativeShare = async () => {
+    if (!project) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: project.title,
+          text: `${project.description?.slice(0, 100)}...`,
+          url: window.location.href,
+        });
+      } catch {}
+    } else {
+      setShowShareMenu(true);
+    }
   };
 
   // Lightbox navigation
@@ -54,7 +151,7 @@ const ProjectDetail = () => {
   // Close lightbox on ESC
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'Escape') { closeLightbox(); setShowShareMenu(false); }
       if (e.key === 'ArrowLeft' && lightbox.open) prevImage();
       if (e.key === 'ArrowRight' && lightbox.open) nextImage();
     };
@@ -69,6 +166,7 @@ const ProjectDetail = () => {
         const data = await getProjectById(id);
         if (!data) { setError('Proyek tidak ditemukan.'); return; }
         setProject(data);
+        setWishlisted(isWishlisted(id));
         if (data.price > 0 && user) {
           const purchased = await checkUserPurchase(user.uid, id);
           setHasPurchased(purchased);
@@ -139,6 +237,39 @@ const ProjectDetail = () => {
         </div>
       )}
 
+      {/* ─── Share Menu Dropdown ────────────────────────────── */}
+      {showShareMenu && (
+        <div className="share-overlay" onClick={() => setShowShareMenu(false)}>
+          <div className="share-menu" onClick={e => e.stopPropagation()}>
+            <div className="share-menu-header">
+              <h3>Bagikan Proyek</h3>
+              <button onClick={() => setShowShareMenu(false)}><X size={16} /></button>
+            </div>
+            <div className="share-preview">
+              <div className="share-preview-title">{project.title}</div>
+              <div className="share-preview-sub">
+                {isFree ? '🎉 Gratis' : `💰 Rp ${project.price?.toLocaleString('id-ID')}`}
+                {' · '}{project.category}
+              </div>
+            </div>
+            <div className="share-options">
+              <button className="share-option whatsapp" onClick={handleShareWhatsApp}>
+                <MessageCircle size={20} />
+                <span>WhatsApp</span>
+              </button>
+              <button className="share-option twitter" onClick={handleShareTwitter}>
+                <Twitter size={20} />
+                <span>Twitter / X</span>
+              </button>
+              <button className="share-option copylink" onClick={handleCopyLink}>
+                {copied ? <Check size={20} /> : <Link2 size={20} />}
+                <span>{copied ? 'Tersalin!' : 'Salin Link'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── Lightbox ─────────────────────────────────────── */}
       {lightbox.open && images.length > 0 && (
         <div className="lightbox-overlay" onClick={closeLightbox}>
@@ -164,10 +295,32 @@ const ProjectDetail = () => {
       )}
 
       <div className="detail-container">
-        {/* ─── Back ─────────────────────────────────────────── */}
-        <Link to="/" className="detail-back">
-          <ArrowLeft size={16} /> Kembali
-        </Link>
+        {/* ─── Back + Action Buttons ───────────────────────── */}
+        <div className="detail-topbar">
+          <Link to="/" className="detail-back">
+            <ArrowLeft size={16} /> Kembali
+          </Link>
+          <div className="detail-actions-top">
+            {/* Wishlist / Favorite */}
+            <button
+              className={`action-btn-icon ${wishlisted ? 'wishlisted' : ''}`}
+              onClick={handleWishlist}
+              title={wishlisted ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+            >
+              <Heart size={18} fill={wishlisted ? 'currentColor' : 'none'} />
+              <span>{wishlisted ? 'Favorit' : 'Favorit'}</span>
+            </button>
+            {/* Share */}
+            <button
+              className="action-btn-icon share-btn"
+              onClick={handleNativeShare}
+              title="Bagikan proyek ini"
+            >
+              <Share2 size={18} />
+              <span>Bagikan</span>
+            </button>
+          </div>
+        </div>
 
         {/* ─── Main Content Grid ─────────────────────────────── */}
         <div className="detail-grid">
@@ -359,7 +512,17 @@ const ProjectDetail = () => {
               {isFree ? 'Tersedia gratis untuk semua' : `Rp ${project.price?.toLocaleString('id-ID')}`}
             </span>
           </div>
-          <div className="cta-action">
+          <div className="cta-actions">
+            <button
+              className={`cta-fav-btn ${wishlisted ? 'wishlisted' : ''}`}
+              onClick={handleWishlist}
+              title={wishlisted ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+            >
+              <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
+            </button>
+            <button className="cta-share-btn" onClick={() => setShowShareMenu(true)}>
+              <Share2 size={16} />
+            </button>
             {isFree ? (
               <button onClick={handleFreeDownload} className="btn btn-primary action-btn">
                 <Download size={18} /> Download Gratis

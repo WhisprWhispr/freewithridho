@@ -1,8 +1,25 @@
 import { Link } from 'react-router-dom';
-import { Download, ChevronRight } from 'lucide-react';
+import { Download, ChevronRight, Heart, Eye } from 'lucide-react';
+import { isWishlisted, toggleWishlist } from '../services/wishlistService';
+import { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import './ProjectCard.css';
 
 const ProjectCard = ({ project }) => {
+  const [wishlisted, setWishlisted] = useState(isWishlisted(project.id));
+
+  const handleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const now = toggleWishlist(project.id);
+    setWishlisted(now);
+    if (now) {
+      toast.success('❤️ Ditambahkan ke Favorit!');
+    } else {
+      toast('💔 Dihapus dari Favorit', { icon: null });
+    }
+  };
+
   return (
     <div className="project-card">
       <div className="card-header">
@@ -13,19 +30,30 @@ const ProjectCard = ({ project }) => {
           {project.price > 0 ? `Rp ${project.price.toLocaleString('id-ID')}` : 'Gratis'}
         </span>
       </div>
-      
+
       {project.images && project.images[0] && (
         <div className="card-thumbnail">
           <img src={project.images[0]} alt={project.title} loading="lazy" />
         </div>
       )}
+
       <div className="card-body">
         <h3 className="card-title">{project.title}</h3>
         <p className="card-description">{project.description}</p>
       </div>
+
       <div className="card-footer">
-        <Link to={`/project/${project.id}`} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-          View Details <ChevronRight size={16} />
+        {/* Wishlist button */}
+        <button
+          className={`card-wishlist-btn ${wishlisted ? 'active' : ''}`}
+          onClick={handleWishlist}
+          title={wishlisted ? 'Hapus dari Favorit' : 'Tambah ke Favorit'}
+        >
+          <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
+        </button>
+
+        <Link to={`/project/${project.id}`} className="btn btn-primary card-detail-btn">
+          Lihat Detail <ChevronRight size={16} />
         </Link>
       </div>
     </div>

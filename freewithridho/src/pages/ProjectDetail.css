@@ -712,8 +712,221 @@
   }
 
   .cta-title { max-width: 100%; }
-  .cta-action { width: 100%; }
-  .cta-action .btn { width: 100%; justify-content: center; }
+  .cta-actions { width: 100%; flex-wrap: wrap; }
+  .cta-actions .btn { flex: 1; justify-content: center; }
 
   .markdown-body { padding: 1.25rem; }
+
+  .share-menu {
+    width: calc(100vw - 2rem);
+    max-width: 360px;
+  }
+
+  .detail-topbar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .detail-actions-top { align-self: flex-end; }
 }
+
+/* ── Top Bar (Back + Actions) ─────────────────────────── */
+.detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.detail-actions-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Action Icon Buttons (Wishlist / Share) ───────────── */
+.action-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.action-btn-icon.wishlisted {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.25);
+}
+
+.action-btn-icon.wishlisted:hover {
+  background: rgba(244, 63, 94, 0.15);
+}
+
+.action-btn-icon.share-btn:hover {
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+/* ── Share Overlay & Menu ─────────────────────────────── */
+.share-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 9000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.share-menu {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px 20px 16px 16px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.share-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.share-menu-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.share-menu-header button {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #64748b;
+  padding: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.share-menu-header button:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
+
+.share-preview {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+}
+
+.share-preview-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.share-preview-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.625rem;
+}
+
+.share-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 0.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-option:hover { transform: translateY(-2px); }
+
+.share-option.whatsapp:hover {
+  background: rgba(37, 211, 102, 0.12);
+  border-color: rgba(37, 211, 102, 0.3);
+  color: #25d366;
+}
+
+.share-option.twitter:hover {
+  background: rgba(29, 161, 242, 0.12);
+  border-color: rgba(29, 161, 242, 0.3);
+  color: #1da1f2;
+}
+
+.share-option.copylink:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+}
+
+/* ── Updated CTA Bar ──────────────────────────────────── */
+.cta-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cta-fav-btn,
+.cta-share-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.cta-fav-btn:hover { color: #f43f5e; background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.25); }
+.cta-fav-btn.wishlisted { color: #f43f5e; background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.25); }
+.cta-share-btn:hover { color: #60a5fa; background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.25); }
+
