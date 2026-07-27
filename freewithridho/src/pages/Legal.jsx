@@ -19,7 +19,7 @@ const PrivacyPolicy = () => {
           <div className="legal-body">
             <section>
               <h2>1. Informasi yang Kami Kumpulkan</h2>
-              <p>Kami mengumpulkan informasi yang Anda berikan secara langsung saat mendaftar, seperti alamat email, nama pengguna, dan informasi pembayaran dasar yang diproses dengan aman melalui Tripay.</p>
+              <p>Kami mengumpulkan informasi yang Anda berikan secara langsung saat mendaftar, seperti alamat email, nama pengguna, dan informasi pembayaran dasar yang diproses dengan aman melalui Midtrans.</p>
             </section>
             <section>
               <h2>2. Penggunaan Informasi</h2>
@@ -31,7 +31,7 @@ const PrivacyPolicy = () => {
             </section>
             <section>
               <h2>4. Pembagian Informasi Pihak Ketiga</h2>
-              <p>Kami tidak menjual atau menyewakan informasi pribadi Anda kepada pihak ketiga. Proses pembayaran Anda ditangani oleh Tripay Payment Gateway sesuai standar industri.</p>
+              <p>Kami tidak menjual atau menyewakan informasi pribadi Anda kepada pihak ketiga. Proses pembayaran Anda ditangani oleh Midtrans Payment Gateway sesuai standar industri.</p>
             </section>
           </div>
         </div>

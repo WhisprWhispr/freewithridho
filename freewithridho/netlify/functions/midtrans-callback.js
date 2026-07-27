@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-const TRIPAY_PRIVATE_KEY = process.env.TRIPAY_PRIVATE_KEY;
+const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -8,35 +8,30 @@ exports.handler = async (event) => {
   }
 
   try {
-    const callbackSignature = event.headers['x-callback-signature'];
     const rawBody = event.body;
+    const data = JSON.parse(rawBody);
 
-    // Verify signature from Tripay
+    const { order_id, status_code, gross_amount, signature_key, transaction_status } = data;
+
+    // Verify signature from Midtrans
+    // SHA512(order_id+status_code+gross_amount+ServerKey)
     const expectedSignature = crypto
-      .createHmac('sha256', TRIPAY_PRIVATE_KEY)
-      .update(rawBody)
+      .createHash('sha512')
+      .update(`${order_id}${status_code}${gross_amount}${MIDTRANS_SERVER_KEY}`)
       .digest('hex');
 
-    if (expectedSignature !== callbackSignature) {
-      console.error('Invalid Tripay signature!');
+    if (expectedSignature !== signature_key) {
+      console.error('Invalid Midtrans signature!');
       return {
         statusCode: 400,
         body: JSON.stringify({ success: false, message: 'Invalid signature' }),
       };
     }
 
-    const data = JSON.parse(rawBody);
+    console.log(`Callback received — Order ID: ${order_id}, Status: ${transaction_status}`);
 
-    if (data.event !== 'payment_status') {
-      return { statusCode: 200, body: JSON.stringify({ success: true }) };
-    }
-
-    const { reference, merchant_ref, status } = data;
-
-    console.log(`Callback received — Ref: ${reference}, Status: ${status}`);
-
-    if (status === 'PAID') {
-      console.log(`✅ Payment PAID for ref: ${reference} (merchant_ref: ${merchant_ref})`);
+    if (transaction_status === 'capture' || transaction_status === 'settlement') {
+      console.log(`✅ Payment PAID for order: ${order_id}`);
 
       // TODO: Update Firestore transaction status to PAID via Admin SDK
       // const admin = require('firebase-admin');
@@ -46,7 +41,7 @@ exports.handler = async (event) => {
       //   });
       // }
       // const db = admin.firestore();
-      // await db.collection('transactions').doc(merchant_ref).update({
+      // await db.collection('transactions').doc(order_id).update({
       //   status: 'PAID',
       //   paidAt: admin.firestore.FieldValue.serverTimestamp(),
       // });

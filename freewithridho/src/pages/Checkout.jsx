@@ -66,7 +66,7 @@ const Checkout = () => {
         throw new Error(data.message || 'Gagal memproses pembayaran');
       }
 
-      // Redirect user to Tripay checkout page
+      // Redirect user to Midtrans checkout page
       window.location.href = data.checkoutUrl;
       
     } catch (err) {
@@ -109,7 +109,7 @@ const Checkout = () => {
         </div>
 
         <div className="checkout-security">
-          <ShieldCheck size={18} /> Pembayaran diproses dengan aman oleh Tripay.
+          <ShieldCheck size={18} /> Pembayaran diproses dengan aman oleh Midtrans.
         </div>
 
         <button 
