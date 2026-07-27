@@ -2,14 +2,27 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
-// const admin = require('firebase-admin');
+// Initialize Firebase Admin (Requires serviceAccountKey.json in the server folder)
+const admin = require('firebase-admin');
+try {
+  let serviceAccount;
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else {
+    serviceAccount = require('./serviceAccountKey.json');
+  }
+  
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    console.log('Firebase Admin initialized successfully');
+  }
+} catch (error) {
+  console.log('Warning: Firebase Admin not initialized. Missing serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT env var.');
+}
 
-// Initialize Firebase Admin (Uncomment and configure to use)
-// const serviceAccount = require('./serviceAccountKey.json');
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount)
-// });
-// const db = admin.firestore();
+const db = admin.apps.length ? admin.firestore() : null;
 
 const app = express();
 app.use(cors());
@@ -139,6 +152,29 @@ app.post('/api/tripay-callback', async (req, res) => {
   } catch (error) {
     console.error('Callback error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// 3. Endpoint: Delete Firebase Auth User (Used by Admin Panel when Banning Partner)
+app.post('/api/delete-user', async (req, res) => {
+  if (!admin.apps.length) {
+    return res.status(500).json({ success: false, message: 'Firebase Admin SDK not initialized on backend' });
+  }
+
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Missing userId' });
+    }
+
+    // Delete the user from Firebase Auth
+    await admin.auth().deleteUser(userId);
+    console.log(`Successfully deleted user auth account: ${userId}`);
+
+    res.json({ success: true, message: 'User auth account deleted.' });
+  } catch (error) {
+    console.error('Error deleting user auth:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

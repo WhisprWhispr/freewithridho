@@ -174,7 +174,7 @@ export async function banPartner(partnerId, userId) {
       const currentUser = auth.currentUser;
       if (currentUser) {
         const token = await currentUser.getIdToken();
-        const response = await fetch('/.netlify/functions/delete-user', {
+        const response = await fetch('/api/delete-user', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
