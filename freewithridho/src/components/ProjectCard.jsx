@@ -45,7 +45,7 @@ const ProjectCard = ({ project }) => {
       <div className="card-footer">
         <div className="footer-left">
           {project.developerName ? (
-            <Link to={`/user/${project.userId}`} className="card-developer" title={`Lihat Profil Developer: ${project.developerName}`} style={{ textDecoration: 'none' }}>
+            <Link to={`/user/${project.ownerId}`} className="card-developer" title={`Lihat Profil Developer: ${project.developerName}`} style={{ textDecoration: 'none' }}>
               <div className="dev-avatar">
                 {project.developerName[0].toUpperCase()}
               </div>
