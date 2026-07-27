@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ArrowLeft, Code2, Rocket, Heart, Sparkles, TerminalSquare } from 'lucide-react';
+import { ArrowLeft, Rocket, Heart, Sparkles, TerminalSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './About.css';
 
@@ -64,8 +64,30 @@ const About = () => {
         {/* SukaCoding Highlight */}
         <section className="sukacoding-highlight glass-panel">
           <div className="highlight-content">
-            <div className="highlight-icon">
-              <Code2 size={40} />
+            <div className="highlight-icon sukacoding-logo-wrap">
+              {/* SukaCoding logo — inline SVG based on brand */}
+              <svg width="220" height="52" viewBox="0 0 220 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="scGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#22d3ee" />
+                    <stop offset="100%" stopColor="#3b82f6" />
+                  </linearGradient>
+                  <linearGradient id="textGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#60a5fa" />
+                    <stop offset="100%" stopColor="#38bdf8" />
+                  </linearGradient>
+                </defs>
+                {/* Left bracket < */}
+                <polygon points="8,26 24,10 32,18 20,26 32,34 24,42" fill="url(#scGrad)" opacity="0.8" />
+                {/* Slash / */}
+                <rect x="34" y="8" width="8" height="36" rx="4" transform="rotate(-20 38 26)" fill="url(#scGrad)" />
+                {/* Right bracket > */}
+                <polygon points="64,26 48,10 40,18 52,26 40,34 48,42" fill="url(#scGrad)" opacity="0.9" />
+                {/* Text: Suka */}
+                <text x="78" y="36" fontFamily="'Segoe UI',Arial,sans-serif" fontWeight="700" fontSize="26" fill="white">Suka</text>
+                {/* Text: Coding */}
+                <text x="128" y="36" fontFamily="'Segoe UI',Arial,sans-serif" fontWeight="700" fontSize="26" fill="url(#textGrad)">Coding</text>
+              </svg>
             </div>
             <h2>Program Eksklusif <span className="text-gradient">SukaCoding</span></h2>
             <p>
@@ -91,7 +113,7 @@ const About = () => {
         {/* Footer/CTA in About */}
         <div className="about-footer">
           <p className="made-with-love">
-            Diciptakan dengan <Heart size={16} className="heart-icon" /> oleh Tim SukaCoding
+            Created by: SukaCoding Team
           </p>
         </div>
       </div>
