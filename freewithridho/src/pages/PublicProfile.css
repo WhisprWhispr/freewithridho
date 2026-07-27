@@ -187,3 +187,78 @@
 .empty-state p {
   color: #94a3b8;
 }
+
+/* ── Admin Profile Styles ──────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-profile-header {
+  border-color: rgba(245, 158, 11, 0.15);
+}
+
+.admin-cover {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(109, 40, 217, 0.3) 50%, rgba(245, 158, 11, 0.2) 100%) !important;
+}
+
+.admin-avatar-icon {
+  background: linear-gradient(135deg, #1d4ed8, #7c3aed) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  box-shadow: 0 0 0 6px #0f172a, 0 0 30px rgba(124, 58, 237, 0.4), 0 10px 20px rgba(0,0,0,0.5) !important;
+}
+
+.admin-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.8rem;
+  background: rgba(109, 40, 217, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(109, 40, 217, 0.25);
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-role-badge.founder {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.admin-profile-bio {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-top: 0.5rem;
+  max-width: 500px;
+}
+
+.admin-stat-box {
+  border-color: rgba(245, 158, 11, 0.2) !important;
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
+.admin-stat-box .public-stat-value {
+  background: linear-gradient(135deg, #fbbf24, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

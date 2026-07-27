@@ -28,7 +28,6 @@ const emptyForm = {
   readme: '',
   images: [''],
   price: 0,
-  developerName: '',
 };
 
 const Admin = () => {
@@ -432,6 +431,8 @@ const Admin = () => {
       const projectData = {
         ...form,
         price: Number(form.price) || 0,
+        developerName: 'Admin',
+        ownerId: user.uid,
       };
       
       if (editingId) {
