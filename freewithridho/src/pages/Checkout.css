@@ -181,3 +181,32 @@
     height: 28px;
   }
 }
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.btn-pay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.checkout-warning {
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  color: #fbbf24;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  line-height: 1.5;
+}
+

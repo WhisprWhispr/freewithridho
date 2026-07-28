@@ -22,7 +22,7 @@ try {
   console.log('Warning: Firebase Admin not initialized. Missing serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT env var.');
 }
 
-const db = admin.apps.length ? admin.firestore() : null;
+const db = (admin.apps && admin.apps.length) ? admin.firestore() : null;
 
 const app = express();
 app.use(cors());
@@ -36,6 +36,7 @@ const TRIPAY_URL = process.env.TRIPAY_URL || 'https://tripay.co.id/api-sandbox/'
 
 // Utility to create Tripay Signature
 const generateSignature = (merchantRef, amount) => {
+  if (!TRIPAY_PRIVATE_KEY || TRIPAY_PRIVATE_KEY === 'YOUR_TRIPAY_PRIVATE_KEY') return 'dummy-signature';
   const signatureStr = `${TRIPAY_MERCHANT_CODE}${merchantRef}${amount}`;
   return crypto.createHmac('sha256', TRIPAY_PRIVATE_KEY).update(signatureStr).digest('hex');
 };
@@ -46,16 +47,20 @@ app.post('/api/create-transaction', async (req, res) => {
 
   try {
     // In a real app, you MUST fetch the project price from Firestore securely here
-    // For example:
-    // const projectDoc = await db.collection('projects').doc(projectId).get();
-    // const project = projectDoc.data();
-    // const amount = project.price;
-
-    // For demo purposes, we'll hardcode an amount if not fetching from DB
     const amount = 50000; // MUST REPLACE WITH DB FETCH
 
     const merchantRef = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const signature = generateSignature(merchantRef, amount);
+
+    // DUMMY MODE IF NO REAL KEY IS PROVIDED
+    if (!TRIPAY_API_KEY || TRIPAY_API_KEY === 'YOUR_TRIPAY_API_KEY') {
+      console.log('Using dummy payment mode because TRIPAY_API_KEY is not set');
+      return res.json({
+        success: true,
+        checkoutUrl: `http://localhost:5173/success?reference=${merchantRef}`, 
+        reference: merchantRef
+      });
+    }
 
     const payload = {
       method: 'QRIS', // Defaulting to QRIS for demo, you can pass this from frontend

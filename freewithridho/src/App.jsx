@@ -16,6 +16,7 @@ import PartnerDashboard from './pages/PartnerDashboard';
 import PublicProfile from './pages/PublicProfile';
 import { PrivacyPolicy, TermsOfService } from './pages/Legal';
 import About from './pages/About';
+import PrayerTimes from './pages/PrayerTimes';
 import Footer from './components/Footer';
 import './App.css';
 
@@ -73,6 +74,7 @@ function App() {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/about" element={<About />} />
+              <Route path="/jadwal-sholat" element={<PrayerTimes />} />
               <Route
                 path="/admin"
                 element={
