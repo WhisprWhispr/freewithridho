@@ -90,6 +90,8 @@ exports.handler = async (event) => {
       enabled_payments: ["other_qris"],
       callbacks: {
         finish: `${SITE_URL}/success`,
+        unfinish: `${SITE_URL}/checkout/${projectId}`,
+        error: `${SITE_URL}/checkout/${projectId}`,
       },
     };
 
