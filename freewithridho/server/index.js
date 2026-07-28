@@ -7,7 +7,11 @@ const admin = require('firebase-admin');
 try {
   let serviceAccount;
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    let envVal = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (envVal.startsWith("'") && envVal.endsWith("'")) {
+       envVal = envVal.slice(1, -1);
+    }
+    serviceAccount = JSON.parse(envVal);
   } else {
     serviceAccount = require('./serviceAccountKey.json');
   }
@@ -20,6 +24,7 @@ try {
   }
 } catch (error) {
   console.log('Warning: Firebase Admin not initialized. Missing serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT env var.');
+  console.error('Initialization error details:', error.message);
 }
 
 const db = (admin.apps && admin.apps.length) ? admin.firestore() : null;
@@ -41,83 +46,108 @@ const generateSignature = (merchantRef, amount) => {
   return crypto.createHmac('sha256', TRIPAY_PRIVATE_KEY).update(signatureStr).digest('hex');
 };
 
-// 1. Endpoint: Create Transaction
+// 1. Endpoint: Create Transaction (Midtrans)
 app.post('/api/create-transaction', async (req, res) => {
-  const { projectId, userId, userEmail } = req.body;
+  const { projectId, userId, userEmail, projectTitle, amount } = req.body;
+
+  if (!projectId || !userId || !userEmail || !amount) {
+    return res.status(400).json({ success: false, message: 'Data tidak lengkap.' });
+  }
 
   try {
-    // In a real app, you MUST fetch the project price from Firestore securely here
-    const amount = 50000; // MUST REPLACE WITH DB FETCH
+    let serverKey = process.env.MIDTRANS_SERVER_KEY;
+    let environment = 'sandbox';
 
-    const merchantRef = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const signature = generateSignature(merchantRef, amount);
+    if (db) {
+      try {
+        const settingsDoc = await db.collection('settings').doc('midtrans').get();
+        if (settingsDoc.exists) {
+          if (settingsDoc.data().serverKey) serverKey = settingsDoc.data().serverKey;
+          if (settingsDoc.data().environment) environment = settingsDoc.data().environment;
+        }
+      } catch (e) {
+        console.warn('Could not read settings from Firestore:', e.message);
+      }
+    }
 
-    // DUMMY MODE IF NO REAL KEY IS PROVIDED
-    if (!TRIPAY_API_KEY || TRIPAY_API_KEY === 'YOUR_TRIPAY_API_KEY') {
-      console.log('Using dummy payment mode because TRIPAY_API_KEY is not set');
-      return res.json({
-        success: true,
-        checkoutUrl: `http://localhost:5173/success?reference=${merchantRef}`, 
-        reference: merchantRef
+    if (!serverKey) {
+      return res.status(500).json({ success: false, message: 'Midtrans Server Key not configured in Admin Panel.' });
+    }
+
+    let isSandbox = environment === 'sandbox';
+    if (!environment) {
+       isSandbox = serverKey.startsWith('SB-') || serverKey.startsWith('sb-');
+    }
+    const MIDTRANS_URL = isSandbox 
+      ? 'https://app.sandbox.midtrans.com/snap/v1/transactions' 
+      : 'https://app.midtrans.com/snap/v1/transactions';
+
+    const orderId = `TRX-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+
+    const payload = {
+      transaction_details: {
+        order_id: orderId,
+        gross_amount: Number(amount),
+      },
+      customer_details: {
+        first_name: userEmail.split('@')[0],
+        email: userEmail,
+      },
+      item_details: [
+        {
+          id: projectId,
+          price: Number(amount),
+          quantity: 1,
+          name: (projectTitle || 'Source Code').substring(0, 50),
+        }
+      ]
+    };
+
+    const authString = Buffer.from(`${serverKey}:`).toString('base64');
+    
+    // Gunakan global fetch (Node 18+)
+    const midtransRes = await fetch(MIDTRANS_URL, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${authString}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const midtransData = await midtransRes.json();
+
+    if (!midtransRes.ok) {
+      const errMsg = midtransData.error_messages ? midtransData.error_messages[0] : JSON.stringify(midtransData);
+      return res.status(400).json({ success: false, message: errMsg });
+    }
+
+    // Auto-save transaction to Firestore as PENDING
+    if (db) {
+      await db.collection('transactions').add({
+        merchantRef: orderId,
+        projectId,
+        projectTitle: projectTitle || 'Source Code',
+        userId,
+        userEmail,
+        amount: Number(amount),
+        status: 'PENDING',
+        snapToken: midtransData.token || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     }
 
-    const payload = {
-      method: 'QRIS', // Defaulting to QRIS for demo, you can pass this from frontend
-      merchant_ref: merchantRef,
-      amount: amount,
-      customer_name: userEmail.split('@')[0],
-      customer_email: userEmail,
-      customer_phone: '081234567890',
-      order_items: [
-        {
-          sku: projectId,
-          name: 'Source Code Premium',
-          price: amount,
-          quantity: 1,
-        }
-      ],
-      return_url: `http://localhost:5173/success`,
-      expired_time: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
-      signature: signature
-    };
-
-    const response = await fetch(`${TRIPAY_URL}transaction/create`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${TRIPAY_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const tripayData = await response.json();
-
-    if (!tripayData.success) {
-      return res.status(400).json({ success: false, message: tripayData.message });
-    }
-
-    // Save transaction to Firestore as UNPAID
-    // await db.collection('transactions').doc(merchantRef).set({
-    //   reference: tripayData.data.reference,
-    //   merchantRef,
-    //   projectId,
-    //   userId,
-    //   userEmail,
-    //   amount,
-    //   status: 'UNPAID',
-    //   createdAt: admin.firestore.FieldValue.serverTimestamp()
-    // });
-
     res.json({
       success: true,
-      checkoutUrl: tripayData.data.checkout_url,
-      reference: tripayData.data.reference
+      checkoutUrl: midtransData.redirect_url,
+      reference: midtransData.token,
+      merchantRef: orderId
     });
 
   } catch (error) {
     console.error('Error creating transaction:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
   }
 });
 

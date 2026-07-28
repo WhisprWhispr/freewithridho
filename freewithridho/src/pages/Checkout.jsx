@@ -79,38 +79,52 @@ const Checkout = () => {
   }, [id, user, navigate]);
 
   const handleCheckout = async () => {
-    const loadingToast = toast.loading('Memproses pembayaran otomatis...');
+    const loadingToast = toast.loading('Memproses pembayaran...');
     try {
       setProcessing(true);
 
-      // Simulasikan delay pembayaran
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Request ke API lokal (Express Server)
+      const endpoint = '/api/create-transaction';
 
-      // Buat referensi transaksi dummy
-      const merchantRef = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-      // Tulis langsung ke Firestore sebagai PAID (berkat update rules)
-      const { db } = await import('../firebase');
-      const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
-
-      await setDoc(doc(db, 'transactions', merchantRef), {
-        reference: `MOCK-${Date.now()}`,
-        merchantRef: merchantRef,
-        projectId: id,
-        userId: user.uid,
-        userEmail: user.email,
-        amount: project.price,
-        status: 'PAID', // Langsung PAID
-        createdAt: serverTimestamp(),
-        paidAt: serverTimestamp(),
-        paymentMethod: 'otomatis_midtrans_dummy'
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: id,
+          userId: user.uid,
+          userEmail: user.email,
+          projectTitle: project.title,
+          amount: project.price,
+        }),
       });
 
-      toast.dismiss(loadingToast);
-      toast.success('Pembayaran otomatis berhasil! 🎉');
+      const data = await response.json();
       
-      // Redirect ke halaman sukses dengan reference
-      navigate(`/success?reference=${merchantRef}`);
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal memproses pembayaran');
+      }
+
+      toast.success('Membuka gerbang pembayaran...', { id: loadingToast });
+      
+      // Buka popup Midtrans Snap
+      window.snap.pay(data.reference, {
+        onSuccess: function (result) {
+          toast.success('Pembayaran berhasil!');
+          navigate(`/success?reference=${data.merchantRef}`);
+        },
+        onPending: function (result) {
+          toast.info('Menunggu pembayaran Anda...');
+          navigate(`/success?reference=${data.merchantRef}`);
+        },
+        onError: function (result) {
+          toast.error('Pembayaran gagal.');
+          setProcessing(false);
+        },
+        onClose: function () {
+          toast.error('Anda menutup popup sebelum menyelesaikan pembayaran.');
+          setProcessing(false);
+        }
+      });
 
     } catch (err) {
       console.error(err);
