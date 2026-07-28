@@ -161,6 +161,11 @@ const Admin = () => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const handlePriceChange = (e) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    setForm((prev) => ({ ...prev, price: rawValue ? parseInt(rawValue, 10) : '' }));
+  };
+
   const handleImageChange = (index, value) => {
     const newImages = [...form.images];
     newImages[index] = value;
@@ -644,12 +649,10 @@ const Admin = () => {
                     <input
                       id="price"
                       name="price"
-                      type="number"
-                      min="0"
-                      step="1000"
+                      type="text"
                       placeholder="0"
-                      value={form.price}
-                      onChange={handleChange}
+                      value={form.price !== '' && form.price !== undefined ? form.price.toLocaleString('id-ID') : ''}
+                      onChange={handlePriceChange}
                       required
                     />
                   </div>

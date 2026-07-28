@@ -376,7 +376,15 @@ const PartnerDashboard = () => {
               </div>
               <div className="form-group">
                 <label>Harga (Rp) - Isi 0 jika gratis</label>
-                <input type="number" min="0" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required />
+                <input 
+                  type="text" 
+                  value={form.price !== '' && form.price !== undefined ? form.price.toLocaleString('id-ID') : ''} 
+                  onChange={e => {
+                    const rawValue = e.target.value.replace(/\D/g, '');
+                    setForm({...form, price: rawValue ? parseInt(rawValue, 10) : ''});
+                  }} 
+                  required 
+                />
               </div>
               <div className="form-group">
                 <label>Deskripsi</label>
