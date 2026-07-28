@@ -128,20 +128,7 @@ app.post('/api/create-transaction', async (req, res) => {
       return res.status(400).json({ success: false, message: errMsg });
     }
 
-    // Auto-save transaction to Firestore as PENDING
-    if (db) {
-      await db.collection('transactions').add({
-        merchantRef: orderId,
-        projectId,
-        projectTitle: projectTitle || 'Source Code',
-        userId,
-        userEmail,
-        amount: Number(amount),
-        status: 'PENDING',
-        snapToken: midtransData.token || null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
+    // Transaction akan disimpan/diupdate oleh frontend (PENDING) dan webhook (PAID)
 
     res.json({
       success: true,

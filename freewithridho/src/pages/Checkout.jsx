@@ -5,6 +5,8 @@ import { getSettings } from '../services/projectService';
 import { useAuth } from '../context/AuthContext';
 import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import './Checkout.css';
 
 // Inject Midtrans Snap.js script dynamically
@@ -107,6 +109,31 @@ const Checkout = () => {
 
       toast.success('Membuka gerbang pembayaran...', { id: loadingToast });
       
+      // Simpan transaksi sebagai PENDING di Firestore lokal/produksi
+      try {
+        await addDoc(collection(db, 'transactions'), {
+          merchantRef: data.merchantRef,
+          projectId: id,
+          projectTitle: project.title,
+          userId: user.uid,
+          userEmail: user.email,
+          amount: Number(project.price),
+          status: 'PENDING',
+          snapToken: data.reference || null,
+          createdAt: serverTimestamp(),
+        });
+      } catch (e) {
+        console.warn('Gagal menyimpan transaksi PENDING:', e);
+      }
+
+      const cancelTransaction = async () => {
+        try {
+          const q = query(collection(db, 'transactions'), where('merchantRef', '==', data.merchantRef));
+          const snap = await getDocs(q);
+          snap.forEach(docSnap => updateDoc(docSnap.ref, { status: 'CANCELLED' }));
+        } catch(e) { console.error('Gagal membatalkan transaksi:', e); }
+      };
+
       // Buka popup Midtrans Snap ter-embed
       setShowSnap(true);
       setTimeout(() => {
@@ -124,11 +151,13 @@ const Checkout = () => {
             toast.error('Pembayaran gagal.');
             setProcessing(false);
             setShowSnap(false);
+            cancelTransaction();
           },
           onClose: function () {
             toast.error('Anda menutup pembayaran.');
             setProcessing(false);
             setShowSnap(false);
+            cancelTransaction();
           }
         });
       }, 100);
