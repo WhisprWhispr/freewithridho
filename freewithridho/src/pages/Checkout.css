@@ -210,3 +210,4 @@
   line-height: 1.5;
 }
 
+.snap-embed-container { margin-top: 1.5rem; border-radius: 0.75rem; overflow: hidden; min-height: 400px; display: flex; justify-content: center; } 

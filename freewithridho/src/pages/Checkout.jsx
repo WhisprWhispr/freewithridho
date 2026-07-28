@@ -36,6 +36,7 @@ const Checkout = () => {
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState(false);
   const [midtransConfig, setMidtransConfig] = useState(null);
+  const [showSnap, setShowSnap] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -106,25 +107,31 @@ const Checkout = () => {
 
       toast.success('Membuka gerbang pembayaran...', { id: loadingToast });
       
-      // Buka popup Midtrans Snap
-      window.snap.pay(data.reference, {
-        onSuccess: function (result) {
-          toast.success('Pembayaran berhasil!');
-          navigate(`/success?reference=${data.merchantRef}`);
-        },
-        onPending: function (result) {
-          toast.info('Menunggu pembayaran Anda...');
-          navigate(`/success?reference=${data.merchantRef}`);
-        },
-        onError: function (result) {
-          toast.error('Pembayaran gagal.');
-          setProcessing(false);
-        },
-        onClose: function () {
-          toast.error('Anda menutup popup sebelum menyelesaikan pembayaran.');
-          setProcessing(false);
-        }
-      });
+      // Buka popup Midtrans Snap ter-embed
+      setShowSnap(true);
+      setTimeout(() => {
+        window.snap.embed(data.reference, {
+          embedId: 'snap-container',
+          onSuccess: function (result) {
+            toast.success('Pembayaran berhasil!');
+            navigate(`/success?reference=${data.merchantRef}`);
+          },
+          onPending: function (result) {
+            toast.info('Menunggu pembayaran Anda...');
+            navigate(`/success?reference=${data.merchantRef}`);
+          },
+          onError: function (result) {
+            toast.error('Pembayaran gagal.');
+            setProcessing(false);
+            setShowSnap(false);
+          },
+          onClose: function () {
+            toast.error('Anda menutup pembayaran.');
+            setProcessing(false);
+            setShowSnap(false);
+          }
+        });
+      }, 100);
 
     } catch (err) {
       console.error(err);
@@ -179,17 +186,21 @@ const Checkout = () => {
           </div>
         )}
 
-        <button
-          className="btn-pay"
-          onClick={handleCheckout}
-          disabled={processing || !midtransConfig?.clientKey}
-        >
-          {processing ? (
-            <><Loader2 size={18} className="spin-icon" /> Memproses...</>
-          ) : (
-            'Lanjutkan ke Pembayaran'
-          )}
-        </button>
+        {!showSnap ? (
+          <button
+            className="btn-pay"
+            onClick={handleCheckout}
+            disabled={processing || !midtransConfig?.clientKey}
+          >
+            {processing ? (
+              <><Loader2 size={18} className="spin-icon" /> Memproses...</>
+            ) : (
+              'Lanjutkan ke Pembayaran'
+            )}
+          </button>
+        ) : (
+          <div id="snap-container" className="snap-embed-container"></div>
+        )}
       </div>
     </div>
   );

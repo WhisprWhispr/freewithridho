@@ -99,7 +99,8 @@ app.post('/api/create-transaction', async (req, res) => {
           quantity: 1,
           name: (projectTitle || 'Source Code').substring(0, 50),
         }
-      ]
+      ],
+      enabled_payments: ["gopay", "other_qris"]
     };
 
     const authString = Buffer.from(`${serverKey}:`).toString('base64');

@@ -87,6 +87,7 @@ exports.handler = async (event) => {
           name: (projectTitle || 'Source Code Premium').substring(0, 50),
         },
       ],
+      enabled_payments: ["gopay", "other_qris"],
       callbacks: {
         finish: `${SITE_URL}/success`,
       },
