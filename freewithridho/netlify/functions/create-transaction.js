@@ -1,35 +1,40 @@
 'use strict';
-const crypto = require('crypto');
-const admin = require('firebase-admin');
 
-// Initialize Firebase Admin once
-if (!admin.apps.length) {
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-  } catch (error) {
-    console.error('Firebase Admin initialization error:', error);
-  }
-}
+// Firebase project config (public — same as frontend)
+const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'premium-f53eb';
+const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || 'AIzaSyCnOJJ5g6Ob2Ozo1WcvYARFzPthi133Qws';
 
-// Midtrans config — URL auto-detected based on server key prefix
-const FALLBACK_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 const SITE_URL = process.env.URL || 'https://freewithridho.netlify.app';
 
-function getMidtransUrl(serverKey, environment) {
-  // Try to use environment setting first, fallback to checking prefix if environment is not provided
-  let isSandbox = true;
-  if (environment) {
-    isSandbox = environment === 'sandbox';
-  } else {
-    isSandbox = serverKey && (serverKey.startsWith('SB-') || serverKey.startsWith('sb-'));
+// Baca environment dari Firestore REST API (tanpa service account)
+async function getMidtransConfig() {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/settings/midtrans?key=${FIREBASE_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Firestore REST API error: ' + res.status);
+    const data = await res.json();
+
+    const environment = data.fields?.environment?.stringValue || 'sandbox';
+    const clientKey = data.fields?.clientKey?.stringValue || '';
+
+    // Pilih server key dari env vars berdasarkan environment
+    let serverKey;
+    if (environment === 'production') {
+      serverKey = process.env.MIDTRANS_SERVER_KEY_PRODUCTION;
+      console.log('✅ Mode PRODUCTION — menggunakan MIDTRANS_SERVER_KEY_PRODUCTION');
+    } else {
+      serverKey = process.env.MIDTRANS_SERVER_KEY_SANDBOX;
+      console.log('✅ Mode SANDBOX — menggunakan MIDTRANS_SERVER_KEY_SANDBOX');
+    }
+
+    return { environment, serverKey, clientKey };
+  } catch (e) {
+    console.warn('Gagal baca Firestore, fallback ke env vars:', e.message);
+    // Fallback: cek env var lama
+    const serverKey = process.env.MIDTRANS_SERVER_KEY_PRODUCTION || process.env.MIDTRANS_SERVER_KEY || null;
+    const isSandbox = !serverKey || serverKey.startsWith('Mid-server-k') || serverKey.startsWith('SB-');
+    return { environment: isSandbox ? 'sandbox' : 'production', serverKey };
   }
-  
-  return isSandbox
-    ? 'https://app.sandbox.midtrans.com/snap/v1/transactions'
-    : 'https://app.midtrans.com/snap/v1/transactions';
 }
 
 exports.handler = async (event) => {
@@ -38,34 +43,20 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Try to get server key from Firestore settings first
-    let serverKey = FALLBACK_SERVER_KEY;
-    let environment = 'sandbox'; // default
-    if (admin.apps.length) {
-      try {
-        const db = admin.firestore();
-        const settingsDoc = await db.collection('settings').doc('midtrans').get();
-        if (settingsDoc.exists) {
-          if (settingsDoc.data().serverKey) {
-            serverKey = settingsDoc.data().serverKey;
-            console.log('✅ Using serverKey from Firestore settings');
-          }
-          if (settingsDoc.data().environment) {
-            environment = settingsDoc.data().environment;
-            console.log('✅ Using environment from Firestore settings:', environment);
-          }
-        }
-      } catch (e) {
-        console.warn('Could not read settings from Firestore, using env key:', e.message);
-      }
-    }
+    // Dapatkan konfigurasi Midtrans (environment + server key)
+    const { environment, serverKey } = await getMidtransConfig();
 
     if (!serverKey) {
       return {
         statusCode: 500,
-        body: JSON.stringify({ success: false, message: 'Midtrans Server Key not configured. Please set it in Admin Panel or Netlify environment variables.' }),
+        body: JSON.stringify({ success: false, message: `Midtrans Server Key tidak ditemukan. Tambahkan MIDTRANS_SERVER_KEY_SANDBOX dan MIDTRANS_SERVER_KEY_PRODUCTION di Netlify Environment Variables.` }),
       };
     }
+
+    const isSandbox = environment === 'sandbox';
+    const MIDTRANS_URL = isSandbox
+      ? 'https://app.sandbox.midtrans.com/snap/v1/transactions'
+      : 'https://app.midtrans.com/snap/v1/transactions';
 
     const body = JSON.parse(event.body);
     const { projectId, userId, userEmail, projectTitle, amount } = body;
@@ -102,8 +93,7 @@ exports.handler = async (event) => {
     };
 
     const authString = Buffer.from(`${serverKey}:`).toString('base64');
-    const MIDTRANS_URL = getMidtransUrl(serverKey, environment);
-    console.log('🌐 Midtrans URL:', MIDTRANS_URL);
+    console.log('🌐 Midtrans URL:', MIDTRANS_URL, '| Environment:', environment);
 
     const midtransRes = await fetch(MIDTRANS_URL, {
       method: 'POST',
@@ -129,26 +119,7 @@ exports.handler = async (event) => {
       };
     }
 
-    // Auto-save transaction to Firestore as PENDING
-    if (admin.apps.length) {
-      try {
-        const db = admin.firestore();
-        await db.collection('transactions').add({
-          merchantRef: orderId,
-          projectId,
-          projectTitle: projectTitle || 'Source Code Premium',
-          userId,
-          userEmail,
-          amount: Number(amount),
-          status: 'PENDING',
-          snapToken: midtransData.token || null,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        console.log(`✅ Transaction ${orderId} saved to Firestore`);
-      } catch (e) {
-        console.warn('Could not save to Firestore:', e.message);
-      }
-    }
+    // Transaction akan disimpan ke Firestore oleh midtrans-callback webhook setelah pembayaran sukses
 
     return {
       statusCode: 200,

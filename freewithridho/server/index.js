@@ -1,50 +1,65 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const crypto = require('crypto');
-// Initialize Firebase Admin (Requires serviceAccountKey.json in the server folder)
 const admin = require('firebase-admin');
+
+// Firebase project config (public)
+const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'premium-f53eb';
+const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || 'AIzaSyCnOJJ5g6Ob2Ozo1WcvYARFzPthi133Qws';
+
+// Inisialisasi Firebase Admin (opsional, untuk fitur lain seperti delete user)
+let db = null;
 try {
   let serviceAccount;
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    let envVal = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (envVal.startsWith("'") && envVal.endsWith("'")) {
-       envVal = envVal.slice(1, -1);
-    }
+  let envVal = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (envVal) {
+    if (envVal.startsWith("'") && envVal.endsWith("'")) envVal = envVal.slice(1, -1);
     serviceAccount = JSON.parse(envVal);
   } else {
     serviceAccount = require('./serviceAccountKey.json');
   }
-  
   if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
     console.log('Firebase Admin initialized successfully');
   }
+  db = admin.firestore();
 } catch (error) {
-  console.log('Warning: Firebase Admin not initialized. Missing serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT env var.');
-  console.error('Initialization error details:', error.message);
+  console.log('Warning: Firebase Admin not initialized:', error.message);
 }
-
-const db = (admin.apps && admin.apps.length) ? admin.firestore() : null;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-const TRIPAY_API_KEY = process.env.TRIPAY_API_KEY;
-const TRIPAY_PRIVATE_KEY = process.env.TRIPAY_PRIVATE_KEY;
-const TRIPAY_MERCHANT_CODE = process.env.TRIPAY_MERCHANT_CODE;
-const TRIPAY_URL = process.env.TRIPAY_URL || 'https://tripay.co.id/api-sandbox/';
 
-// Utility to create Tripay Signature
-const generateSignature = (merchantRef, amount) => {
-  if (!TRIPAY_PRIVATE_KEY || TRIPAY_PRIVATE_KEY === 'YOUR_TRIPAY_PRIVATE_KEY') return 'dummy-signature';
-  const signatureStr = `${TRIPAY_MERCHANT_CODE}${merchantRef}${amount}`;
-  return crypto.createHmac('sha256', TRIPAY_PRIVATE_KEY).update(signatureStr).digest('hex');
-};
+// Baca environment dari Firestore REST API (tanpa service account)
+async function getMidtransConfig() {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/settings/midtrans?key=${FIREBASE_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Firestore REST error: ' + res.status);
+    const data = await res.json();
+
+    const environment = data.fields?.environment?.stringValue || 'sandbox';
+
+    let serverKey;
+    if (environment === 'production') {
+      serverKey = process.env.MIDTRANS_SERVER_KEY_PRODUCTION;
+      console.log('✅ Mode PRODUCTION — menggunakan MIDTRANS_SERVER_KEY_PRODUCTION');
+    } else {
+      serverKey = process.env.MIDTRANS_SERVER_KEY_SANDBOX;
+      console.log('✅ Mode SANDBOX — menggunakan MIDTRANS_SERVER_KEY_SANDBOX');
+    }
+
+    return { environment, serverKey };
+  } catch (e) {
+    console.warn('Gagal baca Firestore REST, fallback ke env vars:', e.message);
+    const serverKey = process.env.MIDTRANS_SERVER_KEY_PRODUCTION || process.env.MIDTRANS_SERVER_KEY || null;
+    const isSandbox = !serverKey || serverKey.includes('k_');
+    return { environment: isSandbox ? 'sandbox' : 'production', serverKey };
+  }
+}
 
 // 1. Endpoint: Create Transaction (Midtrans)
 app.post('/api/create-transaction', async (req, res) => {
@@ -55,31 +70,15 @@ app.post('/api/create-transaction', async (req, res) => {
   }
 
   try {
-    let serverKey = process.env.MIDTRANS_SERVER_KEY;
-    let environment = 'sandbox';
-
-    if (db) {
-      try {
-        const settingsDoc = await db.collection('settings').doc('midtrans').get();
-        if (settingsDoc.exists) {
-          if (settingsDoc.data().serverKey) serverKey = settingsDoc.data().serverKey;
-          if (settingsDoc.data().environment) environment = settingsDoc.data().environment;
-        }
-      } catch (e) {
-        console.warn('Could not read settings from Firestore:', e.message);
-      }
-    }
+    const { environment, serverKey } = await getMidtransConfig();
 
     if (!serverKey) {
-      return res.status(500).json({ success: false, message: 'Midtrans Server Key not configured in Admin Panel.' });
+      return res.status(500).json({ success: false, message: 'Midtrans Server Key tidak ditemukan. Tambahkan MIDTRANS_SERVER_KEY_SANDBOX / MIDTRANS_SERVER_KEY_PRODUCTION di file .env' });
     }
 
-    let isSandbox = environment === 'sandbox';
-    if (!environment) {
-       isSandbox = serverKey.startsWith('SB-') || serverKey.startsWith('sb-');
-    }
-    const MIDTRANS_URL = isSandbox 
-      ? 'https://app.sandbox.midtrans.com/snap/v1/transactions' 
+    const isSandbox = environment === 'sandbox';
+    const MIDTRANS_URL = isSandbox
+      ? 'https://app.sandbox.midtrans.com/snap/v1/transactions'
       : 'https://app.midtrans.com/snap/v1/transactions';
 
     const orderId = `TRX-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;

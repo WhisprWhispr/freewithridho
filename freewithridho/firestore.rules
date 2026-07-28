@@ -18,9 +18,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Settings (API Keys, dll) hanya bisa dibaca dan ditulis oleh admin
+    // Settings: environment bisa dibaca publik (untuk deteksi sandbox/production di backend)
+    // Write hanya untuk user yang login (admin)
     match /settings/{document=**} {
-      allow read, write: if request.auth != null;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
 
     // Ratings: Anyone can read, logged-in users can write their own rating
