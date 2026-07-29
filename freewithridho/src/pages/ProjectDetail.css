@@ -769,8 +769,14 @@
     max-width: 360px;
   }
 
-  .detail-topbar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-  .detail-actions-top { align-self: flex-end; }
+  .detail-topbar { 
+    flex-direction: row; 
+    align-items: center; 
+    justify-content: space-between; 
+    gap: 0.5rem; 
+    flex-wrap: wrap; 
+  }
+  .detail-actions-top { align-self: auto; }
 }
 
 /* ── Top Bar (Back + Actions) ─────────────────────────── */

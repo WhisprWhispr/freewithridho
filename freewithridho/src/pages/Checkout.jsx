@@ -8,7 +8,6 @@ import { toast } from 'react-hot-toast';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { validatePromoCode } from '../services/promoService';
-import { validateReferralCode, getUserProfile } from '../services/referralService';
 import './Checkout.css';
 
 // Inject Midtrans Snap.js script dynamically
@@ -47,11 +46,6 @@ const Checkout = () => {
   const [validPromo, setValidPromo] = useState(null);
   const [checkingPromo, setCheckingPromo] = useState(false);
 
-  // Referral code state
-  const [referralInput, setReferralInput] = useState('');
-  const [validReferral, setValidReferral] = useState(null);
-  const [checkingReferral, setCheckingReferral] = useState(false);
-
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -60,20 +54,10 @@ const Checkout = () => {
 
     const fetchData = async () => {
       try {
-        const [data, settings, userProfile] = await Promise.all([
+        const [data, settings] = await Promise.all([
           getProjectById(id),
-          getSettings('midtrans'),
-          getUserProfile(user.uid)
+          getSettings('midtrans')
         ]);
-
-        if (userProfile && userProfile.referredBy && userProfile.referredByUserId) {
-          setReferralInput(userProfile.referredBy);
-          setValidReferral({
-            valid: true,
-            ownerUserId: userProfile.referredByUserId,
-            message: 'Kode otomatis dari profil: ' + userProfile.referredBy
-          });
-        }
 
         if (!data) {
           setError('Proyek tidak ditemukan.');
@@ -142,8 +126,6 @@ const Checkout = () => {
           amount: validPromo ? validPromo.finalAmount : Number(project.price),
           originalAmount: Number(project.price),
           promoCode: validPromo ? validPromo.code : null,
-          referrerUserId: validReferral ? validReferral.ownerUserId : null,
-          referralCode: validReferral ? referralInput.trim().toUpperCase() : null,
           status: 'PENDING',
           snapToken: data.reference || null,
           createdAt: serverTimestamp(),
@@ -275,50 +257,6 @@ const Checkout = () => {
           {validPromo && (
             <div className="promo-success-msg">
               {validPromo.message}
-            </div>
-          )}
-        </div>
-
-        {/* Referral Code */}
-        <div className="promo-section">
-          <div className="promo-input-group">
-            <span style={{ fontSize: '1rem' }}>🤝</span>
-            <input
-              type="text"
-              placeholder="Kode referral teman (opsional)"
-              value={referralInput}
-              onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
-              disabled={validReferral !== null || checkingReferral}
-              className="promo-input"
-            />
-            {!validReferral ? (
-              <button
-                className="btn-apply-promo"
-                onClick={async () => {
-                  if (!referralInput.trim()) return;
-                  setCheckingReferral(true);
-                  const res = await validateReferralCode(referralInput, user.uid);
-                  if (res.valid) {
-                    setValidReferral(res);
-                    toast.success(res.message);
-                  } else {
-                    toast.error(res.message);
-                  }
-                  setCheckingReferral(false);
-                }}
-                disabled={!referralInput.trim() || checkingReferral}
-              >
-                {checkingReferral ? 'Cek...' : 'Terapkan'}
-              </button>
-            ) : (
-              <button className="btn-remove-promo" onClick={() => { setValidReferral(null); setReferralInput(''); }} title="Hapus Referral">
-                <X size={16} />
-              </button>
-            )}
-          </div>
-          {validReferral && (
-            <div className="promo-success-msg">
-              {validReferral.message}
             </div>
           )}
         </div>

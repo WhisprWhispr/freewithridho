@@ -221,6 +221,11 @@ const Navbar = () => {
                   <LayoutDashboard size={15} /> Admin Panel
                 </Link>
               )}
+              {partner && partner.status === 'approved' && (
+                <Link to="/partner-dashboard" className="mobile-link">
+                  <LayoutDashboard size={15} /> Dashboard Partner
+                </Link>
+              )}
               <Link to="/profile" className="mobile-link">
                 <User size={15} /> Profil & Transaksi
               </Link>

@@ -40,7 +40,8 @@ service cloud.firestore {
         request.auth.token.email == 'ridhosandhika18022022@gmail.com' || 
         (request.auth.uid == resource.data.userId && (
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['appealRequested', 'appealedAt']) ||
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance'])
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance', 'affiliateBalance'])
         )) ||
         // Allow any logged in user (buyers) to add referral commissions
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['affiliateBalance', 'affiliateCount', 'balance'])

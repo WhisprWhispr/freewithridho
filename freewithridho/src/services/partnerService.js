@@ -122,9 +122,16 @@ export async function submitWithdrawal(data) {
   const partnerRef = doc(db, COLLECTION, data.partnerId);
   const partnerSnap = await getDoc(partnerRef);
   if (partnerSnap.exists()) {
-    const currentBalance = partnerSnap.data().balance || 0;
+    const pData = partnerSnap.data();
+    const currentBalance = pData.balance || 0;
+    const currentAffBalance = pData.affiliateBalance || 0;
+    
+    // Deduct affiliate balance proportionally (but not below 0)
+    const newAffBalance = Math.max(0, currentAffBalance - data.amount);
+
     await updateDoc(partnerRef, {
-      balance: currentBalance - data.amount
+      balance: currentBalance - data.amount,
+      affiliateBalance: newAffBalance
     });
   }
 }

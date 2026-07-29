@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import ProjectCard from '../components/ProjectCard';
 import { listenToPartnerByUserId } from '../services/partnerService';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
-import { User, Briefcase, ExternalLink, ShieldCheck, Star, Crown, MessageCircle, Mail } from 'lucide-react';
+import { User, Briefcase, ExternalLink, ShieldCheck, Star, Crown, MessageCircle, Mail, ArrowLeft } from 'lucide-react';
 import './PublicProfile.css';
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
@@ -73,10 +73,17 @@ const PublicProfile = () => {
     );
   }
 
+  const navigate = useNavigate();
+
   // ── ADMIN PROFILE ──────────────────────────────────────────────
   if (isAdminProfile) {
     return (
       <div className="public-profile-page">
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1.5rem 0', width: '100%' }}>
+          <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s', fontWeight: 500 }}>
+            <ArrowLeft size={16} /> Kembali
+          </button>
+        </div>
         <div className="public-profile-header admin-profile-header">
           <div className="public-profile-cover admin-cover"></div>
           <div className="public-profile-info-container">
@@ -177,6 +184,11 @@ const PublicProfile = () => {
   // ── PARTNER PROFILE ────────────────────────────────────────────
   return (
     <div className="public-profile-page">
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 1.5rem 0', width: '100%' }}>
+        <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s', fontWeight: 500 }}>
+          <ArrowLeft size={16} /> Kembali
+        </button>
+      </div>
       <div className="public-profile-header">
         <div className="public-profile-cover"></div>
         <div className="public-profile-info-container">
