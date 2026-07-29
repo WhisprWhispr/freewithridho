@@ -1,25 +1,48 @@
 .public-profile-page {
-  padding: 6rem 5% 4rem;
-  max-width: 1200px;
+  padding: 5rem 1rem 4rem;
+  max-width: 1100px;
   margin: 0 auto;
   min-height: calc(100vh - 80px);
+  box-sizing: border-box;
 }
 
+/* ── Back Button ─────────────────────────────────── */
+.profile-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 0.2s;
+  margin-bottom: 1rem;
+}
+
+.profile-back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+/* ── Profile Header Card ─────────────────────────── */
 .public-profile-header {
   position: relative;
-  border-radius: 1.5rem;
+  border-radius: 1.25rem;
   overflow: hidden;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  margin-bottom: 3rem;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .public-profile-cover {
-  height: 200px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.2));
-  background-size: cover;
-  background-position: center;
+  height: 140px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.25));
   position: relative;
 }
 
@@ -29,78 +52,133 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 100px;
+  height: 80px;
   background: linear-gradient(to top, rgba(15, 23, 42, 1), transparent);
 }
 
+/* ── Info Container ──────────────────────────────── */
 .public-profile-info-container {
-  padding: 0 2rem 2rem;
+  padding: 0 1.25rem 1.5rem;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-@media (min-width: 768px) {
-  .public-profile-info-container {
-    flex-direction: row;
-    align-items: flex-end;
-    padding: 0 3rem 2rem;
-  }
-}
-
+/* ── Avatar ──────────────────────────────────────── */
 .public-profile-avatar {
-  width: 120px;
-  height: 120px;
+  width: 90px;
+  height: 90px;
   background: linear-gradient(135deg, #3b82f6, #6366f1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 3rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  box-shadow: 0 0 0 6px #0f172a, 0 10px 20px rgba(0,0,0,0.5);
-  margin-top: -60px;
+  box-shadow: 0 0 0 4px #0f172a, 0 8px 20px rgba(0, 0, 0, 0.5);
+  margin-top: -45px;
   z-index: 2;
   flex-shrink: 0;
 }
 
-.public-profile-details {
-  flex: 1;
+/* ── Name Row: name + badge inline ──────────────── */
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .public-profile-name {
-  margin: 0 0 0.5rem;
-  font-size: 2rem;
+  margin: 0;
+  font-size: 1.6rem;
   color: #f8fafc;
   line-height: 1.2;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+/* ── Badges Row ──────────────────────────────────── */
+.profile-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
 }
 
 .public-profile-badge {
-  margin: 0 0 1rem;
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  background: rgba(16, 185, 129, 0.1);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  background: rgba(16, 185, 129, 0.12);
   color: #10b981;
   border-radius: 9999px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  white-space: nowrap;
 }
 
+.admin-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  background: rgba(109, 40, 217, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(109, 40, 217, 0.25);
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-role-badge.founder {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* ── Bio ─────────────────────────────────────────── */
+.admin-profile-bio {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  margin: 0.25rem 0 0;
+}
+
+/* ── Meta (skills, portfolio) ────────────────────── */
 .public-profile-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1rem;
   color: #94a3b8;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
 }
 
 .public-meta-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .public-meta-item.link {
@@ -114,141 +192,93 @@
   text-decoration: underline;
 }
 
+/* ── Stats + CTA Row ─────────────────────────────── */
+.profile-stats-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
 .public-profile-stats {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .public-stat-box {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
   text-align: center;
-  min-width: 100px;
+  min-width: 80px;
 }
 
 .public-stat-value {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: #f8fafc;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 
 .public-stat-label {
-  font-size: 0.85rem;
-  color: #94a3b8;
+  font-size: 0.8rem;
+  color: #64748b;
 }
 
-.public-profile-content {
-  margin-top: 2rem;
-}
-
-.public-content-title {
-  font-size: 1.5rem;
-  color: #f8fafc;
-  margin-bottom: 1.5rem;
-  display: flex;
+/* ── Hire Me / Contact Button ────────────────────── */
+.btn-hire-me {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.public-empty-projects {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
-  color: #94a3b8;
+.btn-hire-me:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+  color: white;
 }
 
-.public-projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+.btn-hire-me.admin-btn {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
-/* Empty State Profile Not Found */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  min-height: 60vh;
+.btn-hire-me.admin-btn:hover {
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
 }
 
-.empty-state h2 {
-  color: #f8fafc;
-  margin-bottom: 0.5rem;
-}
-
-.empty-state p {
-  color: #94a3b8;
-}
-
-/* ── Admin Profile Styles ──────────────────────────── */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
+/* ── Admin Cover ─────────────────────────────────── */
 .admin-profile-header {
   border-color: rgba(245, 158, 11, 0.15);
 }
 
 .admin-cover {
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(109, 40, 217, 0.3) 50%, rgba(245, 158, 11, 0.2) 100%) !important;
+  background: linear-gradient(135deg,
+    rgba(30, 58, 138, 0.5) 0%,
+    rgba(109, 40, 217, 0.35) 50%,
+    rgba(245, 158, 11, 0.2) 100%) !important;
 }
 
 .admin-avatar-icon {
   background: linear-gradient(135deg, #1d4ed8, #7c3aed) !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: white;
-  font-size: 1rem;
-  box-shadow: 0 0 0 6px #0f172a, 0 0 30px rgba(124, 58, 237, 0.4), 0 10px 20px rgba(0,0,0,0.5) !important;
-}
-
-.admin-verified-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.75rem;
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.admin-role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.8rem;
-  background: rgba(109, 40, 217, 0.15);
-  color: #a78bfa;
-  border: 1px solid rgba(109, 40, 217, 0.25);
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.admin-role-badge.founder {
-  background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.25);
-}
-
-.admin-profile-bio {
-  color: #94a3b8;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-top: 0.5rem;
-  max-width: 500px;
+  box-shadow: 0 0 0 4px #0f172a, 0 0 28px rgba(124, 58, 237, 0.4), 0 8px 20px rgba(0,0,0,0.5) !important;
 }
 
 .admin-stat-box {
@@ -263,39 +293,105 @@
   background-clip: text;
 }
 
-.btn-hire-me {
-  display: inline-flex;
+/* ── Projects Section ────────────────────────────── */
+.public-profile-content {
+  margin-top: 0.5rem;
+}
+
+.public-content-title {
+  font-size: 1.35rem;
+  color: #f8fafc;
+  margin-bottom: 1.25rem;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 0.9rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 50px;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
+  gap: 0.6rem;
 }
 
-.btn-hire-me:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
-  color: white;
+.public-empty-projects {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  color: #94a3b8;
 }
 
-.btn-hire-me:active {
-  transform: translateY(0);
+.public-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
 
-.btn-hire-me.admin-btn {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+/* ── Empty State ─────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 60vh;
+  padding: 2rem 1rem;
 }
 
-.btn-hire-me.admin-btn:hover {
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+.empty-state h2 {
+  color: #f8fafc;
+  margin-bottom: 0.5rem;
 }
 
+.empty-state p {
+  color: #94a3b8;
+}
+
+/* ── Spinner ─────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Desktop ─────────────────────────────────────── */
+@media (min-width: 640px) {
+  .public-profile-page {
+    padding: 6rem 2rem 4rem;
+  }
+
+  .public-profile-cover {
+    height: 180px;
+  }
+
+  .public-profile-avatar {
+    width: 110px;
+    height: 110px;
+    font-size: 2.8rem;
+    margin-top: -55px;
+    box-shadow: 0 0 0 5px #0f172a, 0 10px 24px rgba(0,0,0,0.5);
+  }
+
+  .public-profile-info-container {
+    padding: 0 2rem 2rem;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .public-profile-name {
+    font-size: 1.9rem;
+  }
+
+  .admin-profile-bio {
+    max-width: 480px;
+  }
+
+  .profile-stats-cta-row {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (min-width: 900px) {
+  .public-profile-page {
+    padding: 6rem 3rem 4rem;
+  }
+
+  .public-profile-info-container {
+    padding: 0 2.5rem 2rem;
+    align-items: flex-end;
+  }
+}
