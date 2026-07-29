@@ -3,10 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getProjectById } from '../services/projectService';
 import { getSettings } from '../services/projectService';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2, Tag, X } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2, Tag, X, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, onSnapshot, limit } from 'firebase/firestore';
 import { validatePromoCode } from '../services/promoService';
 import './Checkout.css';
 
@@ -40,6 +40,7 @@ const Checkout = () => {
   const [processing, setProcessing] = useState(false);
   const [midtransConfig, setMidtransConfig] = useState(null);
   const [showSnap, setShowSnap] = useState(false);
+  const [pendingTransaction, setPendingTransaction] = useState(null); // existing PENDING trx
 
   // Promo code state
   const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -87,6 +88,27 @@ const Checkout = () => {
     fetchData();
   }, [id, user, navigate]);
 
+  // Real-time listener: cek apakah ada transaksi PENDING yang belum selesai untuk proyek ini
+  useEffect(() => {
+    if (!user || !id) return;
+    const q = query(
+      collection(db, 'transactions'),
+      where('userId', '==', user.uid),
+      where('projectId', '==', id),
+      where('status', '==', 'PENDING'),
+      limit(1)
+    );
+    const unsubscribe = onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        const doc = snap.docs[0];
+        setPendingTransaction({ id: doc.id, ...doc.data() });
+      } else {
+        setPendingTransaction(null);
+      }
+    });
+    return () => unsubscribe();
+  }, [user, id]);
+
   const handleCheckout = async () => {
     const loadingToast = toast.loading('Memproses pembayaran...');
     try {
@@ -117,11 +139,11 @@ const Checkout = () => {
 
       toast.success('Membuka gerbang pembayaran...', { id: loadingToast });
       
-      // Simpan transaksi sebagai PENDING di Firestore lokal/produksi
+      // Simpan transaksi sebagai PENDING di Firestore
       try {
-        const basePrice = (project.discountPrice && project.discountPrice > 0) ? Number(project.discountPrice) : Number(project.price);
         await addDoc(collection(db, 'transactions'), {
           merchantRef: data.merchantRef,
+          snapToken: data.reference || null,
           projectId: id,
           projectTitle: project.title,
           userId: user.uid,
@@ -130,55 +152,58 @@ const Checkout = () => {
           originalAmount: basePrice,
           promoCode: validPromo ? validPromo.code : null,
           status: 'PENDING',
-          snapToken: data.reference || null,
           createdAt: serverTimestamp(),
         });
       } catch (e) {
         console.warn('Gagal menyimpan transaksi PENDING:', e);
       }
 
-      const cancelTransaction = async () => {
-        try {
-          const q = query(collection(db, 'transactions'), where('merchantRef', '==', data.merchantRef));
-          const snap = await getDocs(q);
-          snap.forEach(docSnap => updateDoc(docSnap.ref, { status: 'CANCELLED' }));
-        } catch(e) { console.error('Gagal membatalkan transaksi:', e); }
-      };
-
       // Buka popup Midtrans Snap ter-embed
-      setShowSnap(true);
-      setTimeout(() => {
-        window.snap.embed(data.reference, {
-          embedId: 'snap-container',
-          onSuccess: function (result) {
-            toast.success('Pembayaran berhasil!');
-            // Referral commission will be credited securely in real-time on the success page
-            navigate(`/success?reference=${data.merchantRef}`);
-          },
-          onPending: function (result) {
-            toast.info('Menunggu pembayaran Anda...');
-            navigate(`/success?reference=${data.merchantRef}`);
-          },
-          onError: function (result) {
-            toast.error('Pembayaran gagal.');
-            setProcessing(false);
-            setShowSnap(false);
-            cancelTransaction();
-          },
-          onClose: function () {
-            toast.error('Anda menutup pembayaran.');
-            setProcessing(false);
-            setShowSnap(false);
-            cancelTransaction();
-          }
-        });
-      }, 100);
+      openSnapEmbed(data.reference, data.merchantRef);
 
     } catch (err) {
       console.error(err);
       toast.error(err.message || 'Terjadi kesalahan saat memproses pembayaran.', { id: loadingToast });
       setProcessing(false);
     }
+  };
+
+  // Lanjutkan bayar dari transaksi PENDING yang sudah ada
+  const handleResumePendingPayment = () => {
+    if (!pendingTransaction?.snapToken) {
+      toast.error('Token pembayaran tidak ditemukan. Silakan buat transaksi baru.');
+      return;
+    }
+    openSnapEmbed(pendingTransaction.snapToken, pendingTransaction.merchantRef);
+  };
+
+  // Buka Midtrans Snap embed
+  const openSnapEmbed = (snapToken, merchantRef) => {
+    setShowSnap(true);
+    setTimeout(() => {
+      window.snap.embed(snapToken, {
+        embedId: 'snap-container',
+        onSuccess: function (result) {
+          toast.success('Pembayaran berhasil!');
+          navigate(`/success?reference=${merchantRef}`);
+        },
+        onPending: function (result) {
+          toast.info('Menunggu pembayaran Anda...');
+          navigate(`/success?reference=${merchantRef}`);
+        },
+        onError: function (result) {
+          toast.error('Pembayaran gagal.');
+          setProcessing(false);
+          setShowSnap(false);
+        },
+        onClose: function () {
+          // Jangan batalkan transaksi — biarkan PENDING agar user bisa kembali lagi
+          toast('Pembayaran ditutup. Anda bisa melanjutkan kapan saja.', { icon: '⏸️' });
+          setProcessing(false);
+          setShowSnap(false);
+        }
+      });
+    }, 100);
   };
 
   const handleApplyPromo = async () => {
@@ -301,17 +326,33 @@ const Checkout = () => {
         )}
 
         {!showSnap ? (
-          <button
-            className="btn-pay"
-            onClick={handleCheckout}
-            disabled={processing || !midtransConfig?.clientKey}
-          >
-            {processing ? (
-              <><Loader2 size={18} className="spin-icon" /> Memproses...</>
-            ) : (
-              'Lanjutkan ke Pembayaran'
+          <div className="checkout-pay-section">
+            {/* Jika ada PENDING transaction yang belum selesai, tampilkan tombol Lanjutkan Bayar */}
+            {pendingTransaction && (
+              <div className="pending-trx-notice">
+                <p>⏸️ Anda memiliki pembayaran yang belum selesai untuk proyek ini.</p>
+                <button
+                  className="btn-resume-pay"
+                  onClick={handleResumePendingPayment}
+                  disabled={processing}
+                >
+                  <RefreshCw size={16} /> Lanjutkan Pembayaran
+                </button>
+                <div className="pending-trx-divider">— atau buat transaksi baru —</div>
+              </div>
             )}
-          </button>
+            <button
+              className="btn-pay"
+              onClick={handleCheckout}
+              disabled={processing || !midtransConfig?.clientKey}
+            >
+              {processing ? (
+                <><Loader2 size={18} className="spin-icon" /> Memproses...</>
+              ) : (
+                'Lanjutkan ke Pembayaran'
+              )}
+            </button>
+          </div>
         ) : (
           <div id="snap-container" className="snap-embed-container"></div>
         )}

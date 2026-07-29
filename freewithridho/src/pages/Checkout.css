@@ -136,6 +136,66 @@
   animation: none;
 }
 
+/* ── Resume Payment ── */
+.checkout-pay-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pending-trx-notice {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.pending-trx-notice p {
+  color: #fbbf24;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.btn-resume-pay {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-resume-pay:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+}
+
+.btn-resume-pay:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pending-trx-divider {
+  color: #64748b;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+
 .checkout-loading, .checkout-error {
   text-align: center;
   margin-top: 5rem;

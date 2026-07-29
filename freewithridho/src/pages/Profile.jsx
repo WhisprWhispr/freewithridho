@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShieldCheck, Settings, BarChart3, Key, Heart, Share2, MessageCircle, Send
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getUserTransactions, getAllProjects } from '../services/projectService';
+import { listenToUserTransactions, getAllProjects } from '../services/projectService';
 import { listenToPartnerByUserId } from '../services/partnerService';
 import { getWishlist, getWishlistFromFirestore } from '../services/wishlistService';
 import { ensureReferralCode, listenToUserProfile, saveReferredBy } from '../services/referralService';
@@ -160,31 +160,29 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
   };
 
   useEffect(() => {
+    // Real-time listener for transactions (otomatis update saat status berubah)
+    const unsubscribeTrx = listenToUserTransactions(user.uid, (transData) => {
+      setTransactions(transData);
+      setLoading(false);
+    });
+
+    // Load wishlist & other data
     const fetchData = async () => {
-      setLoading(true);
       try {
-        const [transData, allProjects] = await Promise.all([
-          getUserTransactions(user.uid),
-          getAllProjects()
-        ]);
-        setTransactions(transData);
-        
+        const allProjects = await getAllProjects();
         const wishlistIds = await getWishlistFromFirestore(user.uid);
         const favs = allProjects.filter(p => wishlistIds.includes(p.id));
         setFavoriteProjects(favs);
-
         // Ensure referral code exists (creates it if not present)
         await ensureReferralCode(user.uid);
       } catch (err) {
         console.error(err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchData();
 
     // Real-time listener for referral balance & count
-    const unsubscribe = listenToUserProfile(user.uid, (profile) => {
+    const unsubscribeProfile = listenToUserProfile(user.uid, (profile) => {
       if (profile) {
         setReferralData({
           code: profile.referralCode || '',
@@ -197,7 +195,11 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
         }
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeTrx();
+      unsubscribeProfile();
+    };
   }, [user.uid]);
 
   const paidTransactions = transactions.filter(t => t.status === 'PAID');

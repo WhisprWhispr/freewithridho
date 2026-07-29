@@ -129,6 +129,27 @@ export async function getUserTransactions(userId) {
 }
 
 /**
+ * Real-time listener for user transactions (auto-updates when data changes)
+ */
+export function listenToUserTransactions(userId, callback) {
+  if (!userId) return () => {};
+  
+  const q = query(
+    collection(db, 'transactions'),
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const transactions = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    callback(transactions);
+  }, (error) => {
+    console.error("Error listening to transactions:", error);
+  });
+}
+
+
+/**
  * Get settings document from Firestore
  */
 export async function getSettings(docId) {
