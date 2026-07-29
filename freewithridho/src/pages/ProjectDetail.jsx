@@ -7,14 +7,15 @@ import 'highlight.js/styles/github-dark.css';
 import { Download, ArrowLeft, FileText, ShoppingCart, LockOpen,
   Heart, Tag, Star, ZoomIn, X, ChevronLeft, ChevronRight,
   Shield, Zap, Package, User, Share2, Link2, MessageCircle,
-  Hash, Eye, Copy, Check, Send, ThumbsUp, Edit3, Trash2, MonitorPlay, ExternalLink
+  Hash, Copy, Check, MonitorPlay, ExternalLink
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getProjectById, checkUserPurchase } from '../services/projectService';
 import { isWishlisted, toggleWishlist, isWishlistedFirestore, toggleWishlistFirestore } from '../services/wishlistService';
 import { listenToProjectReviews, submitReview, getUserReview } from '../services/reviewService';
-import { listenToComments, sendComment, deleteComment } from '../services/discussionService';
+import { listenToComments } from '../services/discussionService';
+import DiscussionModal from '../components/DiscussionModal';
 import './ProjectDetail.css';
 
 // Professional share text generator
@@ -77,11 +78,10 @@ const ProjectDetail = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [existingReview, setExistingReview] = useState(null);
 
-  // Discussions state
+  // Discussions state — only count for tab badge
   const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState('');
-  const [sendingComment, setSendingComment] = useState(false);
-  const [replyingTo, setReplyingTo] = useState(null);
+  // Modal open state
+  const [showDiscModal, setShowDiscModal] = useState(false);
 
   const handleBuy = () => {
     if (!user) navigate('/login');
@@ -254,29 +254,6 @@ const ProjectDetail = () => {
     }
   };
 
-  const handleSendComment = async () => {
-    if (!user) { toast.error('Login dahulu untuk berkomentar!'); return; }
-    if (!commentText.trim()) return;
-    setSendingComment(true);
-    try {
-      await sendComment(id, user.uid, user.displayName || user.email?.split('@')[0], commentText, replyingTo);
-      setCommentText('');
-      setReplyingTo(null);
-    } catch (e) {
-      toast.error(e.message);
-    } finally {
-      setSendingComment(false);
-    }
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    try {
-      await deleteComment(id, commentId);
-      toast.success('Komentar dihapus.');
-    } catch (e) {
-      toast.error('Gagal menghapus komentar.');
-    }
-  };
 
   if (loading) {
     return (
@@ -616,8 +593,8 @@ const ProjectDetail = () => {
               {reviewCount > 0 && <span className="tab-badge">{reviewCount}</span>}
             </button>
             <button
-              className={`detail-tab-btn ${detailTab === 'discussion' ? 'active' : ''}`}
-              onClick={() => setDetailTab('discussion')}
+              className="detail-tab-btn disc-open-btn"
+              onClick={() => setShowDiscModal(true)}
             >
               <MessageCircle size={15} /> Diskusi
               {comments.length > 0 && <span className="tab-badge">{comments.length}</span>}
@@ -773,94 +750,7 @@ const ProjectDetail = () => {
             </div>
           )}
 
-          {/* DISCUSSION TAB */}
-          {detailTab === 'discussion' && (
-            <div className="discussion-section">
-              {/* Comment input */}
-              {user ? (
-                <div className="comment-input-box">
-                  {replyingTo && (
-                    <div className="replying-to-banner">
-                      Membalas komentar · <button onClick={() => setReplyingTo(null)}>✕ Batal</button>
-                    </div>
-                  )}
-                  <textarea
-                    className="comment-textarea"
-                    placeholder={replyingTo ? 'Tulis balasan...' : 'Tulis pertanyaan atau komentar...'}
-                    value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
-                    rows={3}
-                    onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSendComment(); }}
-                  />
-                  <div className="comment-input-footer">
-                    <span className="comment-hint">Ctrl+Enter untuk kirim</span>
-                    <button
-                      className="btn-comment-send"
-                      onClick={handleSendComment}
-                      disabled={sendingComment || !commentText.trim()}
-                    >
-                      <Send size={15} /> {sendingComment ? 'Mengirim...' : 'Kirim'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="comment-login-prompt">
-                  <MessageCircle size={20} />
-                  <span>Silakan <a href="/login">Login</a> untuk berkomentar.</span>
-                </div>
-              )}
-
-              {/* Comment list */}
-              {comments.length === 0 ? (
-                <div className="no-comments">
-                  <MessageCircle size={32} color="#475569" />
-                  <p>Belum ada diskusi. Jadilah yang pertama bertanya!</p>
-                </div>
-              ) : (
-                <div className="comment-list">
-                  {comments.filter(c => !c.replyToId).map(comment => (
-                    <div key={comment.id} className="comment-item">
-                      <div className="comment-avatar">{(comment.displayName || 'A')[0].toUpperCase()}</div>
-                      <div className="comment-content">
-                        <div className="comment-meta">
-                          <span className="comment-author">{comment.displayName}</span>
-                          {comment.edited && <span className="comment-edited">(diedit)</span>}
-                        </div>
-                        <p className="comment-text">{comment.text}</p>
-                        <div className="comment-actions">
-                          <button className="comment-action-btn" onClick={() => setReplyingTo(comment.id)}>
-                            <MessageCircle size={13} /> Balas
-                          </button>
-                          {(user?.uid === comment.userId || user?.email === 'ridhosandhika18022022@gmail.com') && (
-                            <button className="comment-action-btn danger" onClick={() => handleDeleteComment(comment.id)}>
-                              <Trash2 size={13} /> Hapus
-                            </button>
-                          )}
-                        </div>
-                        {/* Replies */}
-                        {comments.filter(c => c.replyToId === comment.id).map(reply => (
-                          <div key={reply.id} className="comment-reply">
-                            <div className="comment-avatar sm">{(reply.displayName || 'A')[0].toUpperCase()}</div>
-                            <div className="comment-content">
-                              <div className="comment-meta">
-                                <span className="comment-author">{reply.displayName}</span>
-                              </div>
-                              <p className="comment-text">{reply.text}</p>
-                              {(user?.uid === reply.userId || user?.email === 'ridhosandhika18022022@gmail.com') && (
-                                <button className="comment-action-btn danger" onClick={() => handleDeleteComment(reply.id)}>
-                                  <Trash2 size={13} /> Hapus
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {/* DISCUSSION — opens as modal, nothing inline */}
         </div>
 
         {/* ─── Bottom CTA ───────────────────────────────────── */}
@@ -898,7 +788,18 @@ const ProjectDetail = () => {
           </div>
         </div>
       </div>
-      {/* DEMO MODAL */}
+
+      {/* ── Discussion Modal ─────────────────────────────── */}
+      {showDiscModal && (
+        <DiscussionModal
+          projectId={id}
+          projectTitle={project.title}
+          user={user}
+          onClose={() => setShowDiscModal(false)}
+        />
+      )}
+
+      {/* ── Demo Modal ───────────────────────────────────── */}
       {showDemoModal && project.demoUrl && (
         <div className="demo-modal-overlay">
           <div className="demo-modal-content">
