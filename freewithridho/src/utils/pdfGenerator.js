@@ -1,18 +1,18 @@
 import jsPDF from 'jspdf';
 
-// Helper: Load image from public folder as base64 for jsPDF
+// Helper: Load logo PNG (transparent) from public folder as base64 for jsPDF
 const loadLogoBase64 = () => {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = '/FREEWITHRIDHO.jpeg';
+    img.src = '/FREEWITHRIDHO.png';
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg'));
+      resolve(canvas.toDataURL('image/png'));
     };
     img.onerror = () => resolve(null);
   });
@@ -36,7 +36,7 @@ export const generatePartnerPDF = async (data) => {
   // Logo in Header (real image)
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, 'JPEG', 10, 8, 34, 34);
+      doc.addImage(logoBase64, 'PNG', 10, 8, 34, 34);
     } catch (e) {
       console.warn('Logo load failed:', e);
     }
@@ -263,7 +263,7 @@ export const generatePartnerCertificatePDF = async (user, partner) => {
   if (logoBase64) {
     try {
       // Tampilkan logo di tengah atas dengan ukuran besar
-      doc.addImage(logoBase64, 'JPEG', pageWidth / 2 - 45, 60, 90, 60);
+      doc.addImage(logoBase64, 'PNG', pageWidth / 2 - 45, 60, 90, 60);
     } catch (e) {
       console.warn('Logo load failed:', e);
     }
