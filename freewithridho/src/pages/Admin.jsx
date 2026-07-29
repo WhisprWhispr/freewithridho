@@ -72,7 +72,7 @@ const AdminSignaturePad = ({ canvasRef, onHasSignature }) => {
   }, [canvasRef, onHasSignature]);
 
   return (
-    <canvas ref={canvasRef} width={440} height={140}
+    <canvas ref={canvasRef} width={320} height={140}
       style={{ width: '100%', height: '140px', display: 'block', cursor: 'crosshair', borderRadius: '8px' }}
     />
   );
