@@ -13,9 +13,10 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getProjectById, checkUserPurchase } from '../services/projectService';
 import { isWishlisted, toggleWishlist, isWishlistedFirestore, toggleWishlistFirestore } from '../services/wishlistService';
-import { listenToProjectReviews, submitReview, getUserReview } from '../services/reviewService';
+import { listenToProjectReviews } from '../services/reviewService';
 import { listenToComments } from '../services/discussionService';
 import DiscussionModal from '../components/DiscussionModal';
+import ReviewModal from '../components/ReviewModal';
 import './ProjectDetail.css';
 
 // Professional share text generator
@@ -68,20 +69,16 @@ const ProjectDetail = () => {
   // Detail tab state: 'readme' | 'reviews' | 'discussion'
   const [detailTab, setDetailTab] = useState('readme');
 
-  // Reviews state
-  const [reviews, setReviews] = useState([]);
+  // Reviews state — only count for tab badge
   const [reviewAvg, setReviewAvg] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
-  const [myRating, setMyRating] = useState(0);
-  const [myHoverRating, setMyHoverRating] = useState(0);
-  const [myComment, setMyComment] = useState('');
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [existingReview, setExistingReview] = useState(null);
 
   // Discussions state — only count for tab badge
   const [comments, setComments] = useState([]);
-  // Modal open state
+  
+  // Modal open states
   const [showDiscModal, setShowDiscModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const handleBuy = () => {
     if (!user) navigate('/login');
@@ -201,13 +198,6 @@ const ProjectDetail = () => {
           if (data.price > 0) {
             const purchased = await checkUserPurchase(user.uid, id);
             setHasPurchased(purchased);
-            // Get existing review
-            const existing = await getUserReview(id, user.uid);
-            if (existing) {
-              setExistingReview(existing);
-              setMyRating(existing.rating);
-              setMyComment(existing.comment);
-            }
           }
         } else {
           setWishlisted(isWishlisted(id));
@@ -222,10 +212,9 @@ const ProjectDetail = () => {
     fetchProjectAndPurchaseStatus();
   }, [id, user]);
 
-  // Listen to reviews
+  // Listen to reviews just for badge counts
   useEffect(() => {
-    const unsub = listenToProjectReviews(id, ({ reviews, average, totalCount }) => {
-      setReviews(reviews);
+    const unsub = listenToProjectReviews(id, ({ average, totalCount }) => {
       setReviewAvg(average);
       setReviewCount(totalCount);
     });
@@ -238,21 +227,7 @@ const ProjectDetail = () => {
     return () => unsub();
   }, [id]);
 
-  const handleSubmitReview = async () => {
-    if (!user) { toast.error('Login dahulu!'); return; }
-    if (!hasPurchased && project?.price > 0) { toast.error('Hanya pembeli yang bisa memberi review.'); return; }
-    if (myRating === 0) { toast.error('Pilih rating bintang dahulu.'); return; }
-    setSubmittingReview(true);
-    try {
-      await submitReview(id, user.uid, user.displayName || user.email, myRating, myComment);
-      toast.success(existingReview ? 'Review diperbarui!' : 'Review berhasil dikirim! ⭐');
-      setExistingReview({ rating: myRating, comment: myComment });
-    } catch (e) {
-      toast.error(e.message);
-    } finally {
-      setSubmittingReview(false);
-    }
-  };
+
 
 
   if (loading) {
@@ -586,8 +561,8 @@ const ProjectDetail = () => {
               <FileText size={15} /> Dokumentasi
             </button>
             <button
-              className={`detail-tab-btn ${detailTab === 'reviews' ? 'active' : ''}`}
-              onClick={() => setDetailTab('reviews')}
+              className="detail-tab-btn review-open-btn"
+              onClick={() => setShowReviewModal(true)}
             >
               <Star size={15} /> Review
               {reviewCount > 0 && <span className="tab-badge">{reviewCount}</span>}
@@ -668,87 +643,7 @@ const ProjectDetail = () => {
             </div>
           )}
 
-          {/* REVIEWS TAB */}
-          {detailTab === 'reviews' && (
-            <div className="reviews-section">
-              {/* Rating summary */}
-              {reviewCount > 0 && (
-                <div className="review-summary">
-                  <div className="review-avg-score">{reviewAvg.toFixed(1)}</div>
-                  <div className="review-avg-stars">
-                    {[1,2,3,4,5].map(s => (
-                      <Star key={s} size={20} fill={s <= Math.round(reviewAvg) ? '#fbbf24' : 'none'} color={s <= Math.round(reviewAvg) ? '#fbbf24' : '#475569'} />
-                    ))}
-                    <span className="review-count-label">{reviewCount} ulasan</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Write review form (only buyers or free project) */}
-              {user && (hasPurchased || !project.price || project.price === 0) && (
-                <div className="review-form">
-                  <h4>{existingReview ? 'Perbarui Ulasan Anda' : 'Tulis Ulasan'}</h4>
-                  <div className="star-selector">
-                    {[1,2,3,4,5].map(s => (
-                      <button
-                        key={s}
-                        className="star-btn"
-                        onMouseEnter={() => setMyHoverRating(s)}
-                        onMouseLeave={() => setMyHoverRating(0)}
-                        onClick={() => setMyRating(s)}
-                      >
-                        <Star size={28} fill={(myHoverRating || myRating) >= s ? '#fbbf24' : 'none'} color={(myHoverRating || myRating) >= s ? '#fbbf24' : '#475569'} />
-                      </button>
-                    ))}
-                    <span className="star-label">
-                      {myHoverRating === 5 ? 'Luar biasa!' : myHoverRating === 4 ? 'Sangat bagus' : myHoverRating === 3 ? 'Lumayan' : myHoverRating === 2 ? 'Kurang' : myHoverRating === 1 ? 'Buruk' : myRating > 0 ? `${myRating} bintang` : 'Pilih rating'}
-                    </span>
-                  </div>
-                  <textarea
-                    className="review-textarea"
-                    placeholder="Ceritakan pengalaman Anda dengan source code ini..."
-                    value={myComment}
-                    onChange={e => setMyComment(e.target.value)}
-                    rows={3}
-                  />
-                  <button
-                    className="btn-review-submit"
-                    onClick={handleSubmitReview}
-                    disabled={submittingReview || myRating === 0}
-                  >
-                    {submittingReview ? 'Mengirim...' : existingReview ? 'Perbarui Ulasan' : '⭐ Kirim Ulasan'}
-                  </button>
-                </div>
-              )}
-
-              {/* Review list */}
-              {reviews.length === 0 ? (
-                <div className="no-reviews">
-                  <Star size={32} color="#475569" />
-                  <p>Belum ada ulasan. Jadilah yang pertama!</p>
-                </div>
-              ) : (
-                <div className="review-list">
-                  {reviews.map(r => (
-                    <div key={r.id} className={`review-item ${r.userId === user?.uid ? 'own-review' : ''}`}>
-                      <div className="review-header">
-                        <div className="review-avatar">{(r.displayName || 'A')[0].toUpperCase()}</div>
-                        <div>
-                          <div className="review-author">{r.displayName}</div>
-                          <div className="review-stars">
-                            {[1,2,3,4,5].map(s => (
-                              <Star key={s} size={13} fill={s <= r.rating ? '#fbbf24' : 'none'} color={s <= r.rating ? '#fbbf24' : '#475569'} />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <p className="review-text">{r.comment}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {/* REVIEWS — opens as modal, nothing inline */}
 
           {/* DISCUSSION — opens as modal, nothing inline */}
         </div>
@@ -788,6 +683,18 @@ const ProjectDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Review Modal ─────────────────────────────── */}
+      {showReviewModal && (
+        <ReviewModal
+          projectId={id}
+          projectTitle={project.title}
+          user={user}
+          hasPurchased={hasPurchased}
+          projectPrice={project.price}
+          onClose={() => setShowReviewModal(false)}
+        />
+      )}
 
       {/* ── Discussion Modal ─────────────────────────────── */}
       {showDiscModal && (
