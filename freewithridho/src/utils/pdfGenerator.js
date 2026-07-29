@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 
-export const generatePartnerApprovalPDF = (user, partner) => {
+export const generatePartnerPDF = (user, partner) => {
   if (!user || !partner) return;
   
   const doc = new jsPDF('p', 'pt', 'a4');

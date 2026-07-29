@@ -12,7 +12,7 @@ import { listenToPartnerByUserId } from '../services/partnerService';
 import { getWishlist, getWishlistFromFirestore } from '../services/wishlistService';
 import { ensureReferralCode, listenToUserProfile, saveReferredBy } from '../services/referralService';
 import { toast } from 'react-hot-toast';
-import { generatePartnerApprovalPDF } from '../utils/pdfGenerator';
+import { generatePartnerPDF } from '../utils/pdfGenerator';
 import ProjectCard from '../components/ProjectCard';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import './Profile.css';
@@ -361,7 +361,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                   Pendaftaran kemitraan Anda telah disetujui. Anda sekarang bisa mengunggah dan menjual Source Code Anda sendiri, mendapatkan komisi 70%, dan menikmati berbagai keuntungan lainnya sebagai Mitra Resmi FREEWITHRIDHO.
                 </p>
                 <button
-                  onClick={() => generatePartnerApprovalPDF(user, partner)}
+                  onClick={() => generatePartnerPDF(user, partner)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '0.5rem',
                     background: 'linear-gradient(135deg, #10b981, #059669)',
