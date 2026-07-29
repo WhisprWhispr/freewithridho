@@ -1054,3 +1054,39 @@
   border-radius: 8px;
   margin: 0.5em 0;
 }
+
+/* ════════════════════════════════════════════════
+   RESPONSIVE — Admin
+   ════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .admin-page {
+    padding: 2rem 1rem;
+  }
+  .admin-user-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .admin-tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  .admin-tabs::-webkit-scrollbar {
+    height: 4px;
+  }
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-stat-card {
+    padding: 1rem;
+  }
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-table {
+    min-width: 700px; /* Force scroll on small screens */
+  }
+}

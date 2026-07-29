@@ -95,6 +95,8 @@ const Checkout = () => {
       // Request ke API lokal (Express Server)
       const endpoint = '/api/create-transaction';
 
+      const basePrice = (project.discountPrice && project.discountPrice > 0) ? Number(project.discountPrice) : Number(project.price);
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +105,7 @@ const Checkout = () => {
           userId: user.uid,
           userEmail: user.email,
           projectTitle: project.title,
-          amount: validPromo ? validPromo.finalAmount : project.price,
+          amount: validPromo ? validPromo.finalAmount : basePrice,
         }),
       });
 
@@ -117,14 +119,15 @@ const Checkout = () => {
       
       // Simpan transaksi sebagai PENDING di Firestore lokal/produksi
       try {
+        const basePrice = (project.discountPrice && project.discountPrice > 0) ? Number(project.discountPrice) : Number(project.price);
         await addDoc(collection(db, 'transactions'), {
           merchantRef: data.merchantRef,
           projectId: id,
           projectTitle: project.title,
           userId: user.uid,
           userEmail: user.email,
-          amount: validPromo ? validPromo.finalAmount : Number(project.price),
-          originalAmount: Number(project.price),
+          amount: validPromo ? validPromo.finalAmount : basePrice,
+          originalAmount: basePrice,
           promoCode: validPromo ? validPromo.code : null,
           status: 'PENDING',
           snapToken: data.reference || null,
@@ -181,7 +184,8 @@ const Checkout = () => {
   const handleApplyPromo = async () => {
     if (!promoCodeInput.trim()) return;
     setCheckingPromo(true);
-    const result = await validatePromoCode(promoCodeInput, project.price);
+    const basePrice = (project.discountPrice && project.discountPrice > 0) ? Number(project.discountPrice) : Number(project.price);
+    const result = await validatePromoCode(promoCodeInput, basePrice);
     
     if (result.valid) {
       setValidPromo(result);
@@ -261,10 +265,17 @@ const Checkout = () => {
           )}
         </div>
 
-          <div className="summary-item">
-            <span className="summary-label">Harga Normal</span>
-            <span className="summary-value price">Rp {project.price.toLocaleString('id-ID')}</span>
-          </div>
+          {project.discountPrice && project.discountPrice > 0 ? (
+            <div className="summary-item">
+              <span className="summary-label">Harga Diskon</span>
+              <span className="summary-value price">Rp {project.discountPrice.toLocaleString('id-ID')}</span>
+            </div>
+          ) : (
+            <div className="summary-item">
+              <span className="summary-label">Harga Normal</span>
+              <span className="summary-value price">Rp {project.price.toLocaleString('id-ID')}</span>
+            </div>
+          )}
           {validPromo && (
             <div className="summary-item discount">
               <span className="summary-label">Diskon ({validPromo.code})</span>
@@ -274,7 +285,7 @@ const Checkout = () => {
           <div className="summary-item total">
             <span className="summary-label">Total Pembayaran</span>
             <span className="summary-value price final-price">
-              Rp {(validPromo ? validPromo.finalAmount : project.price).toLocaleString('id-ID')}
+              Rp {(validPromo ? validPromo.finalAmount : ((project.discountPrice && project.discountPrice > 0) ? project.discountPrice : project.price)).toLocaleString('id-ID')}
             </span>
           </div>
         </div>
