@@ -56,31 +56,27 @@ const PartnerDashboard = () => {
     const unsubscribePartner = listenToPartnerByUserId(user.uid, (data) => {
       setPartner(data);
       setLoading(false);
-      // Real-time: update affiliate balance from partner doc
       if (data) {
         setAffiliateData(prev => ({
           ...prev,
           partnerAffiliateBalance: data.affiliateBalance || 0,
           partnerAffiliateCount: data.affiliateCount || 0,
         }));
+        // Load withdrawals once we have partner id
+        import('../services/partnerService').then(({ listenToWithdrawals }) => {
+          listenToWithdrawals((allWithdrawals) => {
+            const myWithdrawals = allWithdrawals.filter(w => w.partnerId === data.id);
+            setPartnerWithdrawals(myWithdrawals);
+          });
+        });
       }
     });
 
     const unsubscribeProjects = listenToProjects((allProjects) => {
-      // Filter projects that belong to this partner
       const myProjects = allProjects.filter(p => p.ownerId === user.uid);
       setProjects(myProjects);
     });
 
-    let unsubscribeWithdrawals;
-    import('../services/partnerService').then(({ listenToWithdrawals }) => {
-      unsubscribeWithdrawals = listenToWithdrawals((allWithdrawals) => {
-        const myWithdrawals = allWithdrawals.filter(w => w.partnerId === partner?.id);
-        setPartnerWithdrawals(myWithdrawals);
-      });
-    });
-
-    // Real-time listener for user profile referral balance
     let unsubscribeProfile;
     import('../services/referralService').then(({ listenToUserProfile, ensureReferralCode }) => {
       ensureReferralCode(user.uid);
@@ -99,10 +95,9 @@ const PartnerDashboard = () => {
     return () => {
       if (unsubscribePartner) unsubscribePartner();
       if (unsubscribeProjects) unsubscribeProjects();
-      if (unsubscribeWithdrawals) unsubscribeWithdrawals();
       if (unsubscribeProfile) unsubscribeProfile();
     };
-  }, [user, partner?.id]);
+  }, [user?.uid]);
 
   if (loading) {
     return <div className="partner-loading">Memuat Dashboard...</div>;
@@ -126,33 +121,7 @@ const PartnerDashboard = () => {
     );
   }
 
-  if (partner.status === 'suspended') {
-    const handleAppeal = async () => {
-      try {
-        const { appealSuspension } = await import('../services/partnerService');
-        await appealSuspension(partner.id);
-        toast.success('Pengajuan banding berhasil dikirim. Tim kami akan segera meninjaunya.', { duration: 4000 });
-      } catch (err) {
-        toast.error('Gagal mengajukan banding: ' + err.message);
-      }
-    };
 
-    return (
-      <div className="partner-access-denied" style={{ borderColor: '#f59e0b', background: 'rgba(30, 41, 59, 0.8)' }}>
-        <h2 style={{ color: '#f59e0b' }}>⚠️ Akun Disuspend Sementara</h2>
-        <p>Dashboard Partner Anda dikunci sementara karena terindikasi melanggar pedoman komunitas.</p>
-        {partner.appealRequested ? (
-          <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid #3b82f6', borderRadius: '8px', color: '#93c5fd' }}>
-            ⏳ Pengajuan banding Anda sedang dalam proses peninjauan oleh Admin.
-          </div>
-        ) : (
-          <button onClick={handleAppeal} style={{ marginTop: '1.5rem', background: '#f59e0b', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem' }}>
-            Ajukan Banding Sekarang
-          </button>
-        )}
-      </div>
-    );
-  }
 
   if (partner.status !== 'approved') {
     return (
@@ -379,40 +348,40 @@ const PartnerDashboard = () => {
         )}
       </div>
 
-      <div className="dashboard-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <div className="stat-card" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Wallet size={32} style={{ color: '#10b981' }} />
+      <div className="dashboard-stats">
+        <div className="stat-card">
+          <Wallet size={32} style={{ color: '#10b981', flexShrink: 0 }} />
           <div>
-            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Saldo Aktif</h3>
-            <p style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>Rp {(partner.balance || 0).toLocaleString('id-ID')}</p>
+            <h3>Saldo Aktif</h3>
+            <p className="stat-value">Rp {(partner.balance || 0).toLocaleString('id-ID')}</p>
           </div>
         </div>
 
-        <div className="stat-card" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <DollarSign size={32} style={{ color: '#3b82f6' }} />
+        <div className="stat-card">
+          <DollarSign size={32} style={{ color: '#3b82f6', flexShrink: 0 }} />
           <div>
-            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Total Pendapatan</h3>
-            <p style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>
+            <h3>Total Pendapatan</h3>
+            <p className="stat-value">
               Rp {((partner.balance || 0) + partnerWithdrawals.reduce((sum, w) => sum + w.amount, 0)).toLocaleString('id-ID')}
             </p>
           </div>
         </div>
 
-        <div className="stat-card" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <CheckCircle size={32} style={{ color: '#8b5cf6' }} />
+        <div className="stat-card">
+          <CheckCircle size={32} style={{ color: '#8b5cf6', flexShrink: 0 }} />
           <div>
-            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Total Penarikan</h3>
-            <p style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>
+            <h3>Total Penarikan</h3>
+            <p className="stat-value">
               Rp {partnerWithdrawals.filter(w => w.status === 'completed').reduce((sum, w) => sum + w.amount, 0).toLocaleString('id-ID')}
             </p>
           </div>
         </div>
 
-        <div className="stat-card" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Upload size={32} style={{ color: '#f59e0b' }} />
+        <div className="stat-card">
+          <Upload size={32} style={{ color: '#f59e0b', flexShrink: 0 }} />
           <div>
-            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Proyek Diunggah</h3>
-            <p style={{ margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'white' }}>{projects.length} Proyek</p>
+            <h3>Proyek Diunggah</h3>
+            <p className="stat-value">{projects.length} Proyek</p>
           </div>
         </div>
       </div>
