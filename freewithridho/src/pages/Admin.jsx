@@ -1220,106 +1220,72 @@ const Admin = () => {
         )}
 
         {activeAdminTab === 'partners' && (
-          <section className="admin-partners-section" style={{ background: 'rgba(15, 23, 42, 0.4)', padding: '2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <section className="admin-section">
+            <div className="admin-section-head">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Users size={24} style={{ color: '#60a5fa' }} />
-                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Daftar Pendaftar Partner</h2>
+                <Users size={22} style={{ color: '#60a5fa' }} />
+                <h2 className="admin-section-title">Daftar Pendaftar Partner</h2>
               </div>
-              <button onClick={exportPartnersPDF} style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.6rem 1.25rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', gap: '0.5rem', alignItems: 'center', fontWeight: 500, fontSize: '0.9rem', transition: 'background 0.2s' }}>
+              <button onClick={exportPartnersPDF} className="btn-export-pdf">
                 <Download size={16} /> Unduh PDF
               </button>
             </div>
-            
+
             {partners.length === 0 ? (
               <div className="admin-empty">
                 <p>Belum ada yang mendaftar menjadi partner.</p>
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
-                      <th style={{ padding: '1rem' }}>Tanggal</th>
-                      <th style={{ padding: '1rem' }}>Nama</th>
-                      <th style={{ padding: '1rem' }}>Kontak</th>
-                      <th style={{ padding: '1rem' }}>Portofolio / Info</th>
-                      <th style={{ padding: '1rem' }}>Status</th>
-                      <th style={{ padding: '1rem', textAlign: 'right' }}>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {partners.map(p => (
-                      <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '1rem' }}>{new Date(p.submittedAt).toLocaleDateString('id-ID')}</td>
-                        <td style={{ padding: '1rem', fontWeight: 500 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {p.fullName}
-                            {getBadgeTier(p.totalEarnings) > 0 && (
-                              <PartnerBadge tier={getBadgeTier(p.totalEarnings)} size="sm" />
-                            )}
-                          </div>
-                        </td>
-                        <td style={{ padding: '1rem' }}>
-                          <div style={{ fontSize: '0.85rem' }}>{p.email}</div>
-                          <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{p.phone}</div>
-                        </td>
-                        <td style={{ padding: '1rem' }}>
-                          <a href={p.portfolio} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', fontSize: '0.85rem', display: 'block' }}>Lihat Portofolio</a>
-                          <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.skills}</div>
-                        </td>
-                        <td style={{ padding: '1rem' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
-                            <span style={{ 
-                              padding: '4px 10px', 
-                              borderRadius: '20px', 
-                              fontSize: '0.8rem',
-                              fontWeight: 500,
-                              background: p.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : p.status === 'rejected' || p.status === 'banned' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                              color: p.status === 'approved' ? '#10b981' : p.status === 'rejected' || p.status === 'banned' ? '#ef4444' : '#f59e0b'
-                            }}>
-                              {p.status.toUpperCase()}
-                            </span>
-                            {p.status === 'suspended' && p.appealRequested && (
-                              <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}>
-                                Aju Banding
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                            <button
-                              onClick={() => exportSinglePartnerPDF(p)}
-                              title="Unduh PDF"
-                              style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 500 }}
-                            >
-                              <Download size={14} /> PDF
-                            </button>
-                            {p.status === 'pending' && (
-                              <>
-                                <button onClick={() => handlePartnerAction(p, 'approved')} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Setujui"><Check size={14} /> Setujui</button>
-                                <button onClick={() => handlePartnerAction(p, 'rejected')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Tolak"><X size={14} /> Tolak</button>
-                              </>
-                            )}
-                            {p.status === 'approved' && (
-                              <>
-                                <button onClick={() => handleSuspendPartner(p.id, p.fullName)} style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Suspend Sementara">Suspend</button>
-                                <button onClick={() => handleBanPartner(p.id, p.userId, p.fullName)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Ban Permanen"><X size={14} /> Ban</button>
-                              </>
-                            )}
-                            {p.status === 'suspended' && (
-                              <>
-                                <button onClick={() => handleRestorePartner(p.id, p.fullName)} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Pulihkan Akun"><Check size={14} /> Pulihkan</button>
-                                <button onClick={() => handleBanPartner(p.id, p.userId, p.fullName)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Ban Permanen"><X size={14} /> Ban</button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="admin-card-list">
+                {partners.map(p => (
+                  <div key={p.id} className="admin-partner-card">
+                    <div className="apc-top">
+                      <div className="apc-info">
+                        <div className="apc-name">
+                          {p.fullName}
+                          {getBadgeTier(p.totalEarnings) > 0 && (
+                            <PartnerBadge tier={getBadgeTier(p.totalEarnings)} size="sm" />
+                          )}
+                        </div>
+                        <div className="apc-sub">{p.email} · {p.phone}</div>
+                        <div className="apc-sub">{new Date(p.submittedAt).toLocaleDateString('id-ID')}</div>
+                      </div>
+                      <span className={`apc-status ${p.status === 'approved' ? 'green' : p.status === 'rejected' || p.status === 'banned' ? 'red' : 'yellow'}`}>
+                        {p.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="apc-portfolio">
+                      <a href={p.portfolio} target="_blank" rel="noopener noreferrer">🔗 Lihat Portofolio</a>
+                      {p.skills && <span className="apc-skills">{p.skills}</span>}
+                    </div>
+                    {p.status === 'suspended' && p.appealRequested && (
+                      <span className="apc-appeal">Aju Banding</span>
+                    )}
+                    <div className="apc-actions">
+                      <button onClick={() => exportSinglePartnerPDF(p)} className="btn-apc btn-apc-blue">
+                        <Download size={13} /> PDF
+                      </button>
+                      {p.status === 'pending' && (
+                        <>
+                          <button onClick={() => handlePartnerAction(p, 'approved')} className="btn-apc btn-apc-green"><Check size={13} /> Setujui</button>
+                          <button onClick={() => handlePartnerAction(p, 'rejected')} className="btn-apc btn-apc-red"><X size={13} /> Tolak</button>
+                        </>
+                      )}
+                      {p.status === 'approved' && (
+                        <>
+                          <button onClick={() => handleSuspendPartner(p.id, p.fullName)} className="btn-apc btn-apc-yellow">Suspend</button>
+                          <button onClick={() => handleBanPartner(p.id, p.userId, p.fullName)} className="btn-apc btn-apc-red"><X size={13} /> Ban</button>
+                        </>
+                      )}
+                      {p.status === 'suspended' && (
+                        <>
+                          <button onClick={() => handleRestorePartner(p.id, p.fullName)} className="btn-apc btn-apc-green"><Check size={13} /> Pulihkan</button>
+                          <button onClick={() => handleBanPartner(p.id, p.userId, p.fullName)} className="btn-apc btn-apc-red"><X size={13} /> Ban</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </section>
@@ -1327,65 +1293,48 @@ const Admin = () => {
 
         {/* ── Withdrawals Tab ── */}
         {activeAdminTab === 'withdrawals' && (
-          <section style={{ background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
-              <DollarSign size={24} style={{ color: '#f59e0b' }} />
-              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Permintaan Penarikan Dana</h2>
+          <section className="admin-section">
+            <div className="admin-section-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <DollarSign size={22} style={{ color: '#f59e0b' }} />
+                <h2 className="admin-section-title">Permintaan Penarikan Dana</h2>
+              </div>
             </div>
             {withdrawals.length === 0 ? (
               <p style={{ color: '#94a3b8', textAlign: 'center', padding: '3rem 0' }}>Tidak ada permintaan penarikan saat ini.</p>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
-                      <th style={{ padding: '1rem' }}>Tanggal</th>
-                      <th style={{ padding: '1rem' }}>Nama Partner</th>
-                      <th style={{ padding: '1rem' }}>Jumlah</th>
-                      <th style={{ padding: '1rem' }}>Detail Transfer</th>
-                      <th style={{ padding: '1rem' }}>Status</th>
-                      <th style={{ padding: '1rem', textAlign: 'right' }}>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {withdrawals.map(w => (
-                      <tr key={w.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '1rem', color: '#94a3b8', fontSize: '0.85rem' }}>{new Date(w.requestedAt).toLocaleDateString('id-ID')}</td>
-                        <td style={{ padding: '1rem', fontWeight: 500 }}>{w.partnerName}</td>
-                        <td style={{ padding: '1rem' }}>
-                          <div style={{ fontWeight: 700, color: '#94a3b8', textDecoration: 'line-through', fontSize: '0.9rem' }}>Rp {w.amount?.toLocaleString('id-ID')}</div>
-                          <div style={{ fontWeight: 700, color: '#10b981' }}>Rp {(w.netAmount || w.amount)?.toLocaleString('id-ID')}</div>
-                          <div style={{ fontSize: '0.8rem', color: '#ef4444' }}>Potongan: Rp {(w.feeAmount || 0)?.toLocaleString('id-ID')}</div>
-                        </td>
-                        <td style={{ padding: '1rem', fontSize: '0.85rem', color: '#94a3b8', maxWidth: '220px', whiteSpace: 'pre-wrap' }}>{w.bankDetails}</td>
-                        <td style={{ padding: '1rem' }}>
-                          <span style={{
-                            padding: '4px 10px',
-                            borderRadius: '20px',
-                            fontSize: '0.8rem',
-                            fontWeight: 500,
-                            background: w.status === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                            color: w.status === 'completed' ? '#10b981' : '#f59e0b'
-                          }}>
-                            {w.status === 'completed' ? 'SELESAI' : 'PENDING'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>
-                          {w.status === 'pending' ? (
-                            <button
-                              onClick={() => handleCompleteWithdrawal(w.id, w.partnerId, w.amount, w.feeAmount)}
-                              style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}
-                            >
-                              ✅ Tandai Selesai
-                            </button>
-                          ) : (
-                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>-</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="admin-card-list">
+                {withdrawals.map(w => (
+                  <div key={w.id} className="admin-partner-card">
+                    <div className="apc-top">
+                      <div className="apc-info">
+                        <div className="apc-name">{w.partnerName}</div>
+                        <div className="apc-sub">{new Date(w.requestedAt).toLocaleDateString('id-ID')}</div>
+                        <div className="apc-sub" style={{ whiteSpace: 'pre-wrap', marginTop: '0.25rem' }}>{w.bankDetails}</div>
+                      </div>
+                      <span className={`apc-status ${w.status === 'completed' ? 'green' : 'yellow'}`}>
+                        {w.status === 'completed' ? 'SELESAI' : 'PENDING'}
+                      </span>
+                    </div>
+                    <div className="apc-amount">
+                      <span className="apc-amount-original">Rp {w.amount?.toLocaleString('id-ID')}</span>
+                      <span className="apc-amount-net">Rp {(w.netAmount || w.amount)?.toLocaleString('id-ID')}</span>
+                      <span className="apc-amount-fee">Potongan: Rp {(w.feeAmount || 0)?.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="apc-actions">
+                      {w.status === 'pending' ? (
+                        <button
+                          onClick={() => handleCompleteWithdrawal(w.id, w.partnerId, w.amount, w.feeAmount)}
+                          className="btn-apc btn-apc-green"
+                        >
+                          ✅ Tandai Selesai
+                        </button>
+                      ) : (
+                        <span style={{ color: '#64748b', fontSize: '0.85rem' }}>Sudah selesai</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </section>
