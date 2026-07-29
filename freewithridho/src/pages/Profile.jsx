@@ -4,7 +4,7 @@ import {
   User, Mail, Calendar, ShoppingBag, Download, Clock,
   CheckCircle, XCircle, AlertCircle, LogOut, ChevronRight,
   Package, Wallet, Star, ArrowLeft, ExternalLink,
-  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key, Heart, Share2, MessageCircle, Send
+  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key, Heart, Share2, MessageCircle, Send, X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { listenToUserTransactions, getAllProjects } from '../services/projectService';
@@ -154,6 +154,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
   const [copiedRef, setCopiedRef] = useState(false);
   const [referredByInput, setReferredByInput] = useState('');
   const [savingReferredBy, setSavingReferredBy] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const getInitials = (email) => {
     if (!email) return '?';
@@ -657,36 +658,26 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                   }
 
                   const handleTransactionClick = () => {
-                    if (isPending) {
-                      if (isExpired) {
-                        toast.error('Waktu pembayaran sudah habis. Silakan buat transaksi baru.');
-                      } else {
-                        navigate(`/checkout/${tx.projectId}`);
-                      }
-                    }
+                    setSelectedTransaction({ ...tx, isExpired });
                   };
 
                   return (
                     <div 
                       key={tx.id} 
-                      className={`transaction-card ${cfg.className} ${isPending && !isExpired ? 'clickable-trx' : ''}`}
+                      className={`transaction-card ${cfg.className} clickable-trx`}
                       onClick={handleTransactionClick}
                       style={{ 
-                        cursor: (isPending && !isExpired) ? 'pointer' : 'default',
+                        cursor: 'pointer',
                         transition: 'transform 0.2s, box-shadow 0.2s',
                         position: 'relative'
                       }}
                       onMouseEnter={(e) => {
-                        if (isPending && !isExpired) {
-                          e.currentTarget.style.transform = 'translateY(-3px)';
-                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.15)';
-                        }
+                        e.currentTarget.style.transform = 'translateY(-3px)';
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.15)';
                       }}
                       onMouseLeave={(e) => {
-                        if (isPending && !isExpired) {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       <div className="tx-header">
@@ -717,11 +708,9 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                           <span className="tx-amount">Rp {(tx.amount || 0).toLocaleString('id-ID')}</span>
                         </div>
                       </div>
-                      {(isPending && !isExpired) && (
-                        <div style={{ marginTop: '1rem', borderTop: '1px dashed rgba(245, 158, 11, 0.3)', paddingTop: '0.75rem', color: '#f59e0b', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
-                          Klik kartu ini untuk melanjutkan pembayaran <ChevronRight size={14} />
-                        </div>
-                      )}
+                      <div style={{ marginTop: '1rem', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '0.75rem', color: '#94a3b8', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        Klik untuk melihat detail transaksi <ChevronRight size={14} />
+                      </div>
                     </div>
                   );
                 })}
@@ -797,6 +786,66 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
           </div>
         )}
       </div>
+
+      {/* MODAL DETAIL TRANSAKSI */}
+      {selectedTransaction && (
+        <div className="modal-overlay" onClick={() => setSelectedTransaction(null)}>
+          <div className="modal-content admin-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h2>Detail Transaksi</h2>
+              <button className="btn-close" onClick={() => setSelectedTransaction(null)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.2rem' }}>Status Pembayaran</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: selectedTransaction.status === 'PAID' ? '#10b981' : (selectedTransaction.isExpired ? '#ef4444' : '#f59e0b') }}>
+                  {selectedTransaction.isExpired ? 'KEDALUWARSA' : (selectedTransaction.status === 'PAID' ? 'LUNAS' : 'MENUNGGU PEMBAYARAN')}
+                </div>
+              </div>
+              
+              <div className="info-row">
+                <span className="info-row-label">Order ID</span>
+                <span className="info-row-value">{selectedTransaction.merchantRef || selectedTransaction.id}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-row-label">Nama Proyek</span>
+                <span className="info-row-value">{selectedTransaction.projectTitle}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-row-label">Tanggal Transaksi</span>
+                <span className="info-row-value">{formatDate(selectedTransaction.createdAt)}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-row-label">Total Pembayaran</span>
+                <span className="info-row-value" style={{ fontWeight: 'bold', color: '#38bdf8' }}>
+                  Rp {(selectedTransaction.amount || 0).toLocaleString('id-ID')}
+                </span>
+              </div>
+
+              {selectedTransaction.status === 'PENDING' && !selectedTransaction.isExpired && (
+                <div style={{ marginTop: '1rem' }}>
+                  <button 
+                    onClick={() => navigate(`/checkout/${selectedTransaction.projectId}`)}
+                    style={{
+                      width: '100%', padding: '0.85rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                      color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer',
+                      display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem'
+                    }}
+                  >
+                    <Wallet size={18} /> Lanjutkan Pembayaran Sekarang
+                  </button>
+                  <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.75rem' }}>
+                    Selesaikan pembayaran sebelum batas waktu (24 jam) habis.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
