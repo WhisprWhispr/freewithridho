@@ -12,7 +12,7 @@ import { listenToPartnerByUserId } from '../services/partnerService';
 import { getWishlist, getWishlistFromFirestore } from '../services/wishlistService';
 import { ensureReferralCode, listenToUserProfile, saveReferredBy } from '../services/referralService';
 import { toast } from 'react-hot-toast';
-import { generatePartnerPDF } from '../utils/pdfGenerator';
+import { generatePartnerCertificatePDF, generatePartnerPDF } from '../utils/pdfGenerator';
 import ProjectCard from '../components/ProjectCard';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import './Profile.css';
@@ -360,21 +360,43 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                 <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem', lineHeight: '1.5' }}>
                   Pendaftaran kemitraan Anda telah disetujui. Anda sekarang bisa mengunggah dan menjual Source Code Anda sendiri, mendapatkan komisi 70%, dan menikmati berbagai keuntungan lainnya sebagai Mitra Resmi FREEWITHRIDHO.
                 </p>
-                <button
-                  onClick={() => generatePartnerPDF(user, partner)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    border: 'none', color: 'white', padding: '0.65rem 1.25rem',
-                    borderRadius: '8px', fontWeight: 600, fontSize: '0.9rem',
-                    cursor: 'pointer', transition: 'all 0.2s',
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  <Download size={16} /> Unduh Sertifikat Kemitraan (PDF)
-                </button>
+                
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => generatePartnerPDF({ 
+                      ...partner, 
+                      fullName: partner.fullName || user.displayName || user.email.split('@')[0], 
+                      email: user.email 
+                    })}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.65rem 1.25rem',
+                      borderRadius: '8px', fontWeight: 600, fontSize: '0.9rem',
+                      cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(0)' }}
+                  >
+                    <Download size={16} /> Unduh Formulir Registrasi (PDF)
+                  </button>
+
+                  <button
+                    onClick={() => generatePartnerCertificatePDF(user, partner)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      border: 'none', color: 'white', padding: '0.65rem 1.25rem',
+                      borderRadius: '8px', fontWeight: 600, fontSize: '0.9rem',
+                      cursor: 'pointer', transition: 'all 0.2s',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <Download size={16} /> Unduh Sertifikat Kemitraan (PDF)
+                  </button>
+                </div>
               </div>
             )}
 
