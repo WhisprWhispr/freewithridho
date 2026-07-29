@@ -4,9 +4,9 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 
-// Firebase project config (public)
-const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'premium-f53eb';
-const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || 'AIzaSyCnOJJ5g6Ob2Ozo1WcvYARFzPthi133Qws';
+// Firebase project config — loaded from environment variables
+const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID;
+const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY;
 
 // Inisialisasi Firebase Admin (opsional, untuk fitur lain seperti delete user)
 let db = null;

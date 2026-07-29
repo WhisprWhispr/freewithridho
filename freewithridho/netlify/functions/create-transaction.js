@@ -1,8 +1,8 @@
 'use strict';
 
-// Firebase project config (public — same as frontend)
-const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'premium-f53eb';
-const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || 'AIzaSyCnOJJ5g6Ob2Ozo1WcvYARFzPthi133Qws';
+// Firebase project config — loaded from Netlify Environment Variables
+const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID;
+const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY;
 
 const SITE_URL = process.env.URL || 'https://freewithridho.netlify.app';
 
