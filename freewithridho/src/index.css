@@ -34,8 +34,7 @@ input, textarea {
   -webkit-user-select: auto;
   user-select: auto;
 }
-  background-attachment: fixed;
-}
+
 
 #root { min-height: 100vh; }
 
