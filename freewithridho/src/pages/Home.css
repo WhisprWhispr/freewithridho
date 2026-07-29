@@ -534,13 +534,6 @@
   50% { transform: translateY(-3px); }
 }
 
-.flash-sale-card-wrap {
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-.flash-sale-card-wrap:hover {
-  transform: translateY(-4px);
-}
-
 .btn-see-all-flash {
   background: rgba(59, 130, 246, 0.1);
   border: 1px solid rgba(59, 130, 246, 0.4);

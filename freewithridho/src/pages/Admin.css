@@ -288,7 +288,7 @@
   backdrop-filter: blur(8px);
 }
 
-.section-header {
+.admin-page .section-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -297,14 +297,14 @@
   background: rgba(30, 41, 59, 0.4);
 }
 
-.section-header h2 {
+.admin-page .section-header h2 {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
   color: #f8fafc;
 }
 
-.section-header svg {
+.admin-page .section-header svg {
   color: #60a5fa;
   flex-shrink: 0;
 }
@@ -325,33 +325,33 @@
 }
 
 
-.form-row {
+.admin-page .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
 
-.form-group {
+.admin-page .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.form-group label {
+.admin-page .form-group label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #cbd5e1;
 }
 
-.field-hint {
+.admin-page .field-hint {
   font-size: 0.8rem;
   color: #64748b;
   margin: 0;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.admin-page .form-group input,
+.admin-page .form-group select,
+.admin-page .form-group textarea {
   background: rgba(15, 23, 42, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.625rem;
@@ -364,20 +364,20 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.admin-page .form-group input:focus,
+.admin-page .form-group select:focus,
+.admin-page .form-group textarea:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-.form-group input::placeholder,
-.form-group textarea::placeholder {
+.admin-page .form-group input::placeholder,
+.admin-page .form-group textarea::placeholder {
   color: #475569;
 }
 
-.form-group select option {
+.admin-page .form-group select option {
   background: #1e293b;
   color: #f8fafc;
 }
