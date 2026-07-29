@@ -12,6 +12,7 @@ import { listenToPartnerByUserId } from '../services/partnerService';
 import { getWishlist, getWishlistFromFirestore } from '../services/wishlistService';
 import { ensureReferralCode, listenToUserProfile, saveReferredBy } from '../services/referralService';
 import { toast } from 'react-hot-toast';
+import { generatePartnerApprovalPDF } from '../utils/pdfGenerator';
 import ProjectCard from '../components/ProjectCard';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import './Profile.css';
@@ -349,6 +350,33 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
               </div>
             </div>
 
+            {/* Notifikasi Mitra Disetujui */}
+            {partner && partner.status === 'approved' && (
+              <div className="info-card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(16, 185, 129, 0.4)', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(15, 23, 42, 0.4))' }}>
+                <h3 className="info-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981' }}>
+                  <ShieldCheck size={20} /> Selamat! Anda Resmi Menjadi Mitra
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem', lineHeight: '1.5' }}>
+                  Pendaftaran kemitraan Anda telah disetujui. Anda sekarang bisa mengunggah dan menjual Source Code Anda sendiri, mendapatkan komisi 70%, dan menikmati berbagai keuntungan lainnya sebagai Mitra Resmi FREEWITHRIDHO.
+                </p>
+                <button
+                  onClick={() => generatePartnerApprovalPDF(user, partner)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    border: 'none', color: 'white', padding: '0.65rem 1.25rem',
+                    borderRadius: '8px', fontWeight: 600, fontSize: '0.9rem',
+                    cursor: 'pointer', transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <Download size={16} /> Unduh Sertifikat Kemitraan (PDF)
+                </button>
+              </div>
+            )}
+
             {/* Set Referral Teman Card */}
             <div className="info-card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(15, 23, 42, 0.4))' }}>
               <h3 className="info-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -617,8 +645,50 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                 {transactions.map(tx => {
                   const cfg = STATUS_CONFIG[tx.status] || STATUS_CONFIG.PENDING;
                   const Icon = cfg.icon;
+                  const isPending = tx.status === 'PENDING';
+                  
+                  // Cek apakah kadaluarsa (24 jam)
+                  let isExpired = false;
+                  if (isPending && tx.createdAt) {
+                    const txTime = tx.createdAt.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt;
+                    if (Date.now() - txTime > 24 * 60 * 60 * 1000) {
+                      isExpired = true;
+                    }
+                  }
+
+                  const handleTransactionClick = () => {
+                    if (isPending) {
+                      if (isExpired) {
+                        toast.error('Waktu pembayaran sudah habis. Silakan buat transaksi baru.');
+                      } else {
+                        navigate(`/checkout/${tx.projectId}`);
+                      }
+                    }
+                  };
+
                   return (
-                    <div key={tx.id} className={`transaction-card ${cfg.className}`}>
+                    <div 
+                      key={tx.id} 
+                      className={`transaction-card ${cfg.className} ${isPending && !isExpired ? 'clickable-trx' : ''}`}
+                      onClick={handleTransactionClick}
+                      style={{ 
+                        cursor: (isPending && !isExpired) ? 'pointer' : 'default',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        position: 'relative'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (isPending && !isExpired) {
+                          e.currentTarget.style.transform = 'translateY(-3px)';
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(245, 158, 11, 0.15)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (isPending && !isExpired) {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }
+                      }}
+                    >
                       <div className="tx-header">
                         <div className="tx-project-name">
                           <Package size={16} />
@@ -626,7 +696,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         </div>
                         <div className={`tx-status-badge ${cfg.className}`}>
                           <Icon size={13} />
-                          {cfg.label}
+                          {isExpired ? 'Kedaluwarsa' : cfg.label}
                         </div>
                       </div>
                       <div className="tx-details">
@@ -647,6 +717,11 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                           <span className="tx-amount">Rp {(tx.amount || 0).toLocaleString('id-ID')}</span>
                         </div>
                       </div>
+                      {(isPending && !isExpired) && (
+                        <div style={{ marginTop: '1rem', borderTop: '1px dashed rgba(245, 158, 11, 0.3)', paddingTop: '0.75rem', color: '#f59e0b', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
+                          Klik kartu ini untuk melanjutkan pembayaran <ChevronRight size={14} />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
