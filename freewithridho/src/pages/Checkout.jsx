@@ -3,10 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getProjectById } from '../services/projectService';
 import { getSettings } from '../services/projectService';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2 } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2, Tag, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { validatePromoCode } from '../services/promoService';
+import { validateReferralCode, getUserProfile } from '../services/referralService';
 import './Checkout.css';
 
 // Inject Midtrans Snap.js script dynamically
@@ -40,6 +42,16 @@ const Checkout = () => {
   const [midtransConfig, setMidtransConfig] = useState(null);
   const [showSnap, setShowSnap] = useState(false);
 
+  // Promo code state
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [validPromo, setValidPromo] = useState(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
+
+  // Referral code state
+  const [referralInput, setReferralInput] = useState('');
+  const [validReferral, setValidReferral] = useState(null);
+  const [checkingReferral, setCheckingReferral] = useState(false);
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -48,10 +60,20 @@ const Checkout = () => {
 
     const fetchData = async () => {
       try {
-        const [data, settings] = await Promise.all([
+        const [data, settings, userProfile] = await Promise.all([
           getProjectById(id),
-          getSettings('midtrans')
+          getSettings('midtrans'),
+          getUserProfile(user.uid)
         ]);
+
+        if (userProfile && userProfile.referredBy && userProfile.referredByUserId) {
+          setReferralInput(userProfile.referredBy);
+          setValidReferral({
+            valid: true,
+            ownerUserId: userProfile.referredByUserId,
+            message: 'Kode otomatis dari profil: ' + userProfile.referredBy
+          });
+        }
 
         if (!data) {
           setError('Proyek tidak ditemukan.');
@@ -97,7 +119,7 @@ const Checkout = () => {
           userId: user.uid,
           userEmail: user.email,
           projectTitle: project.title,
-          amount: project.price,
+          amount: validPromo ? validPromo.finalAmount : project.price,
         }),
       });
 
@@ -117,7 +139,11 @@ const Checkout = () => {
           projectTitle: project.title,
           userId: user.uid,
           userEmail: user.email,
-          amount: Number(project.price),
+          amount: validPromo ? validPromo.finalAmount : Number(project.price),
+          originalAmount: Number(project.price),
+          promoCode: validPromo ? validPromo.code : null,
+          referrerUserId: validReferral ? validReferral.ownerUserId : null,
+          referralCode: validReferral ? referralInput.trim().toUpperCase() : null,
           status: 'PENDING',
           snapToken: data.reference || null,
           createdAt: serverTimestamp(),
@@ -141,6 +167,7 @@ const Checkout = () => {
           embedId: 'snap-container',
           onSuccess: function (result) {
             toast.success('Pembayaran berhasil!');
+            // Referral commission will be credited securely in real-time on the success page
             navigate(`/success?reference=${data.merchantRef}`);
           },
           onPending: function (result) {
@@ -167,6 +194,26 @@ const Checkout = () => {
       toast.error(err.message || 'Terjadi kesalahan saat memproses pembayaran.', { id: loadingToast });
       setProcessing(false);
     }
+  };
+
+  const handleApplyPromo = async () => {
+    if (!promoCodeInput.trim()) return;
+    setCheckingPromo(true);
+    const result = await validatePromoCode(promoCodeInput, project.price);
+    
+    if (result.valid) {
+      setValidPromo(result);
+      toast.success(result.message);
+    } else {
+      setValidPromo(null);
+      toast.error(result.message);
+    }
+    setCheckingPromo(false);
+  };
+
+  const handleRemovePromo = () => {
+    setValidPromo(null);
+    setPromoCodeInput('');
   };
 
   if (loading) return (
@@ -199,9 +246,98 @@ const Checkout = () => {
             <span className="summary-label">Akun Pembeli</span>
             <span className="summary-value">{user.email}</span>
           </div>
+          
+          <div className="promo-section">
+            <div className="promo-input-group">
+              <Tag size={16} className="promo-icon" />
+              <input
+                type="text"
+                placeholder="Punya kode promo?"
+                value={promoCodeInput}
+                onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                disabled={validPromo !== null || checkingPromo}
+                className="promo-input"
+              />
+              {!validPromo ? (
+                <button
+                  className="btn-apply-promo"
+                  onClick={handleApplyPromo}
+                  disabled={!promoCodeInput.trim() || checkingPromo}
+                >
+                  {checkingPromo ? 'Cek...' : 'Terapkan'}
+                </button>
+              ) : (
+                <button className="btn-remove-promo" onClick={handleRemovePromo} title="Hapus Promo">
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          {validPromo && (
+            <div className="promo-success-msg">
+              {validPromo.message}
+            </div>
+          )}
+        </div>
+
+        {/* Referral Code */}
+        <div className="promo-section">
+          <div className="promo-input-group">
+            <span style={{ fontSize: '1rem' }}>🤝</span>
+            <input
+              type="text"
+              placeholder="Kode referral teman (opsional)"
+              value={referralInput}
+              onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
+              disabled={validReferral !== null || checkingReferral}
+              className="promo-input"
+            />
+            {!validReferral ? (
+              <button
+                className="btn-apply-promo"
+                onClick={async () => {
+                  if (!referralInput.trim()) return;
+                  setCheckingReferral(true);
+                  const res = await validateReferralCode(referralInput, user.uid);
+                  if (res.valid) {
+                    setValidReferral(res);
+                    toast.success(res.message);
+                  } else {
+                    toast.error(res.message);
+                  }
+                  setCheckingReferral(false);
+                }}
+                disabled={!referralInput.trim() || checkingReferral}
+              >
+                {checkingReferral ? 'Cek...' : 'Terapkan'}
+              </button>
+            ) : (
+              <button className="btn-remove-promo" onClick={() => { setValidReferral(null); setReferralInput(''); }} title="Hapus Referral">
+                <X size={16} />
+              </button>
+            )}
+          </div>
+          {validReferral && (
+            <div className="promo-success-msg">
+              {validReferral.message}
+            </div>
+          )}
+        </div>
+
+          <div className="summary-item">
+            <span className="summary-label">Harga Normal</span>
+            <span className="summary-value price">Rp {project.price.toLocaleString('id-ID')}</span>
+          </div>
+          {validPromo && (
+            <div className="summary-item discount">
+              <span className="summary-label">Diskon ({validPromo.code})</span>
+              <span className="summary-value price discount-val">- Rp {validPromo.discountAmount.toLocaleString('id-ID')}</span>
+            </div>
+          )}
           <div className="summary-item total">
             <span className="summary-label">Total Pembayaran</span>
-            <span className="summary-value price">Rp {project.price.toLocaleString('id-ID')}</span>
+            <span className="summary-value price final-price">
+              Rp {(validPromo ? validPromo.finalAmount : project.price).toLocaleString('id-ID')}
+            </span>
           </div>
         </div>
 

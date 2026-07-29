@@ -14,7 +14,7 @@ service cloud.firestore {
         request.auth.token.email == 'ridhosandhika18022022@gmail.com'
       );
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'PENDING';
-      allow update: if request.auth != null && request.resource.data.userId == request.auth.uid && request.resource.data.status == 'CANCELLED';
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid && request.resource.data.status == 'CANCELLED';
       allow write: if false;
     }
 
@@ -35,7 +35,16 @@ service cloud.firestore {
     match /partners/{partnerId} {
       allow create: if true;
       allow read: if request.auth != null || resource.data.status == 'approved';
-      allow update, delete: if request.auth != null && request.auth.token.email == 'ridhosandhika18022022@gmail.com';
+      allow delete: if request.auth != null && request.auth.token.email == 'ridhosandhika18022022@gmail.com';
+      allow update: if request.auth != null && (
+        request.auth.token.email == 'ridhosandhika18022022@gmail.com' || 
+        (request.auth.uid == resource.data.userId && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['appealRequested', 'appealedAt']) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance'])
+        )) ||
+        // Allow any logged in user (buyers) to add referral commissions
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['affiliateBalance', 'affiliateCount', 'balance'])
+      );
     }
 
     // Withdrawals: Only logged-in users can create. Admin can read and update.
@@ -48,6 +57,46 @@ service cloud.firestore {
     match /banned_users/{docId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.email == 'ridhosandhika18022022@gmail.com';
+    }
+
+    // Reviews: anyone can read, only logged-in users can write their own review
+    match /reviews/{projectId}/userReviews/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Discussions: anyone can read, logged-in users can create/delete their own comments
+    match /discussions/{projectId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        request.auth.token.email == 'ridhosandhika18022022@gmail.com'
+      );
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Promo Codes: public read (for validation), admin write only
+    match /promoCodes/{code} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'ridhosandhika18022022@gmail.com';
+    }
+
+    // Wishlists: only the owner can read/write their own wishlist
+    match /wishlists/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Users profiles: each user can read/write their own profile (referral, VIP, etc.)
+    // Anyone can read (for referral code lookup by code), but only owner can write
+    match /users/{userId} {
+      allow read: if true;
+      allow create, delete: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (
+        request.auth.uid == userId ||
+        request.auth.token.email == 'ridhosandhika18022022@gmail.com' ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['referralBalance', 'referralCount'])
+      );
     }
   }
 }

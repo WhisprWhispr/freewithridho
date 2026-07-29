@@ -5,7 +5,7 @@ import { db } from '../firebase';
 import ProjectCard from '../components/ProjectCard';
 import { listenToPartnerByUserId } from '../services/partnerService';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
-import { User, Briefcase, ExternalLink, ShieldCheck, Star, Crown } from 'lucide-react';
+import { User, Briefcase, ExternalLink, ShieldCheck, Star, Crown, MessageCircle, Mail } from 'lucide-react';
 import './PublicProfile.css';
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
@@ -105,11 +105,16 @@ const PublicProfile = () => {
               </p>
             </div>
 
-            <div className="public-profile-stats">
-              <div className="public-stat-box admin-stat-box">
-                <span className="public-stat-value">{projects.length}</span>
-                <span className="public-stat-label">Total Proyek</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+              <div className="public-profile-stats" style={{ margin: 0 }}>
+                <div className="public-stat-box admin-stat-box">
+                  <span className="public-stat-value">{projects.length}</span>
+                  <span className="public-stat-label">Total Proyek</span>
+                </div>
               </div>
+              <a href={`mailto:${ADMIN_EMAIL}?subject=Kerjasama Proyek - FREEWITHRIDHO`} className="btn-hire-me admin-btn">
+                <Mail size={16} /> Hubungi Admin
+              </a>
             </div>
           </div>
         </div>
@@ -203,11 +208,23 @@ const PublicProfile = () => {
             </div>
           </div>
 
-          <div className="public-profile-stats">
-            <div className="public-stat-box">
-              <span className="public-stat-value">{projects.length}</span>
-              <span className="public-stat-label">Proyek</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+            <div className="public-profile-stats">
+              <div className="public-stat-box">
+                <span className="public-stat-value">{projects.length}</span>
+                <span className="public-stat-label">Proyek</span>
+              </div>
             </div>
+            {partner.phone && (
+              <a 
+                href={`https://wa.me/${partner.phone.replace(/[^0-9]/g, '').startsWith('0') ? '62' + partner.phone.replace(/[^0-9]/g, '').slice(1) : partner.phone.replace(/[^0-9]/g, '')}?text=Halo%20${encodeURIComponent(partner.fullName)}%2C%20saya%20melihat%20profil%20Anda%20di%20FREEWITHRIDHO%20dan%20tertarik%20untuk%20bekerjasama%20dalam%20proyek...`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-hire-me"
+              >
+                <MessageCircle size={18} /> Hire Me (WhatsApp)
+              </a>
+            )}
           </div>
         </div>
       </div>

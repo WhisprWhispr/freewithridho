@@ -4,16 +4,17 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
-import {
-  Download, ArrowLeft, FileText, ShoppingCart, LockOpen,
+import { Download, ArrowLeft, FileText, ShoppingCart, LockOpen,
   Heart, Tag, Star, ZoomIn, X, ChevronLeft, ChevronRight,
   Shield, Zap, Package, User, Share2, Link2, MessageCircle,
-  Hash, Eye, Copy, Check
+  Hash, Eye, Copy, Check, Send, ThumbsUp, Edit3, Trash2, MonitorPlay, ExternalLink
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getProjectById, checkUserPurchase } from '../services/projectService';
-import { isWishlisted, toggleWishlist } from '../services/wishlistService';
+import { isWishlisted, toggleWishlist, isWishlistedFirestore, toggleWishlistFirestore } from '../services/wishlistService';
+import { listenToProjectReviews, submitReview, getUserReview } from '../services/reviewService';
+import { listenToComments, sendComment, deleteComment } from '../services/discussionService';
 import './ProjectDetail.css';
 
 // Professional share text generator
@@ -60,6 +61,28 @@ const ProjectDetail = () => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Live Preview state
+  const [showDemoModal, setShowDemoModal] = useState(false);
+
+  // Detail tab state: 'readme' | 'reviews' | 'discussion'
+  const [detailTab, setDetailTab] = useState('readme');
+
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [reviewAvg, setReviewAvg] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [myRating, setMyRating] = useState(0);
+  const [myHoverRating, setMyHoverRating] = useState(0);
+  const [myComment, setMyComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [existingReview, setExistingReview] = useState(null);
+
+  // Discussions state
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [sendingComment, setSendingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+
   const handleBuy = () => {
     if (!user) navigate('/login');
     else navigate(`/checkout/${id}`);
@@ -75,9 +98,13 @@ const ProjectDetail = () => {
     window.open(project.downloadUrl, '_blank', 'noopener,noreferrer');
   };
 
-  // Toggle wishlist
-  const handleWishlist = () => {
-    const nowWishlisted = toggleWishlist(id);
+  // Toggle wishlist (Firestore-based)
+  const handleWishlist = async () => {
+    if (!user) {
+      toast.error('Login dahulu untuk menyimpan favorit!');
+      return;
+    }
+    const nowWishlisted = await toggleWishlistFirestore(user.uid, id);
     setWishlisted(nowWishlisted);
     if (nowWishlisted) {
       toast.success('❤️ Ditambahkan ke Favorit!', {
@@ -166,10 +193,24 @@ const ProjectDetail = () => {
         const data = await getProjectById(id);
         if (!data) { setError('Proyek tidak ditemukan.'); return; }
         setProject(data);
-        setWishlisted(isWishlisted(id));
-        if (data.price > 0 && user) {
-          const purchased = await checkUserPurchase(user.uid, id);
-          setHasPurchased(purchased);
+
+        // Wishlist check (Firestore)
+        if (user) {
+          const wl = await isWishlistedFirestore(user.uid, id);
+          setWishlisted(wl);
+          if (data.price > 0) {
+            const purchased = await checkUserPurchase(user.uid, id);
+            setHasPurchased(purchased);
+            // Get existing review
+            const existing = await getUserReview(id, user.uid);
+            if (existing) {
+              setExistingReview(existing);
+              setMyRating(existing.rating);
+              setMyComment(existing.comment);
+            }
+          }
+        } else {
+          setWishlisted(isWishlisted(id));
         }
       } catch (err) {
         console.error(err);
@@ -180,6 +221,62 @@ const ProjectDetail = () => {
     };
     fetchProjectAndPurchaseStatus();
   }, [id, user]);
+
+  // Listen to reviews
+  useEffect(() => {
+    const unsub = listenToProjectReviews(id, ({ reviews, average, totalCount }) => {
+      setReviews(reviews);
+      setReviewAvg(average);
+      setReviewCount(totalCount);
+    });
+    return () => unsub();
+  }, [id]);
+
+  // Listen to comments/discussions
+  useEffect(() => {
+    const unsub = listenToComments(id, (data) => setComments(data));
+    return () => unsub();
+  }, [id]);
+
+  const handleSubmitReview = async () => {
+    if (!user) { toast.error('Login dahulu!'); return; }
+    if (!hasPurchased && project?.price > 0) { toast.error('Hanya pembeli yang bisa memberi review.'); return; }
+    if (myRating === 0) { toast.error('Pilih rating bintang dahulu.'); return; }
+    setSubmittingReview(true);
+    try {
+      await submitReview(id, user.uid, user.displayName || user.email, myRating, myComment);
+      toast.success(existingReview ? 'Review diperbarui!' : 'Review berhasil dikirim! ⭐');
+      setExistingReview({ rating: myRating, comment: myComment });
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleSendComment = async () => {
+    if (!user) { toast.error('Login dahulu untuk berkomentar!'); return; }
+    if (!commentText.trim()) return;
+    setSendingComment(true);
+    try {
+      await sendComment(id, user.uid, user.displayName || user.email?.split('@')[0], commentText, replyingTo);
+      setCommentText('');
+      setReplyingTo(null);
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setSendingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await deleteComment(id, commentId);
+      toast.success('Komentar dihapus.');
+    } catch (e) {
+      toast.error('Gagal menghapus komentar.');
+    }
+  };
 
   if (loading) {
     return (
@@ -364,11 +461,23 @@ const ProjectDetail = () => {
                     <span className="price-label">Harga</span>
                     <span className="price-value free-price">Gratis</span>
                   </>
+                ) : project.isFlashSale ? (
+                  <>
+                    <span className="price-label" style={{ color: '#ef4444', fontWeight: 600 }}>⚡ Flash Sale</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span className="price-value paid-price" style={{ color: '#ef4444' }}>
+                        Rp {project.discountPrice?.toLocaleString('id-ID')}
+                      </span>
+                      <span style={{ textDecoration: 'line-through', color: '#64748b', fontSize: '0.9rem' }}>
+                        Rp {project.price?.toLocaleString('id-ID')}
+                      </span>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <span className="price-label">Harga</span>
                     <span className="price-value paid-price">
-                      Rp {project.price.toLocaleString('id-ID')}
+                      Rp {project.price?.toLocaleString('id-ID')}
                     </span>
                   </>
                 )}
@@ -394,6 +503,17 @@ const ProjectDetail = () => {
                 )}
               </div>
             </div>
+
+            {/* Live Preview Button */}
+            {project.demoUrl && (
+              <button 
+                onClick={() => setShowDemoModal(true)} 
+                className="btn btn-outline" 
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)' }}
+              >
+                <MonitorPlay size={18} /> Live Preview
+              </button>
+            )}
 
             {/* Feature list */}
             <div className="detail-features">
@@ -479,70 +599,266 @@ const ProjectDetail = () => {
           </div>
         )}
 
-        {/* ─── README ───────────────────────────────────────── */}
+        {/* ─── Tabs: README | Reviews | Diskusi ──────────────── */}
         <div className="detail-section">
-          <h2 className="section-heading">
-            <FileText size={18} /> Dokumentasi
-          </h2>
-          {project.readme ? (
-            <div className="readme-container">
-              <div className="readme-header">
-                <div className="readme-header-dot red" />
-                <div className="readme-header-dot yellow" />
-                <div className="readme-header-dot green" />
-                <span className="readme-filename">README.md</span>
-              </div>
-              <div className="markdown-body">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeHighlight]}
-                  components={{
-                    a: ({ href, children }) => (
-                      <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-                    ),
-                    img: ({ src, alt }) => (
-                      <img src={src} alt={alt} style={{ maxWidth: '100%', borderRadius: '8px' }} />
-                    ),
-                    code({node, inline, className, children, ...props}) {
-                      const match = /language-(\w+)/.exec(className || '');
-                      const codeString = String(children).replace(/\n$/, '');
-                      if (!inline) {
-                        return (
-                          <div className="code-block-wrapper">
-                            <div className="code-block-header">
-                              <span className="code-lang">{match ? match[1] : 'text'}</span>
-                              <button 
-                                className="copy-code-btn"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(codeString);
-                                  toast.success('Kode disalin!');
-                                }}
-                                title="Copy code"
-                              >
-                                <Copy size={14} /> Copy
-                              </button>
-                            </div>
-                            <pre className="markdown-pre">
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            </pre>
-                          </div>
-                        )
-                      }
-                      return <code className={className} {...props}>{children}</code>
-                    },
-                    pre: ({ children }) => <>{children}</>
-                  }}
-                >
-                  {project.readme}
-                </ReactMarkdown>
-              </div>
+          <div className="detail-tabs">
+            <button
+              className={`detail-tab-btn ${detailTab === 'readme' ? 'active' : ''}`}
+              onClick={() => setDetailTab('readme')}
+            >
+              <FileText size={15} /> Dokumentasi
+            </button>
+            <button
+              className={`detail-tab-btn ${detailTab === 'reviews' ? 'active' : ''}`}
+              onClick={() => setDetailTab('reviews')}
+            >
+              <Star size={15} /> Review
+              {reviewCount > 0 && <span className="tab-badge">{reviewCount}</span>}
+            </button>
+            <button
+              className={`detail-tab-btn ${detailTab === 'discussion' ? 'active' : ''}`}
+              onClick={() => setDetailTab('discussion')}
+            >
+              <MessageCircle size={15} /> Diskusi
+              {comments.length > 0 && <span className="tab-badge">{comments.length}</span>}
+            </button>
+          </div>
+
+          {/* README TAB */}
+          {detailTab === 'readme' && (
+            <div>
+              {project.readme ? (
+                <div className="readme-container">
+                  <div className="readme-header">
+                    <div className="readme-header-dot red" />
+                    <div className="readme-header-dot yellow" />
+                    <div className="readme-header-dot green" />
+                    <span className="readme-filename">README.md</span>
+                  </div>
+                  <div className="markdown-body">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeHighlight]}
+                      components={{
+                        a: ({ href, children }) => (
+                          <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+                        ),
+                        img: ({ src, alt }) => (
+                          <img src={src} alt={alt} style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                        ),
+                        code({node, inline, className, children, ...props}) {
+                          const match = /language-(\w+)/.exec(className || '');
+                          const codeString = String(children).replace(/\n$/, '');
+                          if (!inline) {
+                            return (
+                              <div className="code-block-wrapper">
+                                <div className="code-block-header">
+                                  <span className="code-lang">{match ? match[1] : 'text'}</span>
+                                  <button
+                                    className="copy-code-btn"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(codeString);
+                                      toast.success('Kode disalin!');
+                                    }}
+                                    title="Copy code"
+                                  >
+                                    <Copy size={14} /> Copy
+                                  </button>
+                                </div>
+                                <pre className="markdown-pre">
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                </pre>
+                              </div>
+                            )
+                          }
+                          return <code className={className} {...props}>{children}</code>
+                        },
+                        pre: ({ children }) => <>{children}</>
+                      }}
+                    >
+                      {project.readme}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-readme">
+                  <FileText size={32} />
+                  <p>Tidak ada README untuk proyek ini.</p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="no-readme">
-              <FileText size={32} />
-              <p>Tidak ada README untuk proyek ini.</p>
+          )}
+
+          {/* REVIEWS TAB */}
+          {detailTab === 'reviews' && (
+            <div className="reviews-section">
+              {/* Rating summary */}
+              {reviewCount > 0 && (
+                <div className="review-summary">
+                  <div className="review-avg-score">{reviewAvg.toFixed(1)}</div>
+                  <div className="review-avg-stars">
+                    {[1,2,3,4,5].map(s => (
+                      <Star key={s} size={20} fill={s <= Math.round(reviewAvg) ? '#fbbf24' : 'none'} color={s <= Math.round(reviewAvg) ? '#fbbf24' : '#475569'} />
+                    ))}
+                    <span className="review-count-label">{reviewCount} ulasan</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Write review form (only buyers or free project) */}
+              {user && (hasPurchased || !project.price || project.price === 0) && (
+                <div className="review-form">
+                  <h4>{existingReview ? 'Perbarui Ulasan Anda' : 'Tulis Ulasan'}</h4>
+                  <div className="star-selector">
+                    {[1,2,3,4,5].map(s => (
+                      <button
+                        key={s}
+                        className="star-btn"
+                        onMouseEnter={() => setMyHoverRating(s)}
+                        onMouseLeave={() => setMyHoverRating(0)}
+                        onClick={() => setMyRating(s)}
+                      >
+                        <Star size={28} fill={(myHoverRating || myRating) >= s ? '#fbbf24' : 'none'} color={(myHoverRating || myRating) >= s ? '#fbbf24' : '#475569'} />
+                      </button>
+                    ))}
+                    <span className="star-label">
+                      {myHoverRating === 5 ? 'Luar biasa!' : myHoverRating === 4 ? 'Sangat bagus' : myHoverRating === 3 ? 'Lumayan' : myHoverRating === 2 ? 'Kurang' : myHoverRating === 1 ? 'Buruk' : myRating > 0 ? `${myRating} bintang` : 'Pilih rating'}
+                    </span>
+                  </div>
+                  <textarea
+                    className="review-textarea"
+                    placeholder="Ceritakan pengalaman Anda dengan source code ini..."
+                    value={myComment}
+                    onChange={e => setMyComment(e.target.value)}
+                    rows={3}
+                  />
+                  <button
+                    className="btn-review-submit"
+                    onClick={handleSubmitReview}
+                    disabled={submittingReview || myRating === 0}
+                  >
+                    {submittingReview ? 'Mengirim...' : existingReview ? 'Perbarui Ulasan' : '⭐ Kirim Ulasan'}
+                  </button>
+                </div>
+              )}
+
+              {/* Review list */}
+              {reviews.length === 0 ? (
+                <div className="no-reviews">
+                  <Star size={32} color="#475569" />
+                  <p>Belum ada ulasan. Jadilah yang pertama!</p>
+                </div>
+              ) : (
+                <div className="review-list">
+                  {reviews.map(r => (
+                    <div key={r.id} className={`review-item ${r.userId === user?.uid ? 'own-review' : ''}`}>
+                      <div className="review-header">
+                        <div className="review-avatar">{(r.displayName || 'A')[0].toUpperCase()}</div>
+                        <div>
+                          <div className="review-author">{r.displayName}</div>
+                          <div className="review-stars">
+                            {[1,2,3,4,5].map(s => (
+                              <Star key={s} size={13} fill={s <= r.rating ? '#fbbf24' : 'none'} color={s <= r.rating ? '#fbbf24' : '#475569'} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="review-text">{r.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* DISCUSSION TAB */}
+          {detailTab === 'discussion' && (
+            <div className="discussion-section">
+              {/* Comment input */}
+              {user ? (
+                <div className="comment-input-box">
+                  {replyingTo && (
+                    <div className="replying-to-banner">
+                      Membalas komentar · <button onClick={() => setReplyingTo(null)}>✕ Batal</button>
+                    </div>
+                  )}
+                  <textarea
+                    className="comment-textarea"
+                    placeholder={replyingTo ? 'Tulis balasan...' : 'Tulis pertanyaan atau komentar...'}
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                    rows={3}
+                    onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSendComment(); }}
+                  />
+                  <div className="comment-input-footer">
+                    <span className="comment-hint">Ctrl+Enter untuk kirim</span>
+                    <button
+                      className="btn-comment-send"
+                      onClick={handleSendComment}
+                      disabled={sendingComment || !commentText.trim()}
+                    >
+                      <Send size={15} /> {sendingComment ? 'Mengirim...' : 'Kirim'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="comment-login-prompt">
+                  <MessageCircle size={20} />
+                  <span>Silakan <a href="/login">Login</a> untuk berkomentar.</span>
+                </div>
+              )}
+
+              {/* Comment list */}
+              {comments.length === 0 ? (
+                <div className="no-comments">
+                  <MessageCircle size={32} color="#475569" />
+                  <p>Belum ada diskusi. Jadilah yang pertama bertanya!</p>
+                </div>
+              ) : (
+                <div className="comment-list">
+                  {comments.filter(c => !c.replyToId).map(comment => (
+                    <div key={comment.id} className="comment-item">
+                      <div className="comment-avatar">{(comment.displayName || 'A')[0].toUpperCase()}</div>
+                      <div className="comment-content">
+                        <div className="comment-meta">
+                          <span className="comment-author">{comment.displayName}</span>
+                          {comment.edited && <span className="comment-edited">(diedit)</span>}
+                        </div>
+                        <p className="comment-text">{comment.text}</p>
+                        <div className="comment-actions">
+                          <button className="comment-action-btn" onClick={() => setReplyingTo(comment.id)}>
+                            <MessageCircle size={13} /> Balas
+                          </button>
+                          {(user?.uid === comment.userId || user?.email === 'ridhosandhika18022022@gmail.com') && (
+                            <button className="comment-action-btn danger" onClick={() => handleDeleteComment(comment.id)}>
+                              <Trash2 size={13} /> Hapus
+                            </button>
+                          )}
+                        </div>
+                        {/* Replies */}
+                        {comments.filter(c => c.replyToId === comment.id).map(reply => (
+                          <div key={reply.id} className="comment-reply">
+                            <div className="comment-avatar sm">{(reply.displayName || 'A')[0].toUpperCase()}</div>
+                            <div className="comment-content">
+                              <div className="comment-meta">
+                                <span className="comment-author">{reply.displayName}</span>
+                              </div>
+                              <p className="comment-text">{reply.text}</p>
+                              {(user?.uid === reply.userId || user?.email === 'ridhosandhika18022022@gmail.com') && (
+                                <button className="comment-action-btn danger" onClick={() => handleDeleteComment(reply.id)}>
+                                  <Trash2 size={13} /> Hapus
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -582,6 +898,27 @@ const ProjectDetail = () => {
           </div>
         </div>
       </div>
+      {/* DEMO MODAL */}
+      {showDemoModal && project.demoUrl && (
+        <div className="demo-modal-overlay">
+          <div className="demo-modal-content">
+            <div className="demo-modal-header">
+              <h3>Live Preview: {project.title}</h3>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <a href={project.demoUrl} target="_blank" rel="noreferrer" className="btn-open-new-tab">
+                  Buka di Tab Baru <ExternalLink size={14} />
+                </a>
+                <button className="btn-close-demo" onClick={() => setShowDemoModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="demo-modal-body">
+              <iframe src={project.demoUrl} title="Live Demo" className="demo-iframe" />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,10 +5,31 @@ import { listenToApprovedDevCount } from '../services/partnerService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import ProjectCard from '../components/ProjectCard';
-import { Search, Code2, Users, Star, Zap } from 'lucide-react';
+import { Search, Code2, Users, Star, Zap, Clock } from 'lucide-react';
 import './Home.css';
 
 const CATEGORIES = ['All', 'Basic', 'Premium', 'Web', 'Game', 'Mobile'];
+
+// Countdown Timer Hook — hitung mundur ke tengah malam
+function useFlashSaleCountdown() {
+  const getTimeLeft = () => {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const diff = Math.max(0, midnight - now);
+    return {
+      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000),
+    };
+  };
+  const [timeLeft, setTimeLeft] = useState(getTimeLeft);
+  useEffect(() => {
+    const timer = setInterval(() => setTimeLeft(getTimeLeft()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return timeLeft;
+}
 
 // Animated counter — re-triggers on target change
 function useCountUp(target, duration = 1200) {
@@ -38,9 +59,13 @@ const Home = () => {
   const [statsVisible, setStatsVisible] = useState(false);
   const statsRef = useRef(null);
 
+  // Flash sale countdown
+  const flashCountdown = useFlashSaleCountdown();
+
   // Derived real-time stats
   const totalProjects = projects.length;
   const freeProjects = projects.filter(p => !p.price || p.price === 0).length;
+  const flashSaleProjects = projects.filter(p => p.isFlashSale && p.discountPrice);
 
   const countProjects = useCountUp(statsVisible ? totalProjects : 0);
   const countFree    = useCountUp(statsVisible ? freeProjects : 0);
@@ -130,6 +155,60 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Flash Sale Banner */}
+      {!loading && flashSaleProjects.length > 0 && (
+        <section className="flash-sale-section">
+          {/* Header */}
+          <div className="flash-sale-header">
+            <div className="flash-sale-title">
+              <div className="flash-icon-wrap">
+                <Zap size={20} className="flash-icon" />
+              </div>
+              <div>
+                <h2>⚡ Flash Sale</h2>
+                <p className="flash-sale-subtitle">Penawaran terbatas, jangan sampai terlewat!</p>
+              </div>
+              <span className="flash-badge">🔥 HOT</span>
+            </div>
+
+            <div className="flash-countdown">
+              <div className="flash-countdown-label">
+                <Clock size={14} />
+                <span>Berakhir dalam</span>
+              </div>
+              <div className="countdown-blocks">
+                <div className="countdown-block">
+                  <span>{String(flashCountdown.hours).padStart(2, '0')}</span>
+                  <small>JAM</small>
+                </div>
+                <div className="countdown-sep">:</div>
+                <div className="countdown-block">
+                  <span>{String(flashCountdown.minutes).padStart(2, '0')}</span>
+                  <small>MNT</small>
+                </div>
+                <div className="countdown-sep">:</div>
+                <div className="countdown-block">
+                  <span>{String(flashCountdown.seconds).padStart(2, '0')}</span>
+                  <small>DTK</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Flash Sale Items */}
+          <div className="flash-sale-grid">
+            {flashSaleProjects.slice(0, 4).map(project => (
+              <div key={project.id} className="flash-sale-card-wrap">
+                <div className="flash-sale-discount-badge">
+                  -{Math.round(((project.price - project.discountPrice) / project.price) * 100)}%
+                </div>
+                <ProjectCard project={project} isFlashSale />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Stats — real-time from Firestore */}
       {!loading && (

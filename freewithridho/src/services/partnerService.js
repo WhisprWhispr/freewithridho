@@ -52,6 +52,19 @@ export async function updatePartnerStatus(id, newStatus) {
 }
 
 /**
+ * Approve partner with admin signature
+ */
+export async function approvePartnerApplication(id, adminName, adminSignature) {
+  const docRef = doc(db, COLLECTION, id);
+  await updateDoc(docRef, {
+    status: 'approved',
+    adminName,
+    adminSignature,
+    reviewedAt: new Date().toISOString()
+  });
+}
+
+/**
  * Listen to total approved developers count (Real-time for Home)
  */
 export function listenToApprovedDevCount(callback) {

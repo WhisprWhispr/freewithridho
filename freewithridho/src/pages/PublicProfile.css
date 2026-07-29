@@ -262,3 +262,40 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+.btn-hire-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.btn-hire-me:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+  color: white;
+}
+
+.btn-hire-me:active {
+  transform: translateY(0);
+}
+
+.btn-hire-me.admin-btn {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-hire-me.admin-btn:hover {
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+}
+

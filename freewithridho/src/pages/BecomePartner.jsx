@@ -1,14 +1,105 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { submitPartnerApplication } from '../services/partnerService';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle } from 'lucide-react';
-import jsPDF from 'jspdf';
+import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle, PenTool } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { generatePartnerPDF } from '../utils/pdfGenerator';
 import './BecomePartner.css';
 
+// ── Native HTML5 Canvas Signature Pad (no external library) ──────────────────
+const SignaturePad = ({ canvasRef, onHasSignature }) => {
+  const isDrawing = useRef(false);
+
+  const getPos = (e, canvas) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if (e.touches) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY,
+      };
+    }
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  };
+
+  const startDraw = useCallback((e) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const { x, y } = getPos(e, canvas);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    isDrawing.current = true;
+  }, [canvasRef]);
+
+  const draw = useCallback((e) => {
+    if (!isDrawing.current) return;
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+    const { x, y } = getPos(e, canvas);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    onHasSignature && onHasSignature(true);
+  }, [canvasRef, onHasSignature]);
+
+  const stopDraw = useCallback((e) => {
+    e.preventDefault();
+    isDrawing.current = false;
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // mouse
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    // touch
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDraw, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('mousedown', startDraw);
+      canvas.removeEventListener('mousemove', draw);
+      canvas.removeEventListener('mouseup', stopDraw);
+      canvas.removeEventListener('mouseleave', stopDraw);
+      canvas.removeEventListener('touchstart', startDraw);
+      canvas.removeEventListener('touchmove', draw);
+      canvas.removeEventListener('touchend', stopDraw);
+    };
+  }, [canvasRef, startDraw, draw, stopDraw]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={500}
+      height={150}
+      style={{ width: '100%', height: '150px', display: 'block', cursor: 'crosshair', borderRadius: '8px' }}
+    />
+  );
+};
+
+// ── Main BecomePartner Page ───────────────────────────────────────────────────
 const BecomePartner = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -23,6 +114,9 @@ const BecomePartner = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const sigCanvasRef = useRef(null);
+  const [hasSignature, setHasSignature] = useState(false);
+  const [signatureData, setSignatureData] = useState(null);
 
   // Auto-fill email if logged in
   useEffect(() => {
@@ -34,6 +128,29 @@ const BecomePartner = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const clearSignature = () => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    setHasSignature(false);
+  };
+
+  const getCompressedSignature = () => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return null;
+    // Compress: draw onto a smaller canvas as JPEG
+    const out = document.createElement('canvas');
+    out.width = 300;
+    out.height = 100;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 300, 100);
+    ctx.drawImage(canvas, 0, 0, 300, 100);
+    return out.toDataURL('image/jpeg', 0.5);
   };
 
   const handleSubmit = async (e) => {
@@ -48,10 +165,18 @@ const BecomePartner = () => {
       return;
     }
 
+    if (!hasSignature) {
+      toast.error('Mohon masukkan tanda tangan Anda.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
-      // Cek apakah nomor telepon ini pernah diblokir/banned
+      const applicantSignatureBase64 = getCompressedSignature();
+      setSignatureData(applicantSignatureBase64);
+
+      // Cek banned
       const qPhone = query(collection(db, 'banned_users'), where('phone', '==', form.phone));
       const phoneSnap = await getDocs(qPhone);
       if (!phoneSnap.empty) {
@@ -62,6 +187,7 @@ const BecomePartner = () => {
 
       await submitPartnerApplication({
         ...form,
+        applicantSignature: applicantSignatureBase64,
         userId: user.uid,
         balance: 0,
       });
@@ -69,32 +195,18 @@ const BecomePartner = () => {
       toast.success('Pendaftaran berhasil dikirim!');
     } catch (error) {
       console.error('Error submitting application:', error);
-      toast.error('Terjadi kesalahan. Silakan coba lagi.');
+      toast.error(`Gagal mengirim: ${error?.message || 'Silakan coba lagi.'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDownloadPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('Bukti Pendaftaran Partner Developer', 20, 20);
-    
-    doc.setFontSize(12);
-    doc.text(`Nama Lengkap: ${form.fullName}`, 20, 40);
-    doc.text(`Email: ${form.email}`, 20, 50);
-    doc.text(`Nomor WhatsApp: ${form.phone}`, 20, 60);
-    doc.text(`Link Portofolio: ${form.portfolio}`, 20, 70);
-    doc.text(`Keahlian: ${form.skills || '-'}`, 20, 80);
-    
-    doc.text('Alasan Bergabung:', 20, 100);
-    const splitReason = doc.splitTextToSize(form.reason || '-', 170);
-    doc.text(splitReason, 20, 110);
-    
-    doc.text('Terima kasih telah mendaftar!', 20, 150);
-    doc.text('FREEWITHRIDHO Team', 20, 160);
-
-    doc.save(`Pendaftaran_Partner_${form.fullName.replace(/\s+/g, '_')}.pdf`);
+    generatePartnerPDF({
+      ...form,
+      status: 'pending',
+      applicantSignature: signatureData
+    });
   };
 
   if (isSuccess) {
@@ -167,78 +279,60 @@ const BecomePartner = () => {
           <form className="partner-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label><User size={16} /> Nama Lengkap *</label>
-              <input 
-                type="text" 
-                name="fullName" 
-                value={form.fullName} 
-                onChange={handleChange} 
-                placeholder="Contoh: Budi Santoso"
-                required 
-              />
+              <input type="text" name="fullName" value={form.fullName} onChange={handleChange} placeholder="Contoh: Budi Santoso" required />
             </div>
             
             <div className="form-group">
               <label><Mail size={16} /> Email Aktif *</label>
-              <input 
-                type="email" 
-                name="email" 
-                value={form.email} 
-                onChange={handleChange} 
-                placeholder="budi@example.com"
-                required 
-              />
+              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="budi@example.com" required />
             </div>
 
             <div className="form-group">
               <label><Phone size={16} /> Nomor WhatsApp *</label>
-              <input 
-                type="text" 
-                name="phone" 
-                value={form.phone} 
-                onChange={handleChange} 
-                placeholder="Contoh: 081234567890"
-                required 
-              />
+              <input type="text" name="phone" value={form.phone} onChange={handleChange} placeholder="Contoh: 081234567890" required />
             </div>
 
             <div className="form-group">
               <label><Link2 size={16} /> Link Portofolio / GitHub *</label>
-              <input 
-                type="url" 
-                name="portfolio" 
-                value={form.portfolio} 
-                onChange={handleChange} 
-                placeholder="https://github.com/username"
-                required 
-              />
+              <input type="url" name="portfolio" value={form.portfolio} onChange={handleChange} placeholder="https://github.com/username" required />
             </div>
 
             <div className="form-group">
               <label><Briefcase size={16} /> Keahlian (Tech Stack)</label>
-              <input 
-                type="text" 
-                name="skills" 
-                value={form.skills} 
-                onChange={handleChange} 
-                placeholder="Contoh: React, Node.js, Flutter" 
-              />
+              <input type="text" name="skills" value={form.skills} onChange={handleChange} placeholder="Contoh: React, Node.js, Flutter" />
             </div>
 
             <div className="form-group">
               <label><FileText size={16} /> Kenapa Anda ingin bergabung?</label>
-              <textarea 
-                name="reason" 
-                value={form.reason} 
-                onChange={handleChange} 
-                rows="3" 
-                placeholder="Ceritakan sedikit tentang motivasi Anda..."
-              ></textarea>
+              <textarea name="reason" value={form.reason} onChange={handleChange} rows="3" placeholder="Ceritakan sedikit tentang motivasi Anda..."></textarea>
+            </div>
+
+            {/* ── Tanda Tangan Native Canvas ── */}
+            <div className="form-group">
+              <label>
+                <PenTool size={16} /> Tanda Tangan Digital *
+              </label>
+              <div style={{
+                border: hasSignature ? '2px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '10px',
+                background: 'white',
+                overflow: 'hidden',
+                transition: 'border-color 0.3s'
+              }}>
+                <SignaturePad canvasRef={sigCanvasRef} onHasSignature={setHasSignature} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', color: hasSignature ? '#6ee7b7' : '#94a3b8' }}>
+                  {hasSignature ? '✅ Tanda tangan terisi' : 'Gunakan mouse atau jari Anda untuk tanda tangan'}
+                </span>
+                <button type="button" onClick={clearSignature} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}>Hapus</button>
+              </div>
             </div>
 
             <button 
               type="submit" 
               className="btn btn-primary submit-btn"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !hasSignature}
             >
               {isSubmitting ? 'Mengirim...' : <><Send size={18} /> Kirim Pendaftaran</>}
             </button>

@@ -95,26 +95,45 @@
 .btn-pay {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
-  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+  background-size: 200% 200%;
+  color: white;
   border: none;
   border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  animation: gradientShift 5s ease infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .btn-pay:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+}
+
+.btn-pay:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .btn-pay:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
+  background: #334155;
+  box-shadow: none;
   cursor: not-allowed;
+  animation: none;
 }
 
 .checkout-loading, .checkout-error {
@@ -125,6 +144,107 @@
 
 .checkout-error {
   color: #f87171;
+}
+
+/* ════════════════════════════════════════════════
+   PROMO CODE
+   ════════════════════════════════════════════════ */
+.promo-section {
+  padding: 1rem 0;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  border-bottom: 1px dashed rgba(255,255,255,0.1);
+  margin: 0.5rem 0;
+}
+
+.promo-input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+}
+
+.promo-icon {
+  color: #64748b;
+  margin: 0 0.5rem;
+}
+
+.promo-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.promo-input::placeholder {
+  color: #64748b;
+  text-transform: none;
+}
+
+.btn-apply-promo {
+  background: rgba(59,130,246,0.2);
+  color: #60a5fa;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.35rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-apply-promo:hover:not(:disabled) {
+  background: rgba(59,130,246,0.3);
+}
+
+.btn-apply-promo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-remove-promo {
+  background: rgba(248,113,113,0.2);
+  color: #f87171;
+  border: none;
+  padding: 0.45rem;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.25rem;
+  transition: all 0.2s;
+}
+
+.btn-remove-promo:hover {
+  background: rgba(248,113,113,0.3);
+}
+
+.promo-success-msg {
+  color: #10b981;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.summary-item.discount {
+  color: #10b981;
+}
+
+.discount-val {
+  color: #10b981 !important;
+}
+
+.summary-item.total .final-price {
+  font-size: 1.2rem;
+  color: #fbbf24;
 }
 
 /* ════════════════════════════════════════════════
@@ -191,12 +311,7 @@
   to { transform: rotate(360deg); }
 }
 
-.btn-pay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
+/* btn-pay is already defined above with display: flex */
 
 .checkout-warning {
   background: rgba(234, 179, 8, 0.1);

@@ -4,12 +4,14 @@ import {
   User, Mail, Calendar, ShoppingBag, Download, Clock,
   CheckCircle, XCircle, AlertCircle, LogOut, ChevronRight,
   Package, Wallet, Star, ArrowLeft, ExternalLink,
-  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key, Heart
+  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key, Heart, Share2, MessageCircle, Send
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getUserTransactions, getAllProjects } from '../services/projectService';
 import { listenToPartnerByUserId } from '../services/partnerService';
-import { getWishlist } from '../services/wishlistService';
+import { getWishlist, getWishlistFromFirestore } from '../services/wishlistService';
+import { ensureReferralCode, listenToUserProfile, saveReferredBy } from '../services/referralService';
+import { toast } from 'react-hot-toast';
 import ProjectCard from '../components/ProjectCard';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import './Profile.css';
@@ -147,6 +149,10 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
   const [favoriteProjects, setFavoriteProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [referralData, setReferralData] = useState({ code: '', balance: 0, count: 0, referredBy: null });
+  const [copiedRef, setCopiedRef] = useState(false);
+  const [referredByInput, setReferredByInput] = useState('');
+  const [savingReferredBy, setSavingReferredBy] = useState(false);
 
   const getInitials = (email) => {
     if (!email) return '?';
@@ -163,9 +169,12 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
         ]);
         setTransactions(transData);
         
-        const wishlistIds = getWishlist();
+        const wishlistIds = await getWishlistFromFirestore(user.uid);
         const favs = allProjects.filter(p => wishlistIds.includes(p.id));
         setFavoriteProjects(favs);
+
+        // Ensure referral code exists (creates it if not present)
+        await ensureReferralCode(user.uid);
       } catch (err) {
         console.error(err);
       } finally {
@@ -173,6 +182,22 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
       }
     };
     fetchData();
+
+    // Real-time listener for referral balance & count
+    const unsubscribe = listenToUserProfile(user.uid, (profile) => {
+      if (profile) {
+        setReferralData({
+          code: profile.referralCode || '',
+          balance: profile.referralBalance || 0,
+          count: profile.referralCount || 0,
+          referredBy: profile.referredBy || null
+        });
+        if (profile.referredBy) {
+          setReferredByInput(profile.referredBy);
+        }
+      }
+    });
+    return () => unsubscribe();
   }, [user.uid]);
 
   const paidTransactions = transactions.filter(t => t.status === 'PAID');
@@ -318,6 +343,227 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                 <div className="info-row">
                   <span className="info-row-label"><User size={15}/> User ID</span>
                   <span className="info-row-value uid">{user.uid}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Set Referral Teman Card */}
+            <div className="info-card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(139, 92, 246, 0.3)', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(15, 23, 42, 0.4))' }}>
+              <h3 className="info-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                🎁 Kode Referral Teman
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                Masukkan kode referral temanmu di sini agar otomatis terpasang saat kamu checkout. Temanmu akan mendapatkan komisi <strong style={{ color: '#10b981' }}>0,25%</strong> dari belanjamu!
+              </p>
+              
+              <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px' }}>
+                <input
+                  type="text"
+                  placeholder="Contoh: REF-ABCD1234"
+                  value={referredByInput}
+                  onChange={(e) => setReferredByInput(e.target.value.toUpperCase())}
+                  disabled={referralData.referredBy || savingReferredBy}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    padding: '0.75rem 1rem',
+                    color: 'white',
+                    fontFamily: 'monospace',
+                    fontSize: '1rem'
+                  }}
+                />
+                {!referralData.referredBy && (
+                  <button
+                    onClick={async () => {
+                      if (!referredByInput.trim()) return;
+                      setSavingReferredBy(true);
+                      const res = await saveReferredBy(user.uid, referredByInput);
+                      if (res.valid) {
+                        toast.success(res.message);
+                      } else {
+                        toast.error(res.message);
+                      }
+                      setSavingReferredBy(false);
+                    }}
+                    disabled={!referredByInput.trim() || savingReferredBy}
+                    style={{
+                      background: '#8b5cf6',
+                      border: 'none',
+                      color: 'white',
+                      padding: '0 1.5rem',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      opacity: (!referredByInput.trim() || savingReferredBy) ? 0.5 : 1
+                    }}
+                  >
+                    {savingReferredBy ? 'Menyimpan...' : 'Simpan'}
+                  </button>
+                )}
+              </div>
+              {referralData.referredBy && (
+                <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <CheckCircle size={14} /> Kode referral teman aktif dan otomatis terpasang.
+                </div>
+              )}
+            </div>
+
+            {/* Referral Card */}
+            <div className="info-card referral-card">
+              <h3 className="info-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                🤝 Program Afiliasi
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+                Bagikan kode afiliasi Anda dan dapatkan komisi <strong style={{ color: '#10b981' }}>Rp 250</strong> secara instan setiap ada teman yang berhasil mendaftar menggunakan kode Anda!
+              </p>
+              <div className="referral-code-box">
+                <span className="referral-code-text">{referralData.code || 'Memuat...'}</span>
+                <button
+                  className="btn-copy-ref"
+                  onClick={() => {
+                    navigator.clipboard.writeText(referralData.code);
+                    setCopiedRef(true);
+                    setTimeout(() => setCopiedRef(false), 2000);
+                  }}
+                >
+                  {copiedRef ? '✓ Disalin!' : 'Salin Kode'}
+                </button>
+              </div>
+
+              {/* Share Buttons */}
+              <div style={{ marginTop: '1rem' }}>
+                <p style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '0.6rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Bagikan Via:</p>
+                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  {/* WhatsApp */}
+                  <button
+                    onClick={() => {
+                      const text = encodeURIComponent(
+                        `🚀 *FREEWITHRIDHO — Premium Source Code Marketplace*\n\n` +
+                        `Hei! Saya ingin mengajak kamu bergabung bersama ribuan developer di *FREEWITHRIDHO* — marketplace terpercaya untuk source code berkualitas premium.\n\n` +
+                        `✅ Source code siap pakai & terverifikasi\n` +
+                        `✅ Harga terjangkau, kualitas profesional\n` +
+                        `✅ Dukungan komunitas developer aktif\n\n` +
+                        `Gunakan kode afiliasi saya saat mendaftar dan kita sama-sama dapat keuntungan!\n\n` +
+                        `🎁 Kode Afiliasi: *${referralData.code}*\n\n` +
+                        `👉 Daftar sekarang di: ${window.location.origin}`
+                      );
+                      window.open(`https://wa.me/?text=${text}`, '_blank');
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      background: 'linear-gradient(135deg, #25d366, #128c7e)',
+                      border: 'none', color: 'white', padding: '0.55rem 1rem',
+                      borderRadius: '8px', fontWeight: 600, fontSize: '0.82rem',
+                      cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(37,211,102,0.3)'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <MessageCircle size={15} /> WhatsApp
+                  </button>
+
+                  {/* Telegram */}
+                  <button
+                    onClick={() => {
+                      const text = encodeURIComponent(
+                        `🚀 FREEWITHRIDHO — Premium Source Code Marketplace\n\n` +
+                        `Bergabunglah bersama saya di FREEWITHRIDHO! Platform marketplace source code terpercaya untuk para developer profesional.\n\n` +
+                        `✅ Ribuan source code premium\n✅ Harga kompetitif\n✅ Komunitas developer aktif\n\n` +
+                        `Gunakan kode afiliasi saya: ${referralData.code}\n\n` +
+                        `Daftar sekarang: ${window.location.origin}`
+                      );
+                      window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${text}`, '_blank');
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      background: 'linear-gradient(135deg, #229ed9, #1a7abf)',
+                      border: 'none', color: 'white', padding: '0.55rem 1rem',
+                      borderRadius: '8px', fontWeight: 600, fontSize: '0.82rem',
+                      cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(34,158,217,0.3)'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <Send size={15} /> Telegram
+                  </button>
+
+                  {/* Twitter/X */}
+                  <button
+                    onClick={() => {
+                      const text = encodeURIComponent(
+                        `🚀 Saya baru saja bergabung di @FreeWithRidho — marketplace source code premium terbaik!\n\n` +
+                        `Gunakan kode afiliasi saya dan dapatkan keuntungan bersama! 🎁\n` +
+                        `Kode: ${referralData.code}\n\n` +
+                        `👉 ${window.location.origin} #developer #sourcecode #webdev`
+                      );
+                      window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      background: 'linear-gradient(135deg, #1da1f2, #0d8ecf)',
+                      border: 'none', color: 'white', padding: '0.55rem 1rem',
+                      borderRadius: '8px', fontWeight: 600, fontSize: '0.82rem',
+                      cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(29,161,242,0.3)'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <Share2 size={15} /> Twitter / X
+                  </button>
+
+                  {/* Bagikan Tautan */}
+                  <button
+                    onClick={() => {
+                      const proMessage =
+                        `🚀 FREEWITHRIDHO — Premium Source Code Marketplace\n\n` +
+                        `Halo! Saya mengundang Anda untuk bergabung di FREEWITHRIDHO, platform marketplace source code premium terpercaya untuk para developer profesional Indonesia.\n\n` +
+                        `🔥 Keunggulan FREEWITHRIDHO:\n` +
+                        `✅ Ribuan source code berkualitas & terverifikasi\n` +
+                        `✅ Harga terjangkau, nilai profesional\n` +
+                        `✅ Langsung unduh setelah pembayaran\n` +
+                        `✅ Komunitas developer aktif & supportif\n\n` +
+                        `🎁 Gunakan kode afiliasi saya saat mendaftar:\n` +
+                        `   ➤  Kode: ${referralData.code}\n\n` +
+                        `🔗 Daftar & Mulai Jelajahi Sekarang:\n` +
+                        `   ${window.location.origin}\n\n` +
+                        `— Salam dari sesama developer 👨‍💻`;
+
+                      if (navigator.share) {
+                        navigator.share({
+                          title: 'FREEWITHRIDHO — Premium Source Code Marketplace',
+                          text: proMessage,
+                          url: window.location.origin
+                        }).catch(() => {});
+                      } else {
+                        navigator.clipboard.writeText(proMessage);
+                        toast.success('✅ Pesan afiliasi profesional berhasil disalin! Tinggal tempel & kirim.');
+                      }
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      background: 'rgba(99,102,241,0.15)',
+                      border: '1px solid rgba(99,102,241,0.4)', color: '#818cf8', padding: '0.55rem 1rem',
+                      borderRadius: '8px', fontWeight: 600, fontSize: '0.82rem',
+                      cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.25)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.15)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  >
+                    <Share2 size={15} /> Salin Pesan
+                  </button>
+                </div>
+              </div>
+
+              <div className="referral-stats" style={{ marginTop: '1.25rem' }}>
+                <div className="ref-stat">
+                  <span className="ref-stat-value">{referralData.count}</span>
+                  <span className="ref-stat-label">Referral Berhasil</span>
+                </div>
+                <div className="ref-stat">
+                  <span className="ref-stat-value">Rp {referralData.balance.toLocaleString('id-ID')}</span>
+                  <span className="ref-stat-label">Komisi Terkumpul</span>
                 </div>
               </div>
             </div>

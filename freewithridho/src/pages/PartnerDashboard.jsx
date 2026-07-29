@@ -3,8 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import { listenToPartnerByUserId, submitWithdrawal } from '../services/partnerService';
 import { listenToProjects, addProject, deleteProject, updateProject } from '../services/projectService';
 import { toast } from 'react-hot-toast';
-import { DollarSign, Upload, Trash2, Edit2, Wallet, Clock, CheckCircle } from 'lucide-react';
+import { DollarSign, Upload, Trash2, Edit2, Wallet, Clock, CheckCircle, BarChart2, BookOpen, Users } from 'lucide-react';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
+import SalesAnalytics from '../components/SalesAnalytics';
+import WelcomeModal from '../components/WelcomeModal';
 import './PartnerDashboard.css';
 
 const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile'];
@@ -16,6 +18,9 @@ const emptyForm = {
   downloadUrl: '',
   images: [''],
   price: 0,
+  demoUrl: '',
+  isFlashSale: false,
+  discountPrice: 0,
 };
 
 const PartnerDashboard = () => {
@@ -39,11 +44,26 @@ const PartnerDashboard = () => {
     accountName: ''
   });
 
+  // Welcome modal state
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  // Affiliate (referral) real-time state
+  const [affiliateData, setAffiliateData] = useState({ code: '', balance: 0, count: 0, partnerAffiliateBalance: 0, partnerAffiliateCount: 0 });
+  const [copiedRef, setCopiedRef] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const unsubscribePartner = listenToPartnerByUserId(user.uid, (data) => {
       setPartner(data);
       setLoading(false);
+      // Real-time: update affiliate balance from partner doc
+      if (data) {
+        setAffiliateData(prev => ({
+          ...prev,
+          partnerAffiliateBalance: data.affiliateBalance || 0,
+          partnerAffiliateCount: data.affiliateCount || 0,
+        }));
+      }
     });
 
     const unsubscribeProjects = listenToProjects((allProjects) => {
@@ -60,10 +80,27 @@ const PartnerDashboard = () => {
       });
     });
 
+    // Real-time listener for user profile referral balance
+    let unsubscribeProfile;
+    import('../services/referralService').then(({ listenToUserProfile, ensureReferralCode }) => {
+      ensureReferralCode(user.uid);
+      unsubscribeProfile = listenToUserProfile(user.uid, (profile) => {
+        if (profile) {
+          setAffiliateData(prev => ({
+            ...prev,
+            code: profile.referralCode || '',
+            balance: profile.referralBalance || 0,
+            count: profile.referralCount || 0,
+          }));
+        }
+      });
+    });
+
     return () => {
       if (unsubscribePartner) unsubscribePartner();
       if (unsubscribeProjects) unsubscribeProjects();
       if (unsubscribeWithdrawals) unsubscribeWithdrawals();
+      if (unsubscribeProfile) unsubscribeProfile();
     };
   }, [user, partner?.id]);
 
@@ -184,6 +221,9 @@ const PartnerDashboard = () => {
       downloadUrl: project.downloadUrl,
       images: project.images || [''],
       price: project.price,
+      demoUrl: project.demoUrl || '',
+      isFlashSale: project.isFlashSale || false,
+      discountPrice: project.discountPrice || 0,
     });
     setEditingId(project.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -294,15 +334,49 @@ const PartnerDashboard = () => {
   }
 
   return (
+    <>
     <div className="partner-dashboard-page">
-      <div className="dashboard-header">
-        <h1>Dashboard Partner</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem', color: '#94a3b8' }}>
-          <span>Selamat datang, {partner.fullName}</span>
-          {getBadgeTier(partner.totalEarnings) > 0 && (
-            <PartnerBadge tier={getBadgeTier(partner.totalEarnings)} size="sm" />
-          )}
+      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1>Dashboard Partner</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem', color: '#94a3b8' }}>
+            <span>Selamat datang, {partner.fullName}</span>
+            {getBadgeTier(partner.totalEarnings) > 0 && (
+              <PartnerBadge tier={getBadgeTier(partner.totalEarnings)} size="sm" />
+            )}
+          </div>
         </div>
+        
+        {!showWelcome && (
+          <button 
+            onClick={() => setShowWelcome(true)}
+            title="Buka Panduan Partner"
+            style={{
+              background: 'rgba(59, 130, 246, 0.2)',
+              border: '1px solid rgba(59, 130, 246, 0.4)',
+              color: '#3b82f6',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = '#3b82f6';
+              e.currentTarget.style.color = '#fff';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+              e.currentTarget.style.color = '#3b82f6';
+            }}
+          >
+            <BookOpen size={18} />
+            <span className="hide-on-mobile">Panduan</span>
+          </button>
+        )}
       </div>
 
       <div className="dashboard-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
@@ -343,18 +417,159 @@ const PartnerDashboard = () => {
         </div>
       </div>
 
+      {/* Referral Code Banner */}
+      {partner.referralCode && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%)',
+          border: '1px solid rgba(139, 92, 246, 0.4)',
+          borderRadius: '16px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ 
+              width: '48px', height: '48px', 
+              background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
+              borderRadius: '12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Users size={24} style={{ color: 'white' }} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>🤝 Kode Affiliasi Kamu</p>
+              <p style={{ margin: '4px 0 0', fontSize: '1.5rem', fontWeight: 800, color: 'white', letterSpacing: '0.1em', fontFamily: 'monospace' }}>
+                {affiliateData.code || partner.referralCode || 'Memuat...'}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: '#64748b' }}>
+                Bagikan ke pembeli — kamu dapat komisi <strong style={{ color: '#10b981' }}>0,25%</strong> setiap ada yang pakai kode ini!
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const code = affiliateData.code || partner.referralCode;
+              navigator.clipboard.writeText(code);
+              setCopiedRef(true);
+              setTimeout(() => setCopiedRef(false), 2000);
+              toast.success('Kode affiliasi berhasil disalin! 🎉');
+            }}
+            style={{
+              background: copiedRef ? '#10b981' : 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
+              border: 'none',
+              color: 'white',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s',
+              flexShrink: 0
+            }}
+          >
+            {copiedRef ? '✅ Disalin!' : '📋 Salin Kode'}
+          </button>
+        </div>
+      )}
+
+      {/* Affiliate Stats Section */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '1rem',
+        marginBottom: '2rem'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1))',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{ width: 40, height: 40, background: 'rgba(16, 185, 129, 0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Users size={20} style={{ color: '#10b981' }} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8' }}>Referral Berhasil</p>
+            <p style={{ margin: '2px 0 0', fontSize: '1.35rem', fontWeight: 800, color: 'white' }}>{affiliateData.count}</p>
+            <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: '#64748b' }}>real-time ⚡</p>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
+          border: '1px solid rgba(139, 92, 246, 0.3)',
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{ width: 40, height: 40, background: 'rgba(139, 92, 246, 0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <DollarSign size={20} style={{ color: '#8b5cf6' }} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8' }}>Komisi Affiliasi Terkumpul</p>
+            <p style={{ margin: '2px 0 0', fontSize: '1.35rem', fontWeight: 800, color: 'white' }}>Rp {(affiliateData.balance || 0).toLocaleString('id-ID')}</p>
+            <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: '#64748b' }}>Rp 250 per undangan ⚡</p>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1))',
+          border: '1px solid rgba(245, 158, 11, 0.3)',
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{ width: 40, height: 40, background: 'rgba(245, 158, 11, 0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Wallet size={20} style={{ color: '#f59e0b' }} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8' }}>Saldo Komisi Afiliasi</p>
+            <p style={{ margin: '2px 0 0', fontSize: '1.35rem', fontWeight: 800, color: 'white' }}>Rp {(affiliateData.partnerAffiliateBalance || 0).toLocaleString('id-ID')}</p>
+            <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: '#64748b' }}>dari {affiliateData.partnerAffiliateCount || 0} undangan ⚡</p>
+          </div>
+        </div>
+      </div>
+
       <div className="dashboard-tabs">
         <button 
           className={`tab-btn ${activeTab === 'projects' ? 'active' : ''}`}
           onClick={() => setActiveTab('projects')}
         >
-          Proyek Saya
+          <Upload size={16} /> Kelola Proyek
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <BarChart2 size={18} /> Analitik
         </button>
         <button 
           className={`tab-btn ${activeTab === 'withdraw' ? 'active' : ''}`}
           onClick={() => setActiveTab('withdraw')}
         >
           Penarikan Dana
+        </button>
+        <button 
+          className="tab-btn" 
+          onClick={() => setShowWelcome(true)}
+          style={{ marginLeft: 'auto', background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.3)', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
+        >
+          <BookOpen size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} /> Panduan
         </button>
       </div>
 
@@ -393,6 +608,107 @@ const PartnerDashboard = () => {
               <div className="form-group">
                 <label>Link Unduh Source Code</label>
                 <input type="url" value={form.downloadUrl} onChange={e => setForm({...form, downloadUrl: e.target.value})} required />
+              </div>
+              <div className="form-group">
+                <label>Link Live Demo (Opsional)</label>
+                <input type="url" value={form.demoUrl} onChange={e => setForm({...form, demoUrl: e.target.value})} placeholder="https://demo.example.com" />
+              </div>
+              <div className="form-group flash-sale-group" style={{ 
+                background: form.isFlashSale ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(185, 28, 28, 0.15))' : 'rgba(255, 255, 255, 0.03)', 
+                padding: '1.25rem', 
+                borderRadius: '12px', 
+                marginBottom: '1.5rem',
+                border: form.isFlashSale ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                transition: 'all 0.3s ease'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: form.isFlashSale ? '#f87171' : 'white', fontSize: '1.05rem', fontWeight: 700 }}>
+                      ⚡ Ikutkan Flash Sale
+                    </h4>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+                      Berikan diskon waktu terbatas untuk meningkatkan penjualan proyekmu!
+                    </p>
+                  </div>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '52px', height: '28px', cursor: 'pointer', flexShrink: 0 }}>
+                    <input 
+                      type="checkbox" 
+                      checked={form.isFlashSale} 
+                      onChange={e => setForm({...form, isFlashSale: e.target.checked})} 
+                      style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                    />
+                    <span style={{
+                      position: 'absolute',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: form.isFlashSale ? '#ef4444' : '#334155',
+                      borderRadius: '34px',
+                      transition: '0.3s',
+                      boxShadow: form.isFlashSale ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'none'
+                    }}>
+                      <span style={{
+                        position: 'absolute',
+                        content: '""',
+                        height: '22px',
+                        width: '22px',
+                        left: form.isFlashSale ? '27px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        borderRadius: '50%',
+                        transition: '0.3s',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+
+                {form.isFlashSale && (
+                  <div style={{ 
+                    marginTop: '1.25rem', 
+                    paddingTop: '1.25rem', 
+                    borderTop: '1px dashed rgba(239, 68, 68, 0.3)',
+                    animation: 'fadeInDown 0.3s ease forwards'
+                  }}>
+                    <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                      Harga Diskon Flash Sale *
+                    </label>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <span style={{ 
+                        position: 'absolute', 
+                        left: '1rem', 
+                        color: '#f87171', 
+                        fontWeight: 700,
+                        fontSize: '1.1rem',
+                        pointerEvents: 'none'
+                      }}>
+                        Rp
+                      </span>
+                      <input 
+                        type="text" 
+                        placeholder="Misal: 50000"
+                        value={form.discountPrice !== '' && form.discountPrice !== undefined ? form.discountPrice.toLocaleString('id-ID') : ''}
+                        onChange={e => {
+                          const rawValue = e.target.value.replace(/\D/g, '');
+                          setForm({...form, discountPrice: rawValue ? parseInt(rawValue, 10) : ''});
+                        }} 
+                        required={form.isFlashSale} 
+                        style={{
+                          width: '100%',
+                          padding: '0.8rem 1rem 0.8rem 2.8rem',
+                          borderRadius: '8px',
+                          border: '2px solid rgba(239, 68, 68, 0.4)',
+                          background: 'rgba(0,0,0,0.2)',
+                          color: 'white',
+                          fontWeight: 700,
+                          fontSize: '1.1rem',
+                          outline: 'none',
+                          transition: 'border-color 0.2s',
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#ef4444'}
+                        onBlur={(e) => e.target.style.borderColor = 'rgba(239, 68, 68, 0.4)'}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label>URL Gambar</label>
@@ -443,7 +759,7 @@ const PartnerDashboard = () => {
       {activeTab === 'withdraw' && (
         <div className="dashboard-card" style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h3>Tarik Penghasilan</h3>
-          <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Pencairan akan diproses manual oleh Admin maksimal 2x24 jam kerja.</p>
+          <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Pencairan akan diproses manual oleh Admin maksimal 3x24 jam kerja.</p>
           
           <form onSubmit={handleWithdrawSubmit} className="partner-upload-form">
             <div className="form-group">
@@ -510,7 +826,23 @@ const PartnerDashboard = () => {
           </form>
         </div>
       )}
+
+      {activeTab === 'analytics' && (
+        <div className="tab-content analytics-tab fade-in">
+          <h2 style={{ color: '#fff', marginBottom: '1rem' }}>Analitik Penjualan</h2>
+          <SalesAnalytics projects={projects} partnerId={partner.id} />
+        </div>
+      )}
+      
+      {showWelcome && (
+        <WelcomeModal 
+          role="partner" 
+          storageKey="hasSeenPartnerWelcome" 
+          onClose={() => setShowWelcome(false)} 
+        />
+      )}
     </div>
+    </>
   );
 };
 

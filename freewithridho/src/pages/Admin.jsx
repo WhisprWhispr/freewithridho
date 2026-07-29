@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllProjects, addProject, deleteProject, updateProject, getSettings, saveSettings } from '../services/projectService';
 import { getAdminStats, listenToAdminStats } from '../services/adminStatsService';
@@ -12,12 +12,71 @@ import 'highlight.js/styles/github-dark.css';
 import {
   Plus, Trash2, Upload, LogOut, FileText, Eye, Edit2, Settings, Key,
   ShieldCheck, BarChart3, TrendingUp, DollarSign, Briefcase,
-  Receipt, Users, Check, X, Download, Wallet
+  Receipt, Users, Check, X, Download, Wallet, Tag, BookOpen
 } from 'lucide-react';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
+import PromoAdminTab from '../components/PromoAdminTab';
+import WelcomeModal from '../components/WelcomeModal';
+import { generatePartnerPDF } from '../utils/pdfGenerator';
 import './Admin.css';
+
+// ── Native Signature Pad ──────────────────────────────────────────────────────
+const AdminSignaturePad = ({ canvasRef, onHasSignature }) => {
+  const isDrawing = React.useRef(false);
+
+  const getPos = (e, canvas) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if (e.touches) {
+      return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+    }
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  };
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const startDraw = (e) => { e.preventDefault(); const { x, y } = getPos(e, canvas); ctx.beginPath(); ctx.moveTo(x, y); isDrawing.current = true; };
+    const draw = (e) => {
+      if (!isDrawing.current) return;
+      e.preventDefault();
+      ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0f172a';
+      const { x, y } = getPos(e, canvas); ctx.lineTo(x, y); ctx.stroke();
+      onHasSignature && onHasSignature(true);
+    };
+    const stopDraw = (e) => { e.preventDefault(); isDrawing.current = false; };
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDraw, { passive: false });
+    return () => {
+      canvas.removeEventListener('mousedown', startDraw);
+      canvas.removeEventListener('mousemove', draw);
+      canvas.removeEventListener('mouseup', stopDraw);
+      canvas.removeEventListener('mouseleave', stopDraw);
+      canvas.removeEventListener('touchstart', startDraw);
+      canvas.removeEventListener('touchmove', draw);
+      canvas.removeEventListener('touchend', stopDraw);
+    };
+  }, [canvasRef, onHasSignature]);
+
+  return (
+    <canvas ref={canvasRef} width={440} height={140}
+      style={{ width: '100%', height: '140px', display: 'block', cursor: 'crosshair', borderRadius: '8px' }}
+    />
+  );
+};
 
 const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile'];
 
@@ -26,9 +85,12 @@ const emptyForm = {
   category: 'Basic',
   description: '',
   downloadUrl: '',
+  demoUrl: '',
   readme: '',
   images: [''],
   price: 0,
+  isFlashSale: false,
+  discountPrice: 0
 };
 
 const Admin = () => {
@@ -90,6 +152,20 @@ const Admin = () => {
   // Settings state
   const [midtransSettings, setMidtransSettings] = useState({ merchantId: '', serverKey: '', clientKey: '', environment: 'sandbox' });
   const [savingSettings, setSavingSettings] = useState(false);
+
+  // Admin Approval Modal state
+  const [adminApprovalModal, setAdminApprovalModal] = useState({
+    isOpen: false,
+    partnerId: null,
+    partnerName: '',
+    adminName: 'Administrator'
+  });
+  const adminSigCanvasRef = useRef(null);
+  const [adminHasSignature, setAdminHasSignature] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+
+  // Welcome modal state
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const handleLogout = async () => {
     await logout();
@@ -216,15 +292,63 @@ const Admin = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePartnerAction = async (partnerId, status) => {
+  const handlePartnerAction = async (partner, status) => {
+    if (status === 'approved') {
+      setAdminApprovalModal({
+        isOpen: true,
+        partnerId: partner.id,
+        partnerName: partner.fullName,
+        adminName: 'Administrator'
+      });
+      return;
+    }
+
     const loadingToast = toast.loading(`Mengupdate status...`);
     try {
       const { updatePartnerStatus } = await import('../services/partnerService');
-      await updatePartnerStatus(partnerId, status);
-      toast.success(`Partner berhasil di-${status === 'approved' ? 'setujui' : 'tolak'}`, { id: loadingToast });
+      await updatePartnerStatus(partner.id, status);
+      toast.success(`Partner berhasil di-tolak`, { id: loadingToast });
     } catch (e) {
       console.error(e);
       toast.error('Gagal update status partner', { id: loadingToast });
+    }
+  };
+
+  const handleSubmitAdminApproval = async () => {
+    if (!adminApprovalModal.adminName.trim()) {
+      toast.error('Nama Admin tidak boleh kosong');
+      return;
+    }
+    if (!adminHasSignature) {
+      toast.error('Mohon isi tanda tangan Anda');
+      return;
+    }
+
+    // Compress admin signature from native canvas
+    const adminCanvas = adminSigCanvasRef.current;
+    const adminCompressCanvas = document.createElement('canvas');
+    adminCompressCanvas.width = 300;
+    adminCompressCanvas.height = 100;
+    const adminCtx = adminCompressCanvas.getContext('2d');
+    adminCtx.fillStyle = 'white';
+    adminCtx.fillRect(0, 0, 300, 100);
+    adminCtx.drawImage(adminCanvas, 0, 0, 300, 100);
+    const adminSigBase64 = adminCompressCanvas.toDataURL('image/jpeg', 0.5);
+    
+    setIsApproving(true);
+    const loadingToast = toast.loading('Menyetujui partner...');
+    try {
+      const { approvePartnerApplication } = await import('../services/partnerService');
+      await approvePartnerApplication(adminApprovalModal.partnerId, adminApprovalModal.adminName, adminSigBase64);
+      
+      toast.success(`Partner ${adminApprovalModal.partnerName} berhasil disetujui!`, { id: loadingToast });
+      setAdminApprovalModal({ isOpen: false, partnerId: null, partnerName: '', adminName: 'Administrator' });
+      setAdminHasSignature(false);
+    } catch (error) {
+      console.error(error);
+      toast.error('Gagal menyetujui partner', { id: loadingToast });
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -484,17 +608,18 @@ const Admin = () => {
   };
 
   return (
-    <div className="admin-page">
-      <ConfirmModal 
-        isOpen={confirmModal.isOpen}
-        title="Hapus Proyek?"
-        message={`Anda yakin ingin menghapus proyek "${confirmModal.title}"? Tindakan ini tidak dapat dibatalkan.`}
-        onClose={() => setConfirmModal({ isOpen: false, id: null, title: '' })}
-        onConfirm={executeDelete}
-        isLoading={deletingId === confirmModal.id}
-      />
+    <>
+      <div className="admin-page">
+        <ConfirmModal 
+          isOpen={confirmModal.isOpen}
+          title="Hapus Proyek?"
+          message={`Anda yakin ingin menghapus proyek "${confirmModal.title}"? Tindakan ini tidak dapat dibatalkan.`}
+          onClose={() => setConfirmModal({ isOpen: false, id: null, title: '' })}
+          onConfirm={executeDelete}
+          isLoading={deletingId === confirmModal.id}
+        />
 
-      <div className="admin-container">
+        <div className="admin-container">
         {/* Admin user banner */}
         <div className="admin-user-banner">
           <div className="admin-user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -599,6 +724,45 @@ const Admin = () => {
               </span>
             )}
           </button>
+          <button 
+            className={`admin-tab-btn ${activeAdminTab === 'promos' ? 'active' : ''}`}
+            onClick={() => setActiveAdminTab('promos')}
+            style={{ background: activeAdminTab === 'promos' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: 'none', color: '#fff', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
+          >
+            <Tag size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Kode Promo
+          </button>
+          
+          {!showWelcome && (
+            <button 
+              onClick={() => setShowWelcome(true)}
+              title="Buka Panduan Admin"
+              style={{
+                marginLeft: 'auto',
+                background: 'rgba(59, 130, 246, 0.2)',
+                border: '1px solid rgba(59, 130, 246, 0.4)',
+                color: '#3b82f6',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = '#3b82f6';
+                e.currentTarget.style.color = '#fff';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                e.currentTarget.style.color = '#3b82f6';
+              }}
+            >
+              <BookOpen size={18} />
+              <span>Panduan</span>
+            </button>
+          )}
         </div>
 
         {activeAdminTab === 'projects' && (
@@ -654,6 +818,118 @@ const Admin = () => {
                       value={form.price !== '' && form.price !== undefined ? form.price.toLocaleString('id-ID') : ''}
                       onChange={handlePriceChange}
                       required
+                    />
+                  </div>
+
+                  {form.price > 0 && (
+                    <div className="form-group" style={{ 
+                      background: form.isFlashSale ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(185, 28, 28, 0.15))' : 'rgba(255, 255, 255, 0.03)', 
+                      padding: '1.25rem', 
+                      borderRadius: '12px', 
+                      marginBottom: '1.5rem',
+                      border: form.isFlashSale ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      transition: 'all 0.3s ease'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                          <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: form.isFlashSale ? '#f87171' : 'white', fontSize: '1.05rem', fontWeight: 700 }}>
+                            ⚡ Aktifkan Flash Sale
+                          </h4>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+                            Berikan diskon waktu terbatas untuk meningkatkan penjualan proyek!
+                          </p>
+                        </div>
+                        <label style={{ position: 'relative', display: 'inline-block', width: '52px', height: '28px', cursor: 'pointer', flexShrink: 0 }}>
+                          <input 
+                            type="checkbox" 
+                            checked={form.isFlashSale} 
+                            onChange={(e) => setForm({ ...form, isFlashSale: e.target.checked })} 
+                            style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                          />
+                          <span style={{
+                            position: 'absolute',
+                            top: 0, left: 0, right: 0, bottom: 0,
+                            backgroundColor: form.isFlashSale ? '#ef4444' : '#334155',
+                            borderRadius: '34px',
+                            transition: '0.3s',
+                            boxShadow: form.isFlashSale ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'none'
+                          }}>
+                            <span style={{
+                              position: 'absolute',
+                              content: '""',
+                              height: '22px',
+                              width: '22px',
+                              left: form.isFlashSale ? '27px' : '3px',
+                              bottom: '3px',
+                              backgroundColor: 'white',
+                              borderRadius: '50%',
+                              transition: '0.3s',
+                              boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                            }} />
+                          </span>
+                        </label>
+                      </div>
+
+                      {form.isFlashSale && (
+                        <div style={{ 
+                          marginTop: '1.25rem', 
+                          paddingTop: '1.25rem', 
+                          borderTop: '1px dashed rgba(239, 68, 68, 0.3)',
+                          animation: 'fadeInDown 0.3s ease forwards'
+                        }}>
+                          <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                            Harga Diskon Flash Sale *
+                          </label>
+                          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            <span style={{ 
+                              position: 'absolute', 
+                              left: '1rem', 
+                              color: '#f87171', 
+                              fontWeight: 700,
+                              fontSize: '1.1rem',
+                              pointerEvents: 'none'
+                            }}>
+                              Rp
+                            </span>
+                            <input 
+                              type="text" 
+                              placeholder="Misal: 50000"
+                              value={form.discountPrice !== '' && form.discountPrice !== undefined ? form.discountPrice.toLocaleString('id-ID') : ''}
+                              onChange={(e) => {
+                                const rawVal = e.target.value.replace(/[^0-9]/g, '');
+                                setForm({ ...form, discountPrice: rawVal ? Number(rawVal) : 0 });
+                              }}
+                              required={form.isFlashSale} 
+                              style={{
+                                width: '100%',
+                                padding: '0.8rem 1rem 0.8rem 2.8rem',
+                                borderRadius: '8px',
+                                border: '2px solid rgba(239, 68, 68, 0.4)',
+                                background: 'rgba(0,0,0,0.2)',
+                                color: 'white',
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                outline: 'none',
+                                transition: 'border-color 0.2s',
+                              }}
+                              onFocus={(e) => e.target.style.borderColor = '#ef4444'}
+                              onBlur={(e) => e.target.style.borderColor = 'rgba(239, 68, 68, 0.4)'}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <label htmlFor="demoUrl">Link Demo Web (Opsional)</label>
+                    <input
+                      id="demoUrl"
+                      name="demoUrl"
+                      type="url"
+                      placeholder="https://example.com/demo"
+                      value={form.demoUrl || ''}
+                      onChange={(e) => setForm({ ...form, demoUrl: e.target.value })}
                     />
                   </div>
 
@@ -1028,8 +1304,8 @@ const Admin = () => {
                             </button>
                             {p.status === 'pending' && (
                               <>
-                                <button onClick={() => handlePartnerAction(p.id, 'approved')} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Setujui"><Check size={14} /> Setujui</button>
-                                <button onClick={() => handlePartnerAction(p.id, 'rejected')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Tolak"><X size={14} /> Tolak</button>
+                                <button onClick={() => handlePartnerAction(p, 'approved')} style={{ background: '#10b981', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Setujui"><Check size={14} /> Setujui</button>
+                                <button onClick={() => handlePartnerAction(p, 'rejected')} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '0.4rem 0.75rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }} title="Tolak"><X size={14} /> Tolak</button>
                               </>
                             )}
                             {p.status === 'approved' && (
@@ -1120,8 +1396,80 @@ const Admin = () => {
             )}
           </section>
         )}
+
+        {/* ── Promos Tab ── */}
+        {activeAdminTab === 'promos' && (
+          <PromoAdminTab />
+        )}
       </div>
+
+      {showWelcome && (
+        <WelcomeModal 
+          role="admin" 
+          storageKey="hasSeenAdminWelcome" 
+          onClose={() => setShowWelcome(false)} 
+        />
+      )}
+
+      {/* Admin Approval Modal */}
+      {adminApprovalModal.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px' }}>
+            <h2>Persetujuan Partner</h2>
+            <p style={{ marginBottom: '1rem', color: '#94a3b8' }}>
+              Silakan isi nama dan tanda tangan Anda untuk menyetujui <strong>{adminApprovalModal.partnerName}</strong> sebagai partner.
+            </p>
+            
+            <div className="form-group">
+              <label>Nama Administrator *</label>
+              <input
+                type="text"
+                value={adminApprovalModal.adminName}
+                onChange={(e) => setAdminApprovalModal({...adminApprovalModal, adminName: e.target.value})}
+                placeholder="Nama Anda"
+                required
+              />
+            </div>
+
+            <div className="form-group" style={{ marginTop: '1rem' }}>
+              <label>Tanda Tangan *</label>
+              <div style={{ border: adminHasSignature ? '2px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', background: 'white', overflow: 'hidden' }}>
+                <AdminSignaturePad canvasRef={adminSigCanvasRef} onHasSignature={setAdminHasSignature} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', color: adminHasSignature ? '#6ee7b7' : '#94a3b8' }}>{adminHasSignature ? '✅ Tanda tangan terisi' : 'Gunakan mouse atau jari'}</span>
+                <button type="button" onClick={() => {
+                  if (adminSigCanvasRef.current) {
+                    const ctx = adminSigCanvasRef.current.getContext('2d');
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, adminSigCanvasRef.current.width, adminSigCanvasRef.current.height);
+                  }
+                  setAdminHasSignature(false);
+                }} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}>Hapus Coretan</button>
+              </div>
+            </div>
+
+            <div className="modal-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setAdminApprovalModal({ isOpen: false, partnerId: null, partnerName: '', adminName: 'Administrator' })}
+                disabled={isApproving}
+              >
+                Batal
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleSubmitAdminApproval}
+                disabled={isApproving}
+              >
+                {isApproving ? 'Memproses...' : 'Simpan & Setujui'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 };
 
