@@ -1,22 +1,30 @@
 import jsPDF from 'jspdf';
 
-// Fungsi bantuan untuk menggambar logo vector "FWR"
-const drawVectorLogo = (doc, x, y, scale = 1) => {
-  doc.setFillColor(217, 119, 6); // Gold
-  doc.rect(x, y, 15 * scale, 15 * scale, 'F');
-  doc.setFillColor(139, 92, 246); // Purple
-  doc.rect(x + 10 * scale, y + 10 * scale, 15 * scale, 15 * scale, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12 * scale);
-  doc.setFont('helvetica', 'bold');
-  doc.text('FWR', x + 28 * scale, y + 18 * scale);
+// Helper: Load image from public folder as base64 for jsPDF
+const loadLogoBase64 = () => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = '/FREEWITHRIDHO.jpeg';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/jpeg'));
+    };
+    img.onerror = () => resolve(null);
+  });
 };
 
-export const generatePartnerPDF = (data) => {
+export const generatePartnerPDF = async (data) => {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
+
+  // Load logo
+  const logoBase64 = await loadLogoBase64();
 
   // Colors
   const primaryColor = [15, 23, 42]; // slate-900
@@ -25,11 +33,17 @@ export const generatePartnerPDF = (data) => {
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, pageWidth, 50, 'F');
 
-  // Vector Logo in Header
-  drawVectorLogo(doc, 15, 15, 0.8);
+  // Logo in Header (real image)
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'JPEG', 10, 8, 34, 34);
+    } catch (e) {
+      console.warn('Logo load failed:', e);
+    }
+  }
 
-  // Title
-  doc.setFontSize(22);
+  // Title (nudge right to leave space for logo)
+  doc.setFontSize(20);
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.text('FREEWITHRIDHO', 50, 22);
@@ -213,8 +227,8 @@ export const generatePartnerPDF = (data) => {
 };
 
 
-// KSERTIFIKAT KEMITRAAN (LANDSCAPE & PREMIUM)
-export const generatePartnerCertificatePDF = (user, partner) => {
+// SERTIFIKAT KEMITRAAN (LANDSCAPE & PREMIUM)
+export const generatePartnerCertificatePDF = async (user, partner) => {
   if (!user || !partner) return;
   
   // Use Landscape mode (l)
@@ -242,8 +256,18 @@ export const generatePartnerCertificatePDF = (user, partner) => {
   doc.setLineWidth(0.5);
   doc.rect(45, 45, pageWidth - 90, pageHeight - 90, 'S');
 
-  // Vector Logo in Center Top
-  drawVectorLogo(doc, pageWidth / 2 - 15, 65, 1.2);
+  // Load logo real
+  const logoBase64 = await loadLogoBase64();
+
+  // Logo di tengah atas sertifikat
+  if (logoBase64) {
+    try {
+      // Tampilkan logo di tengah atas dengan ukuran besar
+      doc.addImage(logoBase64, 'JPEG', pageWidth / 2 - 45, 60, 90, 60);
+    } catch (e) {
+      console.warn('Logo load failed:', e);
+    }
+  }
   
   // SKU RESMI (Top Right)
   const stampId = partner.id || `PRT-${Date.now().toString().slice(-8)}`;
@@ -253,11 +277,11 @@ export const generatePartnerCertificatePDF = (user, partner) => {
   doc.setFont('helvetica', 'bold');
   doc.text(sku, pageWidth - 60, 65, { align: 'right' });
   
-  // Judul Sertifikat
+  // Judul Sertifikat (geser ke bawah untuk kasih ruang logo)
   doc.setTextColor(250, 204, 21); // Yellow/Gold
   doc.setFontSize(36);
   doc.setFont('helvetica', 'bold');
-  doc.text('SERTIFIKAT KEMITRAAN RESMI', pageWidth / 2, 140, { align: 'center', charSpace: 2 });
+  doc.text('SERTIFIKAT KEMITRAAN RESMI', pageWidth / 2, 155, { align: 'center', charSpace: 2 });
   
   doc.setFontSize(16);
   doc.setFont('helvetica', 'normal');
@@ -303,7 +327,7 @@ export const generatePartnerCertificatePDF = (user, partner) => {
   doc.text('Diterbitkan Di:', 100, 460);
   doc.setTextColor(241, 245, 249);
   doc.setFont('helvetica', 'bold');
-  doc.text('Jakarta, Indonesia', 100, 480);
+  doc.text('Medan, Indonesia', 100, 480);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(148, 163, 184);
   doc.text(`Tanggal: ${approvalDate}`, 100, 500);
