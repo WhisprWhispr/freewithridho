@@ -665,7 +665,7 @@ const Admin = () => {
               </div>
               <div className="admin-stat-data">
                 <span className="admin-stat-num">Rp {stats.totalRevenuePending.toLocaleString('id-ID')}</span>
-                <span className="admin-stat-label">Pendapatan Tertunda</span>
+                <span className="admin-stat-label">Checkout Belum Dibayar (Pending)</span>
               </div>
             </div>
 
