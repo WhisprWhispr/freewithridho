@@ -12,6 +12,7 @@ const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@g
 
 const PublicProfile = () => {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const [partner, setPartner] = useState(null);
   const [isAdminProfile, setIsAdminProfile] = useState(false);
   const [projects, setProjects] = useState([]);
@@ -73,7 +74,6 @@ const PublicProfile = () => {
     );
   }
 
-  const navigate = useNavigate();
 
   // ── ADMIN PROFILE ──────────────────────────────────────────────
   if (isAdminProfile) {
