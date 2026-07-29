@@ -20,212 +20,250 @@ const loadLogoBase64 = () => {
 
 export const generatePartnerPDF = async (data) => {
   const doc = new jsPDF('p', 'mm', 'a4');
-  const pageWidth = doc.internal.pageSize.width;
-  const pageHeight = doc.internal.pageSize.height;
+  const pw = doc.internal.pageSize.width;   // 210
+  const ph = doc.internal.pageSize.height;  // 297
+  const ML = 15; // Margin Left
+  const MR = 15; // Margin Right
+  const contentW = pw - ML - MR;
 
-  // Load logo
+  // --- Load logo ---
   const logoBase64 = await loadLogoBase64();
 
-  // Colors
-  const primaryColor = [15, 23, 42]; // slate-900
+  // ===================== HEADER =====================
+  // Background gelap
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, pw, 55, 'F');
+  
+  // Garis emas bawah header
+  doc.setFillColor(217, 119, 6);
+  doc.rect(0, 55, pw, 1.5, 'F');
 
-  // Header Background
-  doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 50, 'F');
-
-  // Logo in Header (real image)
+  // Logo
   if (logoBase64) {
-    try {
-      doc.addImage(logoBase64, 'PNG', 10, 8, 34, 34);
-    } catch (e) {
-      console.warn('Logo load failed:', e);
-    }
+    try { doc.addImage(logoBase64, 'PNG', ML, 9, 35, 35); }
+    catch (e) { console.warn('Logo load failed:', e); }
   }
 
-  // Title (nudge right to leave space for logo)
-  doc.setFontSize(20);
+  // Nama platform & deskripsi (kanan logo)
+  doc.setFontSize(18);
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.text('FREEWITHRIDHO', 50, 22);
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(148, 163, 184);
-  doc.text('Formulir Registrasi Kemitraan Developer Profesional', 50, 29);
-  doc.text('Email: partner@freewithridho.com | Web: freewithridho.com', 50, 35);
+  doc.text('FREEWITHRIDHO', ML + 40, 24);
 
-  // Document Stamp ID (Right top)
-  const stampId = data.id || `PRT-${Date.now().toString().slice(-8)}`;
-  const sku = `SKU: FWR-REG-${stampId}`;
-  
-  doc.setFontSize(12);
-  doc.setTextColor(250, 204, 21); // Yellow Accent
-  doc.setFont('helvetica', 'bold');
-  doc.text('REGISTRASI MITRA', pageWidth - 15, 22, { align: 'right' });
-  
   doc.setFontSize(9);
-  doc.setTextColor(241, 245, 249);
-  doc.setFont('helvetica', 'bold');
-  doc.text(sku, pageWidth - 15, 29, { align: 'right' });
-  
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(148, 163, 184);
-  const dateStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-  doc.text(`Tanggal: ${dateStr}`, pageWidth - 15, 35, { align: 'right' });
+  doc.text('Premium Source Code Marketplace', ML + 40, 31);
+  doc.text('partner@freewithridho.com  |  freewithridho.com', ML + 40, 37);
 
-  // Decorative Line
-  doc.setFillColor(217, 119, 6); // Gold
-  doc.rect(0, 50, pageWidth, 2, 'F');
+  // Judul dokumen + SKU (di kanan)
+  const stampId = data.id || `PRT-${Date.now().toString().slice(-8)}`;
+  const sku = `FWR-REG-${stampId}`;
 
-  let currentY = 65;
-
-  // Introduction text
   doc.setFontSize(11);
-  doc.setTextColor(30, 41, 59);
+  doc.setTextColor(250, 204, 21);
+  doc.setFont('helvetica', 'bold');
+  doc.text('FORMULIR REGISTRASI MITRA', pw - MR, 22, { align: 'right' });
+
+  doc.setFontSize(8);
+  doc.setTextColor(241, 245, 249);
   doc.setFont('helvetica', 'normal');
+  doc.text(`No. SKU: ${sku}`, pw - MR, 29, { align: 'right' });
+
+  const tglStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+  doc.text(`Tanggal: ${tglStr}`, pw - MR, 35, { align: 'right' });
+
+  const statusLabel = data.status === 'approved' ? 'DISETUJUI' : 'PENDING';
+  const statusColor = data.status === 'approved' ? [16, 185, 129] : [245, 158, 11];
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...statusColor);
+  doc.text(`Status: ${statusLabel}`, pw - MR, 42, { align: 'right' });
+
+  // ===================== JUDUL SECTION =====================
+  let y = 65;
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text('DATA PEMOHON KEMITRAAN', ML, y);
   
-  if (data.status === 'approved') {
-    doc.text('Selamat! Pendaftaran Anda sebagai mitra pengembang di platform FREEWITHRIDHO telah DISETUJUI. Berikut adalah rincian lengkap dari data formulir pendaftaran Anda:', 15, currentY, { maxWidth: pageWidth - 30 });
-  } else {
-    doc.text('Terima kasih telah mendaftar sebagai mitra pengembang di platform FREEWITHRIDHO. Berikut adalah rincian lengkap dari data formulir pendaftaran Anda yang sedang kami proses:', 15, currentY, { maxWidth: pageWidth - 30 });
-  }
+  // Garis bawah judul section
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.4);
+  doc.line(ML, y + 2, pw - MR, y + 2);
 
-  currentY += 15;
+  y += 8;
 
-  // Draw data details container box (Wider and taller to fill the screen)
+  // ===================== TABEL DATA =====================
+  const tableRows = [
+    { label: 'Nama Lengkap',     value: data.fullName  || '-' },
+    { label: 'Alamat Email',     value: data.email     || '-' },
+    { label: 'Nomor WhatsApp',   value: data.phone     || '-' },
+    { label: 'Link Portofolio',  value: data.portfolio || '-' },
+    { label: 'Keahlian / Skills',value: data.skills    || '-' },
+    { label: 'Alasan Bergabung', value: data.reason    || '-' },
+  ];
+
+  const LABEL_W  = 45;
+  const VALUE_X  = ML + LABEL_W + 5;
+  const VALUE_W  = contentW - LABEL_W - 5;
+  const ROW_PAD  = 4;
+
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(10, currentY, pageWidth - 20, 130, 3, 3, 'F');
-  doc.setDrawColor(203, 213, 225); // slate-300
-  doc.setLineWidth(0.3);
-  doc.roundedRect(10, currentY, pageWidth - 20, 130, 3, 3, 'D');
+  
+  let totalH = 0;
+  const rowHeights = tableRows.map(row => {
+    const lines = doc.splitTextToSize(row.value, VALUE_W).length;
+    return Math.max(lines * 5, 8) + ROW_PAD * 2;
+  });
+  totalH = rowHeights.reduce((a, b) => a + b, 0);
 
-  // Details Content inside box
-  const drawRow = (label, value, yOffset) => {
-    doc.setFontSize(10);
+  doc.roundedRect(ML, y, contentW, totalH, 2, 2, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(ML, y, contentW, totalH, 2, 2, 'D');
+
+  let ry = y;
+  tableRows.forEach((row, i) => {
+    const rh = rowHeights[i];
+    const textY = ry + ROW_PAD + 4;
+
+    if (i % 2 === 1) {
+      doc.setFillColor(241, 245, 249);
+      doc.rect(ML + 0.3, ry + 0.3, contentW - 0.6, rh - 0.3, 'F');
+    }
+
+    doc.setFillColor(226, 232, 240);
+    doc.rect(ML + 0.3, ry + 0.3, LABEL_W, rh - 0.3, 'F');
+
+    doc.setFontSize(9.5);
     doc.setTextColor(71, 85, 105);
     doc.setFont('helvetica', 'bold');
-    doc.text(label, 15, yOffset);
+    doc.text(row.label, ML + 3, textY);
 
     doc.setTextColor(15, 23, 42);
     doc.setFont('helvetica', 'normal');
-    
-    // Make text area wider
-    const splitValue = doc.splitTextToSize(value || '-', pageWidth - 70);
-    doc.text(splitValue, 60, yOffset);
-    return splitValue.length * 6; // Return calculated dynamic Y height delta
-  };
+    const lines = doc.splitTextToSize(row.value, VALUE_W);
+    doc.text(lines, VALUE_X, textY);
 
-  let rowY = currentY + 12;
-  rowY += drawRow('Nama Lengkap', data.fullName, rowY) + 6;
-  rowY += drawRow('Alamat Email', data.email, rowY) + 6;
-  rowY += drawRow('Nomor WhatsApp', data.phone, rowY) + 6;
-  rowY += drawRow('Link Portofolio', data.portfolio, rowY) + 6;
-  rowY += drawRow('Keahlian / Skills', data.skills, rowY) + 6;
-  
-  doc.setFontSize(10);
-  doc.setTextColor(71, 85, 105);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Alasan Bergabung', 15, rowY);
-  
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'normal');
-  const reasonText = doc.splitTextToSize(data.reason || '-', pageWidth - 70);
-  doc.text(reasonText, 60, rowY);
+    if (i < tableRows.length - 1) {
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.2);
+      doc.line(ML, ry + rh, ML + contentW, ry + rh);
+    }
 
-  currentY += 140;
+    ry += rh;
+  });
 
-  // Terms notice box at bottom ONLY if pending
+  y = ry + 8;
+
+  // ===================== CATATAN STATUS =====================
   if (data.status === 'pending') {
-    doc.setFillColor(239, 68, 68, 0.05); // light red/orange alert box
-    doc.setDrawColor(239, 68, 68, 0.25);
-    doc.roundedRect(10, currentY, pageWidth - 20, 24, 2, 2, 'F');
-    doc.roundedRect(10, currentY, pageWidth - 20, 24, 2, 2, 'D');
+    doc.setFillColor(254, 242, 242);
+    doc.setDrawColor(252, 165, 165);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(ML, y, contentW, 22, 2, 2, 'FD');
 
     doc.setFontSize(9);
     doc.setTextColor(185, 28, 28);
     doc.setFont('helvetica', 'bold');
-    doc.text('CATATAN PENTING & VERIFIKASI:', 15, currentY + 6);
+    doc.text('CATATAN PENTING & VERIFIKASI:', ML + 4, y + 6);
+
     doc.setFontSize(8.5);
-    doc.setTextColor(127, 29, 29);
     doc.setFont('helvetica', 'normal');
-    doc.text('1. Pendaftaran Anda saat ini berstatus PENDING dan sedang diverifikasi secara menyeluruh oleh administrator.', 15, currentY + 11);
-    doc.text('2. Tim operasional kami akan menghubungi Anda melalui email atau nomor WhatsApp di atas dalam waktu 1-3 hari kerja.', 15, currentY + 16);
-    
-    currentY += 35;
+    doc.setTextColor(127, 29, 29);
+    doc.text('1. Pendaftaran Anda saat ini berstatus PENDING dan sedang diverifikasi secara menyeluruh oleh administrator.', ML + 4, y + 12);
+    doc.text('2. Tim operasional kami akan menghubungi Anda melalui email atau nomor WhatsApp di atas dalam waktu 1-3 hari kerja.', ML + 4, y + 17);
+
+    y += 28;
   } else {
-    currentY += 10;
+    y += 6;
   }
 
-  // Signatures Section (Centered and well-spaced)
+  // ===================== TANDA TANGAN =====================
   doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text('PERSETUJUAN & TANDA TANGAN', ML, y);
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.4);
+  doc.line(ML, y + 2, pw - MR, y + 2);
+  y += 6;
+
+  const sigBoxW  = (contentW - 10) / 2;
+  const sigBoxH  = 45;
+  const leftX    = ML;
+  const rightX   = ML + sigBoxW + 10;
+
+  // TTD Admin (kiri)
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(leftX, y, sigBoxW, sigBoxH, 2, 2, 'FD');
+
+  doc.setFontSize(9);
   doc.setTextColor(71, 85, 105);
   doc.setFont('helvetica', 'bold');
-  
-  // Admin Signature Area (Left)
-  doc.text('Menyetujui,', 40, currentY, { align: 'center' });
-  doc.text('Administrator Platform', 40, currentY + 5, { align: 'center' });
-  
+  doc.text('Menyetujui,', leftX + sigBoxW / 2, y + 6, { align: 'center' });
+  doc.text('Administrator Platform', leftX + sigBoxW / 2, y + 11, { align: 'center' });
+
   if (data.status === 'approved' && data.adminSignature) {
     try {
-      doc.addImage(data.adminSignature, 'PNG', 15, currentY + 10, 50, 25);
-    } catch (e) {
-      console.warn("Failed to add admin signature image", e);
-    }
+      doc.addImage(data.adminSignature, 'PNG', leftX + 15, y + 14, sigBoxW - 30, 22);
+    } catch (e) { console.warn('Admin sig error:', e); }
   }
 
-  // Applicant Signature Area (Right)
-  doc.text('Pemohon Kemitraan,', pageWidth - 40, currentY, { align: 'center' });
-  doc.text('Calon Mitra', pageWidth - 40, currentY + 5, { align: 'center' });
-  
-  if (data.applicantSignature) {
-    try {
-      doc.addImage(data.applicantSignature, 'PNG', pageWidth - 65, currentY + 10, 50, 25);
-    } catch (e) {
-      console.warn("Failed to add applicant signature image", e);
-    }
-  }
-
-  currentY += 45;
-  doc.setFontSize(11);
-  doc.setTextColor(15, 23, 42);
-  
-  // Admin Name
-  if (data.status === 'approved' && data.adminName) {
-    doc.text(data.adminName, 40, currentY, { align: 'center' });
-    doc.setDrawColor(148, 163, 184);
-    doc.line(15, currentY + 2, 65, currentY + 2);
-    doc.setFontSize(9);
-    doc.setTextColor(100, 116, 139);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Tim Verifikasi FREEWITHRIDHO', 40, currentY + 7, { align: 'center' });
-  } else {
-    doc.text('Tim FREEWITHRIDHO', 40, currentY, { align: 'center' });
-    doc.setDrawColor(148, 163, 184);
-    doc.line(15, currentY + 2, 65, currentY + 2);
-  }
-
-  // Applicant Name
-  doc.setFontSize(11);
+  doc.setDrawColor(148, 163, 184);
+  doc.setLineWidth(0.4);
+  doc.line(leftX + 8, y + sigBoxH - 6, leftX + sigBoxW - 8, y + sigBoxH - 6);
+  doc.setFontSize(8.5);
   doc.setTextColor(15, 23, 42);
   doc.setFont('helvetica', 'bold');
-  doc.text(data.fullName, pageWidth - 40, currentY, { align: 'center' });
-  doc.setDrawColor(148, 163, 184);
-  doc.line(pageWidth - 65, currentY + 2, pageWidth - 15, currentY + 2);
+  const adminLabel = (data.status === 'approved' && data.adminName) ? data.adminName : 'Tim Verifikasi FREEWITHRIDHO';
+  doc.text(adminLabel, leftX + sigBoxW / 2, y + sigBoxH - 2, { align: 'center' });
+
+  // TTD Pemohon (kanan)
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(rightX, y, sigBoxW, sigBoxH, 2, 2, 'FD');
+
   doc.setFontSize(9);
-  doc.setTextColor(100, 116, 139);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Tanda Tangan Digital Sah', pageWidth - 40, currentY + 7, { align: 'center' });
+  doc.setTextColor(71, 85, 105);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Pemohon Kemitraan,', rightX + sigBoxW / 2, y + 6, { align: 'center' });
+  doc.text('Calon Mitra', rightX + sigBoxW / 2, y + 11, { align: 'center' });
 
-  // Footer (Always at bottom)
-  doc.setFontSize(8);
+  if (data.applicantSignature) {
+    try {
+      doc.addImage(data.applicantSignature, 'PNG', rightX + 15, y + 14, sigBoxW - 30, 22);
+    } catch (e) { console.warn('Applicant sig error:', e); }
+  }
+
+  doc.setDrawColor(148, 163, 184);
+  doc.line(rightX + 8, y + sigBoxH - 6, rightX + sigBoxW - 8, y + sigBoxH - 6);
+  doc.setFontSize(8.5);
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.text(data.fullName || 'Pemohon', rightX + sigBoxW / 2, y + sigBoxH - 2, { align: 'center' });
+
+  // ===================== FOOTER =====================
+  doc.setFillColor(217, 119, 6);
+  doc.rect(0, ph - 16, pw, 0.8, 'F');
+
+  doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
-  doc.text(`Dicetak dari sistem pada ${new Date().toLocaleString('id-ID')} | SKU Document: ${sku}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    `Dicetak otomatis oleh sistem FREEWITHRIDHO pada ${new Date().toLocaleString('id-ID')}  |  SKU Document: ${sku}`,
+    pw / 2, ph - 10, { align: 'center' }
+  );
+  doc.text('Dokumen ini sah secara digital dan tidak memerlukan tanda tangan basah.', pw / 2, ph - 5, { align: 'center' });
 
-  // Save document
-  const fileName = `Pendaftaran_Partner_${data.fullName.replace(/\s+/g, '_')}${data.status === 'approved' ? '_Approved' : ''}.pdf`;
+  // Save
+  const fileName = `Pendaftaran_Partner_${(data.fullName || 'partner').replace(/\s+/g, '_')}${data.status === 'approved' ? '_Approved' : ''}.pdf`;
   doc.save(fileName);
 };
-
 
 // SERTIFIKAT KEMITRAAN (LANDSCAPE & PREMIUM)
 export const generatePartnerCertificatePDF = async (user, partner) => {
