@@ -692,22 +692,20 @@ const Admin = () => {
         </section>
 
         {/* ── Admin Tabs ── */}
-        <div className="admin-tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+        <div className="admin-tabs">
           <button 
             className={`admin-tab-btn ${activeAdminTab === 'projects' ? 'active' : ''}`}
             onClick={() => setActiveAdminTab('projects')}
-            style={{ background: activeAdminTab === 'projects' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: 'none', color: '#fff', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
           >
             <Briefcase size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Kelola Proyek
           </button>
           <button 
             className={`admin-tab-btn ${activeAdminTab === 'partners' ? 'active' : ''}`}
             onClick={() => setActiveAdminTab('partners')}
-            style={{ background: activeAdminTab === 'partners' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: 'none', color: '#fff', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
           >
             <Users size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Manajemen Partner
             {partners.filter(p => p.status === 'pending').length > 0 && (
-              <span style={{ background: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+              <span className="admin-tab-badge admin-tab-badge-red">
                 {partners.filter(p => p.status === 'pending').length}
               </span>
             )}
@@ -715,11 +713,10 @@ const Admin = () => {
           <button 
             className={`admin-tab-btn ${activeAdminTab === 'withdrawals' ? 'active' : ''}`}
             onClick={() => setActiveAdminTab('withdrawals')}
-            style={{ background: activeAdminTab === 'withdrawals' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: 'none', color: '#fff', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
           >
             <DollarSign size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Penarikan Dana
             {withdrawals.filter(w => w.status === 'pending').length > 0 && (
-              <span style={{ background: '#f59e0b', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+              <span className="admin-tab-badge admin-tab-badge-yellow">
                 {withdrawals.filter(w => w.status === 'pending').length}
               </span>
             )}
@@ -727,7 +724,6 @@ const Admin = () => {
           <button 
             className={`admin-tab-btn ${activeAdminTab === 'promos' ? 'active' : ''}`}
             onClick={() => setActiveAdminTab('promos')}
-            style={{ background: activeAdminTab === 'promos' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: 'none', color: '#fff', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}
           >
             <Tag size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Kode Promo
           </button>

@@ -57,9 +57,8 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statsVisible, setStatsVisible] = useState(false);
+  const [showAllFlashSale, setShowAllFlashSale] = useState(false);
   const statsRef = useRef(null);
-
-  // Flash sale countdown
   const flashCountdown = useFlashSaleCountdown();
 
   // Derived real-time stats
@@ -198,7 +197,7 @@ const Home = () => {
 
           {/* Flash Sale Items */}
           <div className="flash-sale-grid">
-            {flashSaleProjects.slice(0, 4).map(project => (
+            {(showAllFlashSale ? flashSaleProjects : flashSaleProjects.slice(0, 3)).map(project => (
               <div key={project.id} className="flash-sale-card-wrap">
                 <div className="flash-sale-discount-badge">
                   -{Math.round(((project.price - project.discountPrice) / project.price) * 100)}%
@@ -207,6 +206,16 @@ const Home = () => {
               </div>
             ))}
           </div>
+          {flashSaleProjects.length > 3 && (
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <button 
+                onClick={() => setShowAllFlashSale(!showAllFlashSale)}
+                className="btn-see-all-flash"
+              >
+                {showAllFlashSale ? 'Tampilkan Lebih Sedikit' : `Lihat Semua Diskon (${flashSaleProjects.length})`}
+              </button>
+            </div>
+          )}
         </section>
       )}
 

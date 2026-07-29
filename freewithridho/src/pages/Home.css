@@ -534,6 +534,30 @@
   50% { transform: translateY(-3px); }
 }
 
+.flash-sale-card-wrap {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.flash-sale-card-wrap:hover {
+  transform: translateY(-4px);
+}
+
+.btn-see-all-flash {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-see-all-flash:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+/* ── STATS SECTION ── */
 /* Countdown Timer */
 .flash-countdown {
   display: flex;
