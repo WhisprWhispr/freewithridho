@@ -1179,7 +1179,6 @@ const Admin = () => {
                       id="environment"
                       value={midtransSettings.environment}
                       onChange={(e) => setMidtransSettings(prev => ({ ...prev, environment: e.target.value }))}
-                      style={{ padding: '0.75rem', borderRadius: '8px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                     >
                       <option value="sandbox">Sandbox (Pengujian)</option>
                       <option value="production">Production (Live)</option>
@@ -1193,7 +1192,6 @@ const Admin = () => {
                       placeholder="M..."
                       value={midtransSettings.merchantId}
                       onChange={(e) => setMidtransSettings({ ...midtransSettings, merchantId: e.target.value })}
-                      style={{ padding: '0.75rem', borderRadius: '8px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                     />
                   </div>
                   <div className="form-group">
