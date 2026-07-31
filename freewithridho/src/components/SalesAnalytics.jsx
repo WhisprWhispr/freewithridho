@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Legend
@@ -16,37 +16,35 @@ const SalesAnalytics = ({ partnerId }) => {
   useEffect(() => {
     if (!partnerId) return;
 
-    const fetchSalesData = async () => {
-      setLoading(true);
-      try {
-        // Find all transactions that belong to this partner's projects
-        // Since we don't store partnerId directly in transaction (we store projectId),
-        // we first need to fetch projects owned by partner, then transactions.
-        const projectsSnap = await getDocs(query(collection(db, 'projects'), where('ownerId', '==', partnerId)));
-        const myProjectIds = projectsSnap.docs.map(d => d.id);
+    let myProjectIds = [];
+    let unsubProjects;
+    let unsubTransactions;
 
-        if (myProjectIds.length === 0) {
-          setData([]);
-          setLoading(false);
-          return;
-        }
+    // Step 1: Listen realtime to partner's projects
+    const projectsQ = query(collection(db, 'projects'), where('ownerId', '==', partnerId));
+    unsubProjects = onSnapshot(projectsQ, (projectsSnap) => {
+      myProjectIds = projectsSnap.docs.map(d => d.id);
 
-        // We can't query 'in' with more than 10 items in Firestore, 
-        // so we'll fetch all SUCCESS transactions and filter locally (ok for small scale).
-        // Or if 'transactions' has a projectOwnerId we could use that. Let's fetch all PAID tx.
-        const txSnap = await getDocs(query(collection(db, 'transactions'), where('status', '==', 'SUCCESS')));
-        
+      if (myProjectIds.length === 0) {
+        setData([]);
+        setTotalSales(0);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Listen realtime to SUCCESS transactions
+      if (unsubTransactions) unsubTransactions();
+      const txQ = query(collection(db, 'transactions'), where('status', '==', 'SUCCESS'));
+      unsubTransactions = onSnapshot(txQ, (txSnap) => {
         let salesData = [];
         let total = 0;
 
-        txSnap.docs.forEach(doc => {
-          const tx = doc.data();
+        txSnap.docs.forEach(docSnap => {
+          const tx = docSnap.data();
           if (myProjectIds.includes(tx.projectId)) {
-            const dateStr = tx.createdAt?.toDate ? tx.createdAt.toDate().toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }) : 'Unknown';
-            // Partner share is typically 80% (assuming 20% platform fee)
-            // if platform fee is configurable, we should fetch from settings, but for simple charts we can just show total sales amount.
-            // Or calculate net earnings if we know the fee.
-            // In freewithridho, it seems partner gets 80%. Let's plot gross amount for now.
+            const dateStr = tx.createdAt?.toDate
+              ? tx.createdAt.toDate().toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })
+              : 'Unknown';
             salesData.push({
               date: dateStr,
               timestamp: tx.createdAt?.toMillis ? tx.createdAt.toMillis() : 0,
@@ -58,7 +56,6 @@ const SalesAnalytics = ({ partnerId }) => {
           }
         });
 
-        // Group by date
         const grouped = salesData.reduce((acc, curr) => {
           if (!acc[curr.date]) {
             acc[curr.date] = { date: curr.date, timestamp: curr.timestamp, Pendapatan: 0, Transaksi: 0 };
@@ -69,17 +66,22 @@ const SalesAnalytics = ({ partnerId }) => {
         }, {});
 
         const chartData = Object.values(grouped).sort((a, b) => a.timestamp - b.timestamp);
-        
         setData(chartData);
         setTotalSales(total);
-      } catch (err) {
-        console.error('Error fetching analytics:', err);
-      } finally {
         setLoading(false);
-      }
-    };
+      }, (err) => {
+        console.error('Error listening transactions:', err);
+        setLoading(false);
+      });
+    }, (err) => {
+      console.error('Error listening projects:', err);
+      setLoading(false);
+    });
 
-    fetchSalesData();
+    return () => {
+      if (unsubProjects) unsubProjects();
+      if (unsubTransactions) unsubTransactions();
+    };
   }, [partnerId]);
 
   if (loading) {

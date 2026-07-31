@@ -406,7 +406,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                 🎁 Kode Referral Teman
               </h3>
               <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                Masukkan kode referral temanmu di sini agar otomatis terpasang saat kamu checkout. Temanmu akan mendapatkan komisi <strong style={{ color: '#10b981' }}>0,25%</strong> dari belanjamu!
+                Masukkan kode referral temanmu di sini. Temanmu akan langsung mendapatkan komisi <strong style={{ color: '#10b981' }}>Rp 250</strong> karena berhasil mengundangmu bergabung!
               </p>
               
               <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px' }}>
@@ -466,10 +466,10 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
             {/* Referral Card */}
             <div className="info-card referral-card">
               <h3 className="info-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                🤝 Program Afiliasi
+                🤝 Program Referral
               </h3>
               <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-                Bagikan kode afiliasi Anda dan dapatkan komisi <strong style={{ color: '#10b981' }}>Rp 250</strong> secara instan setiap ada teman yang berhasil mendaftar menggunakan kode Anda!
+                Bagikan kode referral Anda dan dapatkan komisi <strong style={{ color: '#10b981' }}>Rp 250</strong> secara instan setiap ada teman yang berhasil mendaftar menggunakan kode Anda!
               </p>
               <div className="referral-code-box">
                 <span className="referral-code-text">{referralData.code || 'Memuat...'}</span>
@@ -498,8 +498,8 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         `✅ Source code siap pakai & terverifikasi\n` +
                         `✅ Harga terjangkau, kualitas profesional\n` +
                         `✅ Dukungan komunitas developer aktif\n\n` +
-                        `Gunakan kode afiliasi saya saat mendaftar dan kita sama-sama dapat keuntungan!\n\n` +
-                        `🎁 Kode Afiliasi: *${referralData.code}*\n\n` +
+                        `Gunakan kode referral saya saat mendaftar dan kita sama-sama dapat keuntungan!\n\n` +
+                        `🎁 Kode Referral: *${referralData.code}*\n\n` +
                         `👉 Daftar sekarang di: ${window.location.origin}`
                       );
                       window.open(`https://wa.me/?text=${text}`, '_blank');
@@ -524,7 +524,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         `🚀 FREEWITHRIDHO — Premium Source Code Marketplace\n\n` +
                         `Bergabunglah bersama saya di FREEWITHRIDHO! Platform marketplace source code terpercaya untuk para developer profesional.\n\n` +
                         `✅ Ribuan source code premium\n✅ Harga kompetitif\n✅ Komunitas developer aktif\n\n` +
-                        `Gunakan kode afiliasi saya: ${referralData.code}\n\n` +
+                        `Gunakan kode referral saya: ${referralData.code}\n\n` +
                         `Daftar sekarang: ${window.location.origin}`
                       );
                       window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${text}`, '_blank');
@@ -547,7 +547,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                     onClick={() => {
                       const text = encodeURIComponent(
                         `🚀 Saya baru saja bergabung di @FreeWithRidho — marketplace source code premium terbaik!\n\n` +
-                        `Gunakan kode afiliasi saya dan dapatkan keuntungan bersama! 🎁\n` +
+                        `Gunakan kode referral saya dan dapatkan keuntungan bersama! 🎁\n` +
                         `Kode: ${referralData.code}\n\n` +
                         `👉 ${window.location.origin} #developer #sourcecode #webdev`
                       );
@@ -577,7 +577,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         `✅ Harga terjangkau, nilai profesional\n` +
                         `✅ Langsung unduh setelah pembayaran\n` +
                         `✅ Komunitas developer aktif & supportif\n\n` +
-                        `🎁 Gunakan kode afiliasi saya saat mendaftar:\n` +
+                        `🎁 Gunakan kode referral saya saat mendaftar:\n` +
                         `   ➤  Kode: ${referralData.code}\n\n` +
                         `🔗 Daftar & Mulai Jelajahi Sekarang:\n` +
                         `   ${window.location.origin}\n\n` +
@@ -591,7 +591,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         }).catch(() => {});
                       } else {
                         navigator.clipboard.writeText(proMessage);
-                        toast.success('✅ Pesan afiliasi profesional berhasil disalin! Tinggal tempel & kirim.');
+                        toast.success('✅ Pesan referral profesional berhasil disalin! Tinggal tempel & kirim.');
                       }
                     }}
                     style={{

@@ -1,6 +1,6 @@
 .admin-page {
   min-height: 100vh;
-  padding: 3rem 1.5rem;
+  padding: 2.5rem 1.5rem 4rem;
   animation: fadeIn 0.4s ease;
 }
 
@@ -57,11 +57,12 @@
 }
 
 .admin-container {
-  max-width: 900px;
+  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 2rem;
 }
 
 /* ── Admin Stats Board ── */
@@ -95,9 +96,9 @@
 
 .admin-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.25rem;
-  padding: 1.5rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 1.5rem;
 }
 
 .admin-stat-card {
@@ -219,21 +220,32 @@
 
 /* ── Admin Grid Layout ── */
 .admin-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-grid {
+    grid-template-columns: 2fr 3fr;
+    align-items: start;
+  }
 }
 
 /* ── Admin Tabs ── */
 .admin-tabs {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  backdrop-filter: blur(10px);
+  flex-wrap: nowrap;
 }
 .admin-tabs::-webkit-scrollbar {
   display: none;
@@ -242,8 +254,8 @@
   background: transparent;
   border: 1px solid transparent;
   color: #64748b;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  padding: 0.65rem 1.1rem;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 500;
   font-size: 0.875rem;
@@ -252,31 +264,35 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  font-family: inherit;
 }
 .admin-tab-btn:hover {
   color: #f8fafc;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.07);
 }
 .admin-tab-btn.active {
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(59, 130, 246, 0.18);
   color: #60a5fa;
-  border-color: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.15);
 }
 .admin-tab-badge {
   color: white;
-  padding: 2px 8px;
+  padding: 1px 7px;
   border-radius: 12px;
-  font-size: 0.75rem;
-  margin-left: 0.5rem;
+  font-size: 0.72rem;
+  margin-left: 0.4rem;
+  font-weight: 700;
 }
 .admin-tab-badge-red { background: #ef4444; }
 .admin-tab-badge-yellow { background: #f59e0b; }
 
-.admin-left-col {
+.admin-left-col, .admin-right-col {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   width: 100%;
+  min-width: 0;
 }
 
 /* ── Form Section (Upload Card) ── */
@@ -618,27 +634,34 @@
 .badge-mobile  { background: rgba(251, 146, 60, 0.1);  color: #fb923c; }
 
 /* ════════════════════════════════════════════════
+   RESPONSIVE — Tablet (≤ 1280px)
+   ════════════════════════════════════════════════ */
+@media (max-width: 1280px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ════════════════════════════════════════════════
    RESPONSIVE — Tablet (≤ 1024px)
    ════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .admin-container {
-    max-width: 100%;
-    padding: 0 1rem;
+    padding: 0;
+  }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
   }
 
   .admin-stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
   }
 
-  .form-row {
+  .admin-page .form-row {
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-  }
-
-  .list-header {
-    flex-wrap: wrap;
-    gap: 0.5rem;
   }
 }
 
@@ -647,11 +670,12 @@
    ════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .admin-page {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 0.875rem 3rem;
   }
 
   .admin-container {
-    gap: 1.5rem;
+    gap: 1.25rem;
+    padding: 0;
   }
 
   .admin-user-banner {
@@ -667,42 +691,37 @@
   }
 
   .admin-stat-card {
-    padding: 1rem;
+    padding: 0.875rem;
     gap: 0.75rem;
   }
 
   .admin-stat-num {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   /* Tabs — scrollable horizontal */
   .admin-tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap !important;
-    gap: 0.5rem !important;
-    padding-bottom: 0.75rem !important;
+    border-radius: 10px;
+    padding: 0.35rem;
   }
 
   .admin-tab-btn {
-    white-space: nowrap;
-    flex-shrink: 0;
-    padding: 0.6rem 1rem !important;
-    font-size: 0.8rem !important;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.8rem;
   }
 
   /* Form */
-  .form-row {
+  .admin-page .form-row {
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }
 
-  .form-group label {
-    font-size: 0.85rem;
+  .admin-page .form-group label {
+    font-size: 0.82rem;
   }
 
   /* Project list */
-  .list-item {
+  .project-list-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
@@ -724,44 +743,18 @@
     max-width: 100%;
   }
 
-  /* Partner table — card layout */
-  .partners-table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .partners-table th,
-  .partners-table td {
-    white-space: nowrap;
-    min-width: 120px;
-    font-size: 0.8rem;
-    padding: 0.6rem 0.75rem;
-  }
-
-  /* Withdrawals table */
-  .withdrawals-table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .withdrawals-table th,
-  .withdrawals-table td {
-    white-space: nowrap;
-    min-width: 100px;
-    font-size: 0.8rem;
-    padding: 0.6rem 0.75rem;
-  }
-
-  /* Settings grid */
-  .settings-grid {
-    grid-template-columns: 1fr;
-  }
-
   .btn-upload {
     width: 100%;
     justify-content: center;
+  }
+
+  .admin-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-card-list {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -770,13 +763,13 @@
    ════════════════════════════════════════════════ */
 @media (max-width: 480px) {
   .admin-page {
-    padding: 1rem 0.75rem;
+    padding: 1rem 0.75rem 2.5rem;
   }
 
   .admin-stats-grid {
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
-    padding: 0.75rem;
+    padding: 0.875rem;
   }
 
   .admin-stat-card {
@@ -785,11 +778,11 @@
   }
 
   .admin-stat-num {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .admin-stat-label {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
 
   .admin-stat-icon {
@@ -802,22 +795,23 @@
     font-size: 0.95rem;
   }
 
-  .login-card, .form-card {
-    padding: 1.25rem;
-  }
-
-  .section-title {
-    font-size: 1rem;
-  }
-
-  .form-row {
+  .admin-page .form-row {
     grid-template-columns: 1fr;
   }
 
-  .partner-detail-grid {
-    grid-template-columns: 1fr;
+  .admin-partner-card {
+    padding: 1rem;
+  }
+
+  .apc-actions {
+    flex-wrap: wrap;
+  }
+
+  .btn-apc {
+    flex: 1 1 45%;
   }
 }
+
 
 /* ── README Editor UI ─────────────────────────── */
 .readme-editor-group {
@@ -1103,41 +1097,7 @@
   margin: 0.5em 0;
 }
 
-/* ════════════════════════════════════════════════
-   RESPONSIVE — Admin
-   ════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-  .admin-page {
-    padding: 2rem 1rem;
-  }
-  .admin-user-banner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .admin-tabs {
-    flex-wrap: nowrap !important;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-  }
-  .admin-tabs::-webkit-scrollbar {
-    height: 4px;
-  }
-  .admin-stats-grid {
-    grid-template-columns: 1fr;
-  }
-  .admin-stat-card {
-    padding: 1rem;
-  }
-  .table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .admin-table {
-    min-width: 700px; /* Force scroll on small screens */
-  }
-}
+
 
 /* ════════════════════════════════════════════════
    ADMIN PARTNER CARDS & LISTS
@@ -1298,4 +1258,134 @@
 .apc-amount-fee {
   font-size: 0.75rem;
   color: #ef4444;
+}
+
+/* ════════════════════════════════════════════════
+   MISSING: admin-section, admin-section-head, etc.
+   ════════════════════════════════════════════════ */
+.admin-section {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.admin-section-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+/* ── Export PDF Button ── */
+.btn-export-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.btn-export-pdf:hover {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+/* ── Generic btn, btn-primary, btn-secondary (used in modal) ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(59, 130, 246, 0.45);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+/* ── info-row (used in transaction detail modal from Profile) ── */
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.9rem;
+}
+.info-row:last-of-type {
+  border-bottom: none;
+}
+
+.info-row-label {
+  color: #64748b;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.info-row-value {
+  color: #f1f5f9;
+  font-weight: 500;
+  text-align: right;
+  word-break: break-all;
+  font-size: 0.875rem;
+}
+
+.info-row-value.uid {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
 }

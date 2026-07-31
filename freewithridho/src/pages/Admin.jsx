@@ -40,8 +40,7 @@ const AdminSignaturePad = ({ canvasRef, onHasSignature }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const startDraw = (e) => { e.preventDefault(); const { x, y } = getPos(e, canvas); ctx.beginPath(); ctx.moveTo(x, y); isDrawing.current = true; };
     const draw = (e) => {
@@ -330,10 +329,9 @@ const Admin = () => {
     adminCompressCanvas.width = 300;
     adminCompressCanvas.height = 100;
     const adminCtx = adminCompressCanvas.getContext('2d');
-    adminCtx.fillStyle = 'white';
-    adminCtx.fillRect(0, 0, 300, 100);
+    adminCtx.clearRect(0, 0, 300, 100);
     adminCtx.drawImage(adminCanvas, 0, 0, 300, 100);
-    const adminSigBase64 = adminCompressCanvas.toDataURL('image/jpeg', 0.5);
+    const adminSigBase64 = adminCompressCanvas.toDataURL('image/png', 0.8);
     
     setIsApproving(true);
     const loadingToast = toast.loading('Menyetujui partner...');
@@ -1104,7 +1102,9 @@ const Admin = () => {
                   </button>
                 </form>
               </section>
+            </div>
 
+            <div className="admin-right-col">
               {/* Project List */}
               <section className="admin-card">
                 <div className="admin-card-header">
@@ -1384,8 +1384,7 @@ const Admin = () => {
                 <button type="button" onClick={() => {
                   if (adminSigCanvasRef.current) {
                     const ctx = adminSigCanvasRef.current.getContext('2d');
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(0, 0, adminSigCanvasRef.current.width, adminSigCanvasRef.current.height);
+                    ctx.clearRect(0, 0, adminSigCanvasRef.current.width, adminSigCanvasRef.current.height);
                   }
                   setAdminHasSignature(false);
                 }} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}>Hapus Coretan</button>

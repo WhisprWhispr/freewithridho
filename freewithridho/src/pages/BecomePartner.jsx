@@ -65,8 +65,7 @@ const SignaturePad = ({ canvasRef, onHasSignature }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // mouse
     canvas.addEventListener('mousedown', startDraw);
@@ -134,8 +133,7 @@ const BecomePartner = () => {
     const canvas = sigCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     setHasSignature(false);
   };
 
@@ -147,10 +145,9 @@ const BecomePartner = () => {
     out.width = 300;
     out.height = 100;
     const ctx = out.getContext('2d');
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 300, 100);
+    ctx.clearRect(0, 0, 300, 100);
     ctx.drawImage(canvas, 0, 0, 300, 100);
-    return out.toDataURL('image/jpeg', 0.5);
+    return out.toDataURL('image/png', 0.8);
   };
 
   const handleSubmit = async (e) => {

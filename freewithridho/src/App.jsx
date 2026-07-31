@@ -28,24 +28,36 @@ function App() {
         toastOptions={{
           duration: 2500,
           style: {
-            background: '#1e293b',
+            background: 'rgba(15, 23, 42, 0.85)',
             color: '#f8fafc',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            backdropFilter: 'blur(10px)',
-            fontSize: '14px',
-            boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '16px',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            fontSize: '14.5px',
+            fontWeight: '500',
+            boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.05) inset',
+            padding: '12px 20px',
+            letterSpacing: '0.2px',
           },
           success: {
+            style: {
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 20px rgba(16, 185, 129, 0.1) inset',
+            },
             iconTheme: {
               primary: '#10b981',
-              secondary: '#fff',
+              secondary: '#0f172a',
             },
           },
           error: {
+            style: {
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 20px rgba(239, 68, 68, 0.1) inset',
+            },
             iconTheme: {
               primary: '#ef4444',
-              secondary: '#fff',
+              secondary: '#0f172a',
             },
           },
         }}

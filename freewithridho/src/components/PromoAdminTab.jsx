@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 import { Tag, Plus, Trash2, Check, X } from 'lucide-react';
 import './PromoAdminTab.css';
@@ -22,21 +22,17 @@ const PromoAdminTab = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchPromos();
-  }, []);
-
-  const fetchPromos = async () => {
-    try {
-      setLoading(true);
-      const snap = await getDocs(collection(db, 'promoCodes'));
+    // Realtime listener for promo codes
+    const unsubscribe = onSnapshot(collection(db, 'promoCodes'), (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setPromos(data);
-    } catch (e) {
-      toast.error('Gagal mengambil data promo');
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (e) => {
+      toast.error('Gagal mengambil data promo');
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleCreatePromo = async (e) => {
     e.preventDefault();
@@ -53,7 +49,7 @@ const PromoAdminTab = () => {
       });
       toast.success('Promo berhasil dibuat!');
       setForm(emptyPromo);
-      fetchPromos();
+      // onSnapshot listener will auto-update the list
     } catch (e) {
       toast.error('Gagal membuat promo');
     } finally {
@@ -64,7 +60,7 @@ const PromoAdminTab = () => {
   const togglePromoStatus = async (id, currentStatus) => {
     try {
       await setDoc(doc(db, 'promoCodes', id), { active: !currentStatus }, { merge: true });
-      fetchPromos();
+      // onSnapshot listener will auto-update the list
     } catch (e) {
       toast.error('Gagal mengubah status');
     }
@@ -75,7 +71,7 @@ const PromoAdminTab = () => {
     try {
       await deleteDoc(doc(db, 'promoCodes', id));
       toast.success('Promo dihapus');
-      fetchPromos();
+      // onSnapshot listener will auto-update the list
     } catch (e) {
       toast.error('Gagal menghapus promo');
     }

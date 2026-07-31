@@ -77,7 +77,8 @@
   margin-top: 1rem;
 }
 
-.btn-promo-toggle, .btn-promo-del {
+.btn-promo-toggle,
+.btn-promo-del {
   display: flex;
   align-items: center;
   justify-content: center;

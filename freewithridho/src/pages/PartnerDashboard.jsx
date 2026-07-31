@@ -57,11 +57,8 @@ const PartnerDashboard = () => {
       setPartner(data);
       setLoading(false);
       if (data) {
-        setAffiliateData(prev => ({
-          ...prev,
-          partnerAffiliateBalance: data.affiliateBalance || 0,
-          partnerAffiliateCount: data.affiliateCount || 0,
-        }));
+        // Removed partner affiliate balance/count to focus on user referral
+
         // Load withdrawals once we have partner id
         import('../services/partnerService').then(({ listenToWithdrawals }) => {
           listenToWithdrawals((allWithdrawals) => {
@@ -301,6 +298,65 @@ const PartnerDashboard = () => {
       </div>
     );
   }
+  // --- Gamification Logic ---
+  const currentEarnings = (partner.balance || 0) + partnerWithdrawals.reduce((sum, w) => sum + w.amount, 0);
+  const currentTier = getBadgeTier(currentEarnings);
+  
+  let nextTierTarget = 0;
+  let progressPercent = 100;
+  let tierName = "Mitra Pemula";
+  let nextTierName = "Mitra Berprestasi";
+
+  if (currentTier === 0) {
+    nextTierTarget = 500000;
+    progressPercent = (currentEarnings / nextTierTarget) * 100;
+  } else if (currentTier === 1) {
+    tierName = "Mitra Berprestasi";
+    nextTierName = "Mitra Terverifikasi";
+    nextTierTarget = 1000000;
+    progressPercent = ((currentEarnings - 500000) / 500000) * 100;
+  } else {
+    tierName = "Mitra Terverifikasi";
+    nextTierName = "Max Tier";
+    nextTierTarget = currentEarnings; 
+    progressPercent = 100;
+  }
+
+  // --- Activity Feed Logic ---
+  const activities = [];
+  projects.forEach(p => {
+    activities.push({
+      id: `proj-${p.id}`,
+      type: 'project',
+      desc: `Proyek "${p.title}" berhasil diunggah.`,
+      date: p.createdAt ? new Date(p.createdAt.seconds ? p.createdAt.seconds * 1000 : p.createdAt) : new Date(),
+      icon: <Upload size={14} />,
+      color: 'blue'
+    });
+  });
+  partnerWithdrawals.forEach(w => {
+    activities.push({
+      id: `with-${w.id}`,
+      type: 'withdrawal',
+      desc: `Penarikan dana Rp ${w.amount.toLocaleString('id-ID')} (${w.status === 'completed' ? 'Selesai' : w.status === 'pending' ? 'Diproses' : 'Ditolak'})`,
+      date: w.requestedAt ? new Date(w.requestedAt.seconds ? w.requestedAt.seconds * 1000 : w.requestedAt) : new Date(),
+      icon: <Wallet size={14} />,
+      color: w.status === 'completed' ? 'green' : w.status === 'pending' ? 'yellow' : 'red'
+    });
+  });
+  if (affiliateData.count > 0) {
+    activities.push({
+      id: `aff-1`,
+      type: 'affiliate',
+      desc: `Ada ${affiliateData.count} orang yang mendaftar menggunakan kode referral Anda!`,
+      date: new Date(), 
+      icon: <Users size={14} />,
+      color: 'purple'
+    });
+  }
+  
+  activities.sort((a, b) => b.date - a.date);
+  const recentActivities = activities.slice(0, 4);
 
   return (
     <>
@@ -348,6 +404,31 @@ const PartnerDashboard = () => {
         )}
       </div>
 
+      {/* Tier Progress Bar Gamification */}
+      <div className="tier-progress-container">
+        <div className="tier-progress-header">
+          <div className="tier-info">
+            <span className="tier-label">Level Partner:</span>
+            <span className="tier-current">{tierName}</span>
+          </div>
+          {currentTier < 2 && (
+            <div className="tier-target">
+              <span className="tier-next">Menuju: {nextTierName} (Rp {nextTierTarget.toLocaleString('id-ID')})</span>
+            </div>
+          )}
+        </div>
+        <div className="tier-progress-bar-bg">
+          <div className="tier-progress-bar-fill" style={{ width: `${Math.min(Math.max(progressPercent, 5), 100)}%` }}>
+            <div className="tier-progress-glow"></div>
+          </div>
+        </div>
+        <p className="tier-hint">
+          {currentTier < 2 
+            ? `Kumpulkan Rp ${(nextTierTarget - currentEarnings).toLocaleString('id-ID')} lagi untuk naik ke level ${nextTierName}!` 
+            : 'Selamat! Anda telah mencapai level tertinggi.'}
+        </p>
+      </div>
+
       <div className="dashboard-stats">
         <div className="stat-card">
           <Wallet size={32} style={{ color: '#10b981', flexShrink: 0 }} />
@@ -386,6 +467,28 @@ const PartnerDashboard = () => {
         </div>
       </div>
 
+      {/* Recent Activity Timeline */}
+      <div className="activity-timeline-section">
+        <h3 className="section-title"><Clock size={18} /> Aktivitas Terbaru</h3>
+        <div className="timeline-container">
+          {recentActivities.length > 0 ? recentActivities.map(act => (
+            <div key={act.id} className="timeline-item">
+              <div className={`timeline-dot bg-${act.color}`}>
+                {act.icon}
+              </div>
+              <div className="timeline-content">
+                <p>{act.desc}</p>
+                <span className="timeline-time">
+                  {act.date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+            </div>
+          )) : (
+            <div className="timeline-empty">Belum ada aktivitas. Mulai upload proyek pertama Anda!</div>
+          )}
+        </div>
+      </div>
+
       {/* Referral Code Banner */}
       {partner.referralCode && (
         <div style={{
@@ -411,12 +514,12 @@ const PartnerDashboard = () => {
               <Users size={24} style={{ color: 'white' }} />
             </div>
             <div>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>🤝 Kode Affiliasi Kamu</p>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>🤝 Kode Referral Kamu</p>
               <p style={{ margin: '4px 0 0', fontSize: '1.5rem', fontWeight: 800, color: 'white', letterSpacing: '0.1em', fontFamily: 'monospace' }}>
                 {affiliateData.code || partner.referralCode || 'Memuat...'}
               </p>
               <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: '#64748b' }}>
-                Bagikan ke pembeli — kamu dapat komisi <strong style={{ color: '#10b981' }}>0,25%</strong> setiap ada yang pakai kode ini!
+                Bagikan ke pembeli — kamu dapat komisi <strong style={{ color: '#10b981' }}>Rp 250</strong> setiap ada yang pakai kode ini!
               </p>
             </div>
           </div>
@@ -426,7 +529,7 @@ const PartnerDashboard = () => {
               navigator.clipboard.writeText(code);
               setCopiedRef(true);
               setTimeout(() => setCopiedRef(false), 2000);
-              toast.success('Kode affiliasi berhasil disalin! 🎉');
+              toast.success('Kode referral berhasil disalin! 🎉');
             }}
             style={{
               background: copiedRef ? '#10b981' : 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
@@ -488,28 +591,9 @@ const PartnerDashboard = () => {
             <DollarSign size={20} style={{ color: '#8b5cf6' }} />
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8' }}>Komisi Affiliasi Terkumpul</p>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8' }}>Komisi Referral Terkumpul</p>
             <p style={{ margin: '2px 0 0', fontSize: '1.35rem', fontWeight: 800, color: 'white' }}>Rp {(affiliateData.balance || 0).toLocaleString('id-ID')}</p>
             <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: '#64748b' }}>Rp 250 per undangan ⚡</p>
-          </div>
-        </div>
-
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1))',
-          border: '1px solid rgba(245, 158, 11, 0.3)',
-          borderRadius: '12px',
-          padding: '1.25rem 1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem'
-        }}>
-          <div style={{ width: 40, height: 40, background: 'rgba(245, 158, 11, 0.2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Wallet size={20} style={{ color: '#f59e0b' }} />
-          </div>
-          <div>
-            <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8' }}>Saldo Komisi Afiliasi</p>
-            <p style={{ margin: '2px 0 0', fontSize: '1.35rem', fontWeight: 800, color: 'white' }}>Rp {(affiliateData.partnerAffiliateBalance || 0).toLocaleString('id-ID')}</p>
-            <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: '#64748b' }}>dari {affiliateData.partnerAffiliateCount || 0} undangan ⚡</p>
           </div>
         </div>
       </div>

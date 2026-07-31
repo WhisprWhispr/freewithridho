@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import ProjectCard from '../components/ProjectCard';
 import { listenToPartnerByUserId } from '../services/partnerService';
@@ -21,18 +21,17 @@ const PublicProfile = () => {
   useEffect(() => {
     if (!userId) return;
 
-    const fetchProjects = async () => {
-      try {
-        const q = query(collection(db, 'projects'), where('ownerId', '==', userId));
-        const snapshot = await getDocs(q);
-        const projectsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setProjects(projectsData);
-      } catch (e) {
-        console.error('Failed to load user projects', e);
-      }
-    };
+    // Realtime listener for projects
+    const projQ = query(collection(db, 'projects'), where('ownerId', '==', userId));
+    const unsubProjects = onSnapshot(projQ, (snapshot) => {
+      const projectsData = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+      setProjects(projectsData);
+    }, (e) => {
+      console.error('Failed to listen to user projects', e);
+    });
 
-    const unsubscribe = listenToPartnerByUserId(userId, async (data) => {
+    // Realtime listener for partner data
+    const unsubPartner = listenToPartnerByUserId(userId, async (data) => {
       if (data) {
         setPartner(data);
         setIsAdminProfile(false);
@@ -55,10 +54,9 @@ const PublicProfile = () => {
       }
     });
 
-    fetchProjects();
-
     return () => {
-      if (unsubscribe) unsubscribe();
+      unsubProjects();
+      if (unsubPartner) unsubPartner();
     };
   }, [userId]);
 
