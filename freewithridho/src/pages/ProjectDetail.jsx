@@ -251,6 +251,7 @@ const ProjectDetail = () => {
 
   const images = project.images?.filter(img => img.trim() !== '') || [];
   const isFree = !project.price || project.price === 0;
+  const finalPrice = (project.isFlashSale && project.discountPrice > 0) ? project.discountPrice : project.price;
 
   return (
     <div className="detail-page">
@@ -653,7 +654,7 @@ const ProjectDetail = () => {
           <div className="cta-left">
             <span className="cta-title">{project.title}</span>
             <span className="cta-sub">
-              {isFree ? 'Tersedia gratis untuk semua' : `Rp ${project.price?.toLocaleString('id-ID')}`}
+              {isFree ? 'Tersedia gratis untuk semua' : `Rp ${finalPrice?.toLocaleString('id-ID')}`}
             </span>
           </div>
           <div className="cta-actions">
@@ -677,7 +678,7 @@ const ProjectDetail = () => {
               </a>
             ) : (
               <button onClick={handleBuy} className="btn btn-primary action-btn">
-                <ShoppingCart size={18} /> Beli Rp {project.price?.toLocaleString('id-ID')}
+                <ShoppingCart size={18} /> Beli Rp {finalPrice?.toLocaleString('id-ID')}
               </button>
             )}
           </div>
