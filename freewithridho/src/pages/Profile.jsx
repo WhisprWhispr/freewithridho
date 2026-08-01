@@ -673,7 +673,10 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                   // Cek apakah kadaluarsa (24 jam)
                   let isExpired = false;
                   if (isPending && tx.createdAt) {
-                    const txTime = tx.createdAt.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt;
+                    const txTime = typeof tx.createdAt.toMillis === 'function' 
+                      ? tx.createdAt.toMillis() 
+                      : (tx.createdAt.seconds ? tx.createdAt.seconds * 1000 : new Date(tx.createdAt).getTime());
+                    
                     if (Date.now() - txTime > 24 * 60 * 60 * 1000) {
                       isExpired = true;
                     }

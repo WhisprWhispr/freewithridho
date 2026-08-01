@@ -42,10 +42,12 @@ const Success = () => {
         } else {
           let txData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
           
-          // --- DEMO/TESTING BYPASS ---
-          // Since payment gateway webhooks cannot reach localhost/Netlify without a hosted backend, force status to PAID for testing
-          if (txData.status === 'PENDING' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.includes('netlify.app'))) {
-            console.warn('Demo environment detected: Auto-approving PENDING transaction to test commissions');
+          // --- SMART DEMO BYPASS ---
+          // Because Midtrans webhooks can't reach localhost/Netlify without a backend, 
+          // we use the transaction_status passed from Checkout.jsx (or Midtrans redirect) to smartly update the status.
+          const urlStatus = searchParams.get('transaction_status') || searchParams.get('status');
+          if (txData.status === 'PENDING' && (urlStatus === 'settlement' || urlStatus === 'capture' || urlStatus === 'success')) {
+            console.warn('Smart bypass: Auto-approving because payment was successful.');
             await updateDoc(doc(db, 'transactions', snapshot.docs[0].id), { status: 'PAID' });
             txData.status = 'PAID';
           }

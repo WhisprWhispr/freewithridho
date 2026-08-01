@@ -60,3 +60,4 @@
   font-size: 1.1rem;
   color: #e2e8f0;
 }
+.analytics-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; } 

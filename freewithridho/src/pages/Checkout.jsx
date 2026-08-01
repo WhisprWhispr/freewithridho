@@ -101,7 +101,24 @@ const Checkout = () => {
     const unsubscribe = onSnapshot(q, (snap) => {
       if (!snap.empty) {
         const doc = snap.docs[0];
-        setPendingTransaction({ id: doc.id, ...doc.data() });
+        const txData = doc.data();
+        
+        let isExpired = false;
+        if (txData.createdAt) {
+          const txTime = typeof txData.createdAt.toMillis === 'function' 
+            ? txData.createdAt.toMillis() 
+            : (txData.createdAt.seconds ? txData.createdAt.seconds * 1000 : new Date(txData.createdAt).getTime());
+          
+          if (Date.now() - txTime > 24 * 60 * 60 * 1000) {
+            isExpired = true;
+          }
+        }
+        
+        if (!isExpired) {
+          setPendingTransaction({ id: doc.id, ...txData });
+        } else {
+          setPendingTransaction(null);
+        }
       } else {
         setPendingTransaction(null);
       }
@@ -185,11 +202,11 @@ const Checkout = () => {
         embedId: 'snap-container',
         onSuccess: function (result) {
           toast.success('Pembayaran berhasil!');
-          navigate(`/success?reference=${merchantRef}`);
+          navigate(`/success?reference=${merchantRef}&transaction_status=settlement`);
         },
         onPending: function (result) {
           toast.info('Menunggu pembayaran Anda...');
-          navigate(`/success?reference=${merchantRef}`);
+          navigate(`/success?reference=${merchantRef}&transaction_status=pending`);
         },
         onError: function (result) {
           toast.error('Pembayaran gagal.');

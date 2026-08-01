@@ -886,3 +886,5 @@
   letter-spacing: 0.04em;
 }
 
+@keyframes floatAvatar { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } } .profile-avatar, .public-partner-avatar { animation: floatAvatar 3s ease-in-out infinite; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); } 
+@keyframes floatAvatar { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } } .profile-avatar, .public-profile-avatar { animation: floatAvatar 3s ease-in-out infinite; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); border: 2px solid rgba(59, 130, 246, 0.5); } 

@@ -32,27 +32,35 @@ const SalesAnalytics = ({ partnerId }) => {
         return;
       }
 
-      // Step 2: Listen realtime to SUCCESS transactions
+      // Step 2: Listen realtime to transactions
       if (unsubTransactions) unsubTransactions();
-      const txQ = query(collection(db, 'transactions'), where('status', '==', 'SUCCESS'));
+      const txQ = query(collection(db, 'transactions'), where('status', 'in', ['PAID', 'SUCCESS', 'PENDING']));
       unsubTransactions = onSnapshot(txQ, (txSnap) => {
         let salesData = [];
         let total = 0;
+        let totalPending = 0;
 
         txSnap.docs.forEach(docSnap => {
           const tx = docSnap.data();
           if (myProjectIds.includes(tx.projectId)) {
-            const dateStr = tx.createdAt?.toDate
-              ? tx.createdAt.toDate().toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })
-              : 'Unknown';
-            salesData.push({
-              date: dateStr,
-              timestamp: tx.createdAt?.toMillis ? tx.createdAt.toMillis() : 0,
-              amount: tx.amount,
-              net: tx.amount * 0.8,
-              projectTitle: tx.projectTitle
-            });
-            total += (tx.amount * 0.8);
+            const isPaid = tx.status === 'PAID' || tx.status === 'SUCCESS';
+            const netAmount = tx.amount * 0.8;
+            
+            if (isPaid) {
+              const dateStr = tx.createdAt?.toDate
+                ? tx.createdAt.toDate().toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })
+                : 'Unknown';
+              salesData.push({
+                date: dateStr,
+                timestamp: tx.createdAt?.toMillis ? tx.createdAt.toMillis() : 0,
+                amount: tx.amount,
+                net: netAmount,
+                projectTitle: tx.projectTitle
+              });
+              total += netAmount;
+            } else if (tx.status === 'PENDING') {
+              totalPending += netAmount;
+            }
           }
         });
 
@@ -68,6 +76,7 @@ const SalesAnalytics = ({ partnerId }) => {
         const chartData = Object.values(grouped).sort((a, b) => a.timestamp - b.timestamp);
         setData(chartData);
         setTotalSales(total);
+        if (typeof setPendingSales === 'function') setPendingSales(totalPending);
         setLoading(false);
       }, (err) => {
         console.error('Error listening transactions:', err);
@@ -84,6 +93,8 @@ const SalesAnalytics = ({ partnerId }) => {
     };
   }, [partnerId]);
 
+  const [pendingSales, setPendingSales] = useState(0);
+
   if (loading) {
     return (
       <div className="analytics-loading">
@@ -93,7 +104,7 @@ const SalesAnalytics = ({ partnerId }) => {
     );
   }
 
-  if (data.length === 0) {
+  if (data.length === 0 && pendingSales === 0) {
     return (
       <div className="analytics-empty">
         <TrendingUp size={48} className="empty-icon" />
@@ -105,9 +116,15 @@ const SalesAnalytics = ({ partnerId }) => {
 
   return (
     <div className="sales-analytics-container">
-      <div className="analytics-summary">
-        <h4>Total Estimasi Pendapatan</h4>
-        <p className="total-sales">Rp {totalSales.toLocaleString('id-ID')}</p>
+      <div className="analytics-summary-grid">
+        <div className="analytics-summary">
+          <h4>Total Estimasi Pendapatan (Lunas)</h4>
+          <p className="total-sales">Rp {totalSales.toLocaleString('id-ID')}</p>
+        </div>
+        <div className="analytics-summary pending-summary">
+          <h4>Pendapatan Tertunda (Belum Dibayar)</h4>
+          <p className="total-sales pending-text" style={{ color: '#f59e0b' }}>Rp {pendingSales.toLocaleString('id-ID')}</p>
+        </div>
       </div>
 
       <div className="chart-wrapper">
