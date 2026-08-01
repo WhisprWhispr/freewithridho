@@ -42,10 +42,10 @@ const Success = () => {
         } else {
           let txData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
           
-          // --- LOCALHOST TESTING BYPASS ---
-          // Since payment gateway webhooks cannot reach localhost, force status to PAID for testing
-          if (txData.status === 'PENDING' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-            console.warn('Localhost detected: Auto-approving PENDING transaction to test commissions');
+          // --- DEMO/TESTING BYPASS ---
+          // Since payment gateway webhooks cannot reach localhost/Netlify without a hosted backend, force status to PAID for testing
+          if (txData.status === 'PENDING' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.includes('netlify.app'))) {
+            console.warn('Demo environment detected: Auto-approving PENDING transaction to test commissions');
             await updateDoc(doc(db, 'transactions', snapshot.docs[0].id), { status: 'PAID' });
             txData.status = 'PAID';
           }
