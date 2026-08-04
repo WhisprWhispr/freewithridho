@@ -1,7 +1,8 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
-const admin = require('firebase-admin');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const nodemailer = require('nodemailer');
 
 // Firebase project config — loaded from environment variables
@@ -16,14 +17,17 @@ try {
   if (envVal) {
     if (envVal.startsWith("'") && envVal.endsWith("'")) envVal = envVal.slice(1, -1);
     serviceAccount = JSON.parse(envVal);
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
   } else {
     serviceAccount = require('./serviceAccountKey.json');
   }
-  if (!admin.apps || !admin.apps.length) {
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  if (!require('firebase-admin/app').getApps().length) {
+    initializeApp({ credential: cert(serviceAccount) });
     console.log('Firebase Admin initialized successfully');
   }
-  db = admin.firestore();
+  db = getFirestore();
 } catch (error) {
   console.log('Warning: Firebase Admin not initialized:', error.message);
 }
@@ -290,6 +294,50 @@ app.post('/api/send-email', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// CRON JOB: Cek Flash Sale setiap 1 Menit
+setInterval(async () => {
+  if (!db) return;
+  try {
+    const now = new Date();
+    const projectsRef = db.collection('projects');
+    const snapshot = await projectsRef.where('isFlashSale', '==', true).get();
+    
+    snapshot.forEach(async (doc) => {
+      const project = doc.data();
+      
+      // Jika tidak ada start date, atau sudah pernah dinotifikasi, lewati
+      if (!project.flashSaleStartDate || project.flashSaleNotified) return;
+      
+      const startDate = new Date(project.flashSaleStartDate);
+      
+      // Jika waktu sekarang sudah melewati waktu mulai flash sale
+      if (now >= startDate) {
+        console.log(`[CRON] Flash Sale started for ${project.title}, broadcasting notification!`);
+        
+        try {
+          // 1. Buat notifikasi
+          await db.collection('notifications').add({
+            type: 'flash',
+            title: `⚡ Flash Sale: ${project.title}`,
+            message: `Flash Sale untuk proyek "${project.title}" telah dimulai! Harga turun menjadi Rp ${project.discountPrice?.toLocaleString('id-ID')}. Ayo cek sekarang!`,
+            readBy: [],
+            createdAt: FieldValue.serverTimestamp()
+          });
+          
+          // 2. Tandai agar tidak dinotifikasi ulang
+          await doc.ref.update({
+            flashSaleNotified: true
+          });
+        } catch (err) {
+          console.error('[CRON] Gagal membuat notifikasi Flash Sale:', err.message);
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[CRON] Error checking flash sales:', error);
+  }
+}, 60 * 1000);
 
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);

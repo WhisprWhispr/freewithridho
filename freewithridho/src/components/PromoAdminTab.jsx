@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 import { Tag, Plus, Trash2, Check, X } from 'lucide-react';
 import './PromoAdminTab.css';
@@ -47,9 +47,21 @@ const PromoAdminTab = () => {
         usageCount: 0,
         createdAt: serverTimestamp()
       });
-      toast.success('Promo berhasil dibuat!');
+
+      // Auto-publish notification for all users
+      const discountText = form.type === 'percent'
+        ? `Diskon ${form.value}%`
+        : `Potongan Rp ${Number(form.value).toLocaleString('id-ID')}`;
+      await addDoc(collection(db, 'notifications'), {
+        type: 'promo',
+        title: `🏷️ Promo Baru: ${codeId}`,
+        message: `${form.description || discountText} — Gunakan kode ${codeId} saat checkout!`,
+        readBy: [],
+        createdAt: serverTimestamp()
+      });
+
+      toast.success('Promo berhasil dibuat & notifikasi dikirim!');
       setForm(emptyPromo);
-      // onSnapshot listener will auto-update the list
     } catch (e) {
       toast.error('Gagal membuat promo');
     } finally {

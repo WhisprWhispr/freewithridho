@@ -183,7 +183,8 @@ const PublicProfile = () => {
   }
 
   // ── PARTNER PROFILE ────────────────────────────────────────────
-  const badgeTier = getBadgeTier(partner.totalEarnings);
+  // Fallback to balance if totalEarnings hasn't been cached by the security rules yet
+  const badgeTier = getBadgeTier(partner.totalEarnings !== undefined ? partner.totalEarnings : partner.balance);
 
   return (
     <div className="public-profile-page">

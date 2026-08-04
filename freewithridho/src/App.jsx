@@ -18,6 +18,7 @@ import { PrivacyPolicy, TermsOfService } from './pages/Legal';
 import About from './pages/About';
 import PrayerTimes from './pages/PrayerTimes';
 import Footer from './components/Footer';
+import InstallPWA from './components/InstallPWA';
 import './App.css';
 
 function App() {
@@ -99,6 +100,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <InstallPWA />
         </div>
       </Router>
     </AuthProvider>

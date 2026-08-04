@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllProjects, addProject, deleteProject, updateProject, getSettings, saveSettings } from '../services/projectService';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getAdminStats, listenToAdminStats } from '../services/adminStatsService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -89,7 +91,9 @@ const emptyForm = {
   images: [''],
   price: 0,
   isFlashSale: false,
-  discountPrice: 0
+  discountPrice: 0,
+  flashSaleStartDate: '',
+  flashSaleEndDate: ''
 };
 
 const Admin = () => {
@@ -149,7 +153,7 @@ const Admin = () => {
   const [editingId, setEditingId] = useState(null);
 
   // Settings state
-  const [midtransSettings, setMidtransSettings] = useState({ merchantId: '', serverKey: '', clientKey: '', environment: 'sandbox' });
+  const [instanpaySettings, setInstanpaySettings] = useState({ apiKey: '' });
   const [savingSettings, setSavingSettings] = useState(false);
 
   // Admin Approval Modal state
@@ -187,15 +191,12 @@ const Admin = () => {
       try {
         const [data, settingsData] = await Promise.all([
           getAllProjects(),
-          getSettings('midtrans')
+          getSettings('instanpay')
         ]);
         setProjects(data);
         if (settingsData) {
-          setMidtransSettings({
-            merchantId: settingsData.merchantId || '',
-            serverKey: settingsData.serverKey || '',
-            clientKey: settingsData.clientKey || '',
-            environment: settingsData.environment || 'sandbox'
+          setInstanpaySettings({
+            apiKey: settingsData.apiKey || ''
           });
         }
       } catch (error) {
@@ -536,8 +537,8 @@ const Admin = () => {
     e.preventDefault();
     setSavingSettings(true);
     try {
-      await saveSettings('midtrans', midtransSettings);
-      toast.success('Pengaturan API Midtrans berhasil disimpan!');
+      await saveSettings('instanpay', instanpaySettings);
+      toast.success('Pengaturan API Instanpay berhasil disimpan!');
     } catch (err) {
       console.error(err);
       toast.error('Gagal menyimpan pengaturan.');
@@ -867,48 +868,84 @@ const Admin = () => {
                       {form.isFlashSale && (
                         <div style={{ 
                           marginTop: '1.25rem', 
-                          paddingTop: '1.25rem', 
-                          borderTop: '1px dashed rgba(239, 68, 68, 0.3)',
-                          animation: 'fadeInDown 0.3s ease forwards'
+                          padding: '1.25rem', 
+                          border: '1px dashed rgba(239, 68, 68, 0.3)',
+                          background: 'rgba(0,0,0,0.2)',
+                          borderRadius: '12px',
+                          animation: 'fadeInDown 0.3s ease forwards',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '1rem'
                         }}>
-                          <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                            Harga Diskon Flash Sale *
-                          </label>
-                          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                            <span style={{ 
-                              position: 'absolute', 
-                              left: '1rem', 
-                              color: '#f87171', 
-                              fontWeight: 700,
-                              fontSize: '1.1rem',
-                              pointerEvents: 'none'
-                            }}>
-                              Rp
-                            </span>
-                            <input 
-                              type="text" 
-                              placeholder="Misal: 50000"
-                              value={form.discountPrice !== '' && form.discountPrice !== undefined ? form.discountPrice.toLocaleString('id-ID') : ''}
-                              onChange={(e) => {
-                                const rawVal = e.target.value.replace(/[^0-9]/g, '');
-                                setForm({ ...form, discountPrice: rawVal ? Number(rawVal) : 0 });
-                              }}
-                              required={form.isFlashSale} 
-                              style={{
-                                width: '100%',
-                                padding: '0.8rem 1rem 0.8rem 2.8rem',
-                                borderRadius: '8px',
-                                border: '2px solid rgba(239, 68, 68, 0.4)',
-                                background: 'rgba(0,0,0,0.2)',
-                                color: 'white',
+                          <div>
+                            <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                              Harga Diskon Flash Sale (Rp) *
+                            </label>
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                              <span style={{ 
+                                position: 'absolute', 
+                                left: '1rem', 
+                                color: '#f87171', 
                                 fontWeight: 700,
                                 fontSize: '1.1rem',
-                                outline: 'none',
-                                transition: 'border-color 0.2s',
-                              }}
-                              onFocus={(e) => e.target.style.borderColor = '#ef4444'}
-                              onBlur={(e) => e.target.style.borderColor = 'rgba(239, 68, 68, 0.4)'}
-                            />
+                                pointerEvents: 'none'
+                              }}>
+                                Rp
+                              </span>
+                              <input 
+                                type="text" 
+                                placeholder="Misal: 50000"
+                                value={form.discountPrice !== '' && form.discountPrice !== undefined ? form.discountPrice.toLocaleString('id-ID') : ''}
+                                onChange={(e) => {
+                                  const rawVal = e.target.value.replace(/[^0-9]/g, '');
+                                  setForm({ ...form, discountPrice: rawVal ? Number(rawVal) : 0 });
+                                }}
+                                required={form.isFlashSale} 
+                                style={{
+                                  width: '100%',
+                                  padding: '0.8rem 1rem 0.8rem 2.8rem',
+                                  borderRadius: '8px',
+                                  border: '2px solid rgba(239, 68, 68, 0.4)',
+                                  background: 'rgba(0,0,0,0.2)',
+                                  color: 'white',
+                                  fontWeight: 700,
+                                  fontSize: '1.1rem',
+                                  outline: 'none',
+                                  transition: 'border-color 0.2s',
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#ef4444'}
+                                onBlur={(e) => e.target.style.borderColor = 'rgba(239, 68, 68, 0.4)'}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div>
+                              <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                                Waktu Mulai *
+                              </label>
+                              <input 
+                                type="datetime-local"
+                                className="form-input" 
+                                value={form.flashSaleStartDate || ''} 
+                                onChange={e => setForm({...form, flashSaleStartDate: e.target.value})}
+                                required={form.isFlashSale} 
+                                style={{ borderColor: 'rgba(239, 68, 68, 0.3)', width: '100%' }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                                Waktu Berakhir *
+                              </label>
+                              <input 
+                                type="datetime-local"
+                                className="form-input" 
+                                value={form.flashSaleEndDate || ''} 
+                                onChange={e => setForm({...form, flashSaleEndDate: e.target.value})}
+                                required={form.isFlashSale} 
+                                style={{ borderColor: 'rgba(239, 68, 68, 0.3)', width: '100%' }}
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
@@ -1163,51 +1200,20 @@ const Admin = () => {
               <section className="admin-card">
                 <div className="admin-card-header">
                   <Settings size={20} />
-                  <h2>Pengaturan API Midtrans</h2>
+                  <h2>Pengaturan API Instanpay</h2>
                 </div>
                 <p style={{ fontSize: '0.875rem', color: '#94a3b8', margin: '0 1.25rem 1rem' }}>
-                  Kunci ini akan digunakan oleh sistem backend untuk memproses pembayaran.
+                  API Key akan mendeteksi otomatis mode Sandbox (sk_test_) atau Production (sk_live_).
                 </p>
                 <form onSubmit={handleSaveSettings} className="upload-form" style={{ paddingTop: 0 }}>
                   <div className="form-group">
-                    <label htmlFor="environment">Lingkungan (Environment)</label>
-                    <select
-                      id="environment"
-                      value={midtransSettings.environment}
-                      onChange={(e) => setMidtransSettings(prev => ({ ...prev, environment: e.target.value }))}
-                    >
-                      <option value="sandbox">Sandbox (Pengujian)</option>
-                      <option value="production">Production (Live)</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="merchantId">Merchant ID</label>
+                    <label htmlFor="apiKey">Instanpay API Key <Key size={14} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} /></label>
                     <input
-                      id="merchantId"
+                      id="apiKey"
                       type="text"
-                      placeholder="M..."
-                      value={midtransSettings.merchantId}
-                      onChange={(e) => setMidtransSettings({ ...midtransSettings, merchantId: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="serverKey">Server Key <Key size={14} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} /></label>
-                    <input
-                      id="serverKey"
-                      type="text"
-                      placeholder="SB-Mid-server-..."
-                      value={midtransSettings.serverKey}
-                      onChange={(e) => setMidtransSettings(prev => ({ ...prev, serverKey: e.target.value }))}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="clientKey">Client Key <Key size={14} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} /></label>
-                    <input
-                      id="clientKey"
-                      type="text"
-                      placeholder="SB-Mid-client-..."
-                      value={midtransSettings.clientKey}
-                      onChange={(e) => setMidtransSettings(prev => ({ ...prev, clientKey: e.target.value }))}
+                      placeholder="sk_live_... atau sk_test_..."
+                      value={instanpaySettings.apiKey}
+                      onChange={(e) => setInstanpaySettings({ apiKey: e.target.value })}
                     />
                   </div>
                   <button type="submit" className="btn-upload" disabled={savingSettings} style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.4)', color: '#818cf8', marginTop: '1rem' }}>

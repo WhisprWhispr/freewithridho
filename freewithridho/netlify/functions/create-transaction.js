@@ -1,62 +1,77 @@
-'use strict';
-
 // Firebase project config — loaded from Netlify Environment Variables
 const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID;
 const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY;
 
 const SITE_URL = process.env.URL || 'https://freewithridho.netlify.app';
 
+// Polyfill fetch untuk Node.js < 18
+const fetchFn = typeof fetch !== 'undefined' ? fetch : null;
+
 // Baca environment dari Firestore REST API (tanpa service account)
-async function getMidtransConfig() {
+async function getInstanpayConfig() {
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/settings/midtrans?key=${FIREBASE_API_KEY}`;
-    const res = await fetch(url);
+    if (!fetchFn) throw new Error('fetch not available');
+    const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/settings/instanpay?key=${FIREBASE_API_KEY}`;
+    const res = await fetchFn(url);
     if (!res.ok) throw new Error('Firestore REST API error: ' + res.status);
     const data = await res.json();
 
-    const environment = data.fields?.environment?.stringValue || 'sandbox';
-    const clientKey = data.fields?.clientKey?.stringValue || '';
+    const apiKey = data.fields?.apiKey?.stringValue;
+    if (apiKey) return apiKey;
 
-    // Pilih server key dari env vars berdasarkan environment
-    let serverKey;
-    if (environment === 'production') {
-      serverKey = process.env.MIDTRANS_SERVER_KEY_PRODUCTION;
-      console.log('✅ Mode PRODUCTION — menggunakan MIDTRANS_SERVER_KEY_PRODUCTION');
-    } else {
-      serverKey = process.env.MIDTRANS_SERVER_KEY_SANDBOX;
-      console.log('✅ Mode SANDBOX — menggunakan MIDTRANS_SERVER_KEY_SANDBOX');
-    }
-
-    return { environment, serverKey, clientKey };
+    throw new Error('API Key tidak ditemukan di Firestore');
   } catch (e) {
     console.warn('Gagal baca Firestore, fallback ke env vars:', e.message);
-    // Fallback: cek env var lama
-    const serverKey = process.env.MIDTRANS_SERVER_KEY_PRODUCTION || process.env.MIDTRANS_SERVER_KEY || null;
-    const isSandbox = !serverKey || serverKey.startsWith('Mid-server-k') || serverKey.startsWith('SB-');
-    return { environment: isSandbox ? 'sandbox' : 'production', serverKey };
+    return process.env.INSTANPAY_API_KEY || null;
   }
 }
 
-exports.handler = async (event) => {
+// ✅ ESM format — kompatibel dengan Netlify CLI v17+
+export const handler = async (event) => {
+  // CORS headers untuk dev lokal
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ message: 'Method Not Allowed' }) };
+    return { statusCode: 405, headers, body: JSON.stringify({ message: 'Method Not Allowed' }) };
   }
 
   try {
-    // Dapatkan konfigurasi Midtrans (environment + server key)
-    const { environment, serverKey } = await getMidtransConfig();
-
-    if (!serverKey) {
+    if (!fetchFn) {
       return {
         statusCode: 500,
-        body: JSON.stringify({ success: false, message: `Midtrans Server Key tidak ditemukan. Tambahkan MIDTRANS_SERVER_KEY_SANDBOX dan MIDTRANS_SERVER_KEY_PRODUCTION di Netlify Environment Variables.` }),
+        headers,
+        body: JSON.stringify({
+          success: false,
+          message: 'Node.js versi terlalu lama. Gunakan Node.js 18+ untuk mendukung fetch.',
+        }),
       };
     }
 
-    const isSandbox = environment === 'sandbox';
-    const MIDTRANS_URL = isSandbox
-      ? 'https://app.sandbox.midtrans.com/snap/v1/transactions'
-      : 'https://app.midtrans.com/snap/v1/transactions';
+    // Dapatkan konfigurasi Instanpay
+    const apiKey = await getInstanpayConfig();
+
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          message:
+            'Instanpay API Key tidak ditemukan. Tambahkan INSTANPAY_API_KEY di Netlify Environment Variables atau di Admin Panel.',
+        }),
+      };
+    }
+
+    const INSTANPAY_URL = 'https://instanpay.net/api/v1/payments';
 
     const body = JSON.parse(event.body);
     const { projectId, userId, userEmail, projectTitle, amount } = body;
@@ -64,79 +79,64 @@ exports.handler = async (event) => {
     if (!projectId || !userId || !userEmail || !amount) {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ success: false, message: 'Data tidak lengkap.' }),
       };
     }
 
-    const orderId = `TRX-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;
-
     const payload = {
-      transaction_details: {
-        order_id: orderId,
-        gross_amount: Number(amount),
-      },
-      customer_details: {
-        first_name: userEmail.split('@')[0],
-        email: userEmail,
-      },
-      item_details: [
-        {
-          id: projectId,
-          price: Number(amount),
-          quantity: 1,
-          name: (projectTitle || 'Source Code Premium').substring(0, 50),
-        },
-      ],
-      enabled_payments: ["other_qris"],
-      callbacks: {
-        finish: `${SITE_URL}/success`,
-        unfinish: `${SITE_URL}/checkout/${projectId}`,
-        error: `${SITE_URL}/checkout/${projectId}`,
-      },
+      amount: Number(amount),
+      customer_name: userEmail.split('@')[0],
+      webhook_url: `${SITE_URL}/.netlify/functions/instanpay-webhook`
     };
 
-    const authString = Buffer.from(`${serverKey}:`).toString('base64');
-    console.log('🌐 Midtrans URL:', MIDTRANS_URL, '| Environment:', environment);
+    console.log('🌐 Instanpay URL:', INSTANPAY_URL);
 
-    const midtransRes = await fetch(MIDTRANS_URL, {
+    const instanpayRes = await fetchFn(INSTANPAY_URL, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        Authorization: `Basic ${authString}`,
+        'X-API-Key': apiKey,
       },
       body: JSON.stringify(payload),
     });
 
-    const midtransData = await midtransRes.json();
-    console.log('Midtrans response status:', midtransRes.status);
+    const instanpayData = await instanpayRes.json();
+    console.log('Instanpay response status:', instanpayRes.status);
 
-    if (!midtransRes.ok) {
-      const errMsg = midtransData.error_messages
-        ? midtransData.error_messages[0]
-        : JSON.stringify(midtransData);
-      console.error('Midtrans error:', errMsg);
+    if (!instanpayRes.ok || !instanpayData.success) {
+      const errMsg = instanpayData.message || JSON.stringify(instanpayData);
+      console.error('Instanpay error:', errMsg);
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ success: false, message: errMsg }),
       };
     }
 
-    // Transaction akan disimpan ke Firestore oleh midtrans-callback webhook setelah pembayaran sukses
+    const txData = instanpayData.data;
 
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify({
         success: true,
-        checkoutUrl: midtransData.redirect_url,
-        reference: midtransData.token,
-        merchantRef: orderId,
+        reference: txData.transactionId,
+        merchantRef: txData.transactionId, // Using Instanpay's txId as our reference
+        qrCodeSvg: txData.qrCodeSvg,
+        qrisString: txData.qrisString,
+        totalAmount: txData.totalAmount,
+        totalFormatted: txData.totalFormatted,
+        expiredAt: txData.expiredAt,
+        baseAmount: txData.baseAmount,
       }),
     };
   } catch (err) {
     console.error('create-transaction error:', err);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ success: false, message: 'Internal server error: ' + err.message }),
     };
   }

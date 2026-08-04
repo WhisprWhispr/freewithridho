@@ -30,37 +30,37 @@ const WelcomeModal = ({ role = 'partner', storageKey, onClose }) => {
       icon: <Zap size={22} />,
       color: '#3b82f6',
       title: 'Manajemen Proyek Penuh',
-      desc: 'Upload, edit, hapus, dan pantau semua proyek di marketplace. Anda dapat mengatur harga, Flash Sale, kategori, link demo, dan file unduhan setiap proyek.',
+      desc: 'Upload, edit, hapus, dan pantau semua proyek di marketplace. Anda dapat mengatur harga, Flash Sale, kategori, link demo, dan file unduhan setiap proyek secara real-time.',
     },
     {
       icon: <Shield size={22} />,
       color: '#8b5cf6',
       title: 'Kendali Partner & User',
-      desc: 'Setujui pendaftaran partner, suspensi/ban akun yang melanggar, hapus akun dari Firebase Auth, dan monitor aktivitas seluruh pengguna secara real-time.',
+      desc: 'Setujui pendaftaran partner, suspensi/ban akun yang melanggar, hapus akun dari Firebase Auth, dan monitor aktivitas seluruh pengguna secara real-time. Sistem lencana partner diperbarui otomatis berdasarkan pendapatan.',
     },
     {
       icon: <Star size={22} />,
       color: '#f59e0b',
-      title: 'Manajemen Promo Code',
-      desc: 'Buat kode promo diskon persentase (%) atau nominal (Rp), atur batas pemakaian (limit), serta aktifkan/nonaktifkan promo kapan saja dari panel ini.',
+      title: 'Manajemen Promo Code & Notifikasi',
+      desc: 'Buat kode promo diskon persentase (%) atau nominal (Rp), atur batas pemakaian (limit). Setiap promo baru akan otomatis mengirim notifikasi ke seluruh pengguna secara real-time. Aktifkan/nonaktifkan promo kapan saja.',
     },
     {
       icon: <CheckCircle size={22} />,
       color: '#10b981',
       title: 'Pengaturan API Midtrans',
-      desc: 'Ganti mode Sandbox ↔ Production tanpa harus edit kode. Backend akan otomatis menggunakan key yang sesuai berdasarkan pengaturan di sini.',
+      desc: 'Ganti mode Sandbox ↔ Production tanpa harus edit kode. Backend akan otomatis menggunakan key yang sesuai berdasarkan pengaturan di sini. Selalu uji di mode Sandbox terlebih dahulu sebelum Production.',
     },
     {
       icon: <BookOpen size={22} />,
       color: '#6366f1',
       title: 'Analitik & Statistik Real-time',
-      desc: 'Pantau total pendapatan, transaksi pending, proyek terjual, dan performa partner secara langsung. Data diperbarui otomatis via Firestore listener.',
+      desc: 'Pantau total pendapatan, transaksi pending, proyek terjual, dan performa partner secara langsung. Data diperbarui otomatis via Firestore real-time listener. Pendapatan tertunda juga ditampilkan terpisah.',
     },
     {
       icon: <Info size={22} />,
       color: '#ef4444',
       title: 'Manajemen Penarikan Dana',
-      desc: 'Tinjau dan proses permintaan penarikan dana dari partner. Tandai sebagai DIPROSES atau SELESAI setelah transfer dilakukan secara manual.',
+      desc: 'Tinjau dan proses permintaan penarikan dana dari partner. Tandai sebagai DIPROSES atau SELESAI setelah transfer dilakukan secara manual. Wajib diproses maksimal 3×24 jam kerja.',
     },
   ];
 
@@ -68,32 +68,32 @@ const WelcomeModal = ({ role = 'partner', storageKey, onClose }) => {
     {
       type: 'danger',
       title: 'Akses Rahasia & Tanggung Jawab Absolut',
-      desc: 'Akses Admin Panel bersifat RAHASIA dan eksklusif. Anda DILARANG KERAS membagikan kredensial, token akses, atau mempersilakan orang lain mengoperasikan panel ini. Setiap tindakan dalam panel ini tercatat secara permanen dan menjadi tanggung jawab hukum penuh Admin.',
+      desc: 'Akses Admin Panel bersifat RAHASIA dan eksklusif. Anda DILARANG KERAS membagikan kredensial atau mempersilakan orang lain mengoperasikan panel ini. Setiap tindakan tercatat secara permanen dan menjadi tanggung jawab hukum penuh Admin.',
     },
     {
       type: 'danger',
       title: 'Larangan Penyalahgunaan Kekuasaan',
-      desc: 'Dilarang keras melakukan ban/suspensi partner tanpa alasan yang terdokumentasi dan dapat diverifikasi. Dilarang mengubah, memanipulasi, atau menghapus data transaksi/statistik untuk kepentingan pribadi. Pelanggaran ini dapat berujung pada tindakan hukum.',
+      desc: 'Dilarang keras melakukan ban/suspensi partner tanpa alasan terdokumentasi. Dilarang mengubah, memanipulasi, atau menghapus data transaksi/statistik untuk kepentingan pribadi. Dilarang menghapus notifikasi resmi yang belum dibaca mayoritas pengguna tanpa persetujuan.',
     },
     {
       type: 'danger',
       title: 'Kerahasiaan Data Pengguna (Wajib)',
-      desc: 'Data pribadi seluruh pengguna (email, rekening bank, riwayat transaksi, kode referral) bersifat RAHASIA MUTLAK. Dilarang keras membagikan, menjual, mendiskusikan, atau menggunakan data pengguna di luar kepentingan operasional platform. Pelanggaran adalah kejahatan data.',
+      desc: 'Data pribadi seluruh pengguna (email, nama, rekening bank, riwayat transaksi, kode referral, status notifikasi) bersifat RAHASIA MUTLAK. Dilarang keras membagikan, menjual, atau menggunakan data pengguna di luar kepentingan operasional platform.',
+    },
+    {
+      type: 'warning',
+      title: 'Kelola Notifikasi dengan Bijak',
+      desc: 'Setiap pembuatan Promo Code akan otomatis mengirim notifikasi ke seluruh pengguna. Pastikan promo yang dibuat valid dan aktif sebelum dipublikasikan. Notifikasi yang salah/spam akan menurunkan kepercayaan pengguna terhadap platform.',
     },
     {
       type: 'warning',
       title: 'Proses Penarikan Dana Partner (Wajib Tepat Waktu)',
-      desc: 'Permintaan penarikan dana dari partner WAJIB diproses maksimal 3×24 jam kerja setelah permintaan masuk. Admin wajib memverifikasi keaslian nomor rekening sebelum melakukan transfer. Kelalaian memproses penarikan dana tepat waktu adalah pelanggaran tanggung jawab Admin.',
-    },
-    {
-      type: 'warning',
-      title: 'Pengaturan API & Konfigurasi Keuangan',
-      desc: 'Perubahan mode API (Sandbox ↔ Production) hanya boleh dilakukan saat periode maintenance atau setelah pengujian menyeluruh. Kesalahan konfigurasi yang mengakibatkan kerugian finansial pada pengguna atau platform adalah tanggung jawab penuh Admin yang bersangkutan.',
+      desc: 'Permintaan penarikan dana dari partner WAJIB diproses maksimal 3×24 jam kerja setelah permintaan masuk. Admin wajib memverifikasi keaslian nomor rekening sebelum melakukan transfer. Kelalaian adalah pelanggaran tanggung jawab Admin.',
     },
     {
       type: 'info',
-      title: 'Pembuatan & Pengelolaan Promo Code',
-      desc: 'Setiap promo code yang dibuat HARUS memiliki tujuan yang jelas, terdokumentasi (kampanye, event, reward partner), dan batas pemakaian (limit) yang terukur. Dilarang membuat promo code tanpa batas pemakaian yang berpotensi menimbulkan kerugian finansial tidak terkontrol.',
+      title: 'Sistem Lencana Partner Otomatis',
+      desc: 'Lencana partner diperbarui otomatis oleh sistem berdasarkan total pendapatan kumulatif (≥1Jt, ≥2Jt, ≥5Jt, ≥10Jt). Admin tidak perlu mengatur lencana secara manual. Pantau level badge partner melalui halaman manajemen partner di Admin Panel.',
     },
   ];
 
@@ -115,13 +115,13 @@ const WelcomeModal = ({ role = 'partner', storageKey, onClose }) => {
       icon: <CheckCircle size={22} />,
       color: '#10b981',
       title: 'Live Preview Demo',
-      desc: 'Tambahkan URL demo aplikasi Anda agar pembeli bisa mencoba langsung sebelum membeli via iframe modal interaktif di halaman detail proyek. Meningkatkan kepercayaan & konversi.',
+      desc: 'Tambahkan URL demo aplikasi Anda agar pembeli bisa mencoba langsung sebelum membeli. Meningkatkan kepercayaan & konversi penjualan secara signifikan.',
     },
     {
       icon: <Shield size={22} />,
       color: '#8b5cf6',
-      title: 'Analitik Penjualan',
-      desc: 'Pantau grafik pendapatan harian, jumlah transaksi, dan performa proyek Anda di tab Analitik. Data divisualisasikan dalam chart interaktif dengan recharts.',
+      title: 'Sistem Lencana (Badge) Otomatis',
+      desc: 'Semakin tinggi total pendapatan Anda, semakin tinggi lencana yang Anda raih: 🟢 Mitra Dasar (≥1Jt) → 🔵 Mitra Profesional (≥2Jt) → 🟣 Mitra Ahli (≥5Jt) → 💎 Mitra Elite (≥10Jt). Badge tampil otomatis di profil publik.',
     },
     {
       icon: <BookOpen size={22} />,
@@ -132,8 +132,8 @@ const WelcomeModal = ({ role = 'partner', storageKey, onClose }) => {
     {
       icon: <Info size={22} />,
       color: '#ef4444',
-      title: 'Badge Tier & Reputasi',
-      desc: 'Semakin tinggi total penjualan, semakin tinggi tier badge Anda: Bronze → Silver → Gold → Platinum → Diamond. Badge tampil di profil publik dan meningkatkan kepercayaan pembeli.',
+      title: 'Referral & Komisi Afiliasi',
+      desc: 'Bagikan kode referral unik Anda kepada teman. Setiap pengguna yang mendaftar menggunakan kode Anda akan memberikan komisi afiliasi langsung ke saldo Anda. Kode juga bisa diisi saat pendaftaran.',
     },
   ];
 
@@ -141,32 +141,32 @@ const WelcomeModal = ({ role = 'partner', storageKey, onClose }) => {
     {
       type: 'danger',
       title: 'Keaslian & Hak Cipta — Kewajiban Mutlak',
-      desc: 'Anda WAJIB hanya mengunggah source code yang Anda buat sendiri atau yang Anda miliki lisensi resmi dan tertulis untuk dijual kembali. Mengunggah source code hasil plagiarisme, clone tanpa izin, atau karya orang lain tanpa hak adalah PELANGGARAN BERAT yang berakibat BAN PERMANEN tanpa peringatan dan dapat berujung pada tuntutan hukum hak cipta.',
+      desc: 'Anda WAJIB hanya mengunggah source code yang Anda buat sendiri atau yang Anda miliki lisensi resmi untuk dijual kembali. Mengunggah plagiarisme atau karya orang lain tanpa hak adalah PELANGGARAN BERAT yang berakibat BAN PERMANEN tanpa peringatan dan dapat berujung pada tuntutan hukum hak cipta.',
     },
     {
       type: 'danger',
       title: 'Konten Terlarang — Nol Toleransi',
-      desc: 'Platform menerapkan kebijakan NOL TOLERANSI terhadap konten ilegal. DILARANG KERAS mengunggah source code yang mengandung: malware/virus/spyware, exploit hacking ilegal, konten pornografi/dewasa, konten SARA yang memecah belah, atau konten yang melanggar hukum Negara Republik Indonesia. Sanksi: BAN PERMANEN seketika dan pelaporan kepada pihak berwajib.',
+      desc: 'Platform menerapkan kebijakan NOL TOLERANSI. DILARANG KERAS mengunggah source code yang mengandung: malware/virus/spyware, exploit hacking ilegal, konten pornografi/dewasa, konten SARA, atau konten yang melanggar hukum Negara Republik Indonesia. Sanksi: BAN PERMANEN seketika.',
     },
     {
       type: 'danger',
       title: 'Sanksi BAN PERMANEN & Hangusan Saldo',
-      desc: 'Apabila akun Anda dibanned: (1) Seluruh proyek dihapus seketika dari marketplace. (2) Seluruh saldo pendapatan yang belum dicairkan dihanguskan tanpa kompensasi. (3) Email, nomor telepon, dan IP Anda dimasukkan ke Daftar Hitam permanen. (4) Anda tidak dapat mendaftar kembali dalam bentuk apapun. Keputusan ban tidak dapat dibanding.',
+      desc: 'Apabila akun Anda dibanned: (1) Seluruh proyek dihapus seketika. (2) Seluruh saldo dan komisi afiliasi yang belum dicairkan dihanguskan tanpa kompensasi. (3) Email dan IP Anda dimasukkan ke Daftar Hitam permanen. (4) Anda tidak dapat mendaftar kembali dalam bentuk apapun.',
     },
     {
       type: 'warning',
       title: 'Standar Kualitas Proyek (Wajib)',
-      desc: 'Setiap source code yang dijual HARUS dapat dijalankan sesuai deskripsi yang Anda cantumkan, dilengkapi README yang jelas dan komprehensif, serta telah diuji dengan benar. Proyek yang terbukti tidak berfungsi, mengandung deskripsi menyesatkan, atau mengelabui pembeli akan diturunkan dari marketplace dan saldo Anda dapat ditahan selama investigasi.',
+      desc: 'Setiap source code HARUS dapat dijalankan sesuai deskripsi yang Anda cantumkan, dilengkapi README yang jelas, serta telah diuji dengan benar. Proyek yang terbukti tidak berfungsi atau mengandung deskripsi menyesatkan akan diturunkan dan saldo dapat ditahan selama investigasi.',
     },
     {
       type: 'info',
-      title: 'Sistem Komisi Platform & Pembagian Pendapatan',
-      desc: 'Platform FREEWITHRIDHO mengambil komisi dari setiap transaksi berhasil. Saldo bersih Anda akan dikreditkan ke dashboard setelah dipotong komisi platform. Detail persentase komisi dapat dilihat di pengaturan akun. FREEWITHRIDHO berhak mengubah persentase komisi dengan pemberitahuan sebelumnya.',
+      title: 'Sistem Lencana Otomatis',
+      desc: 'Buka dasbor Anda secara rutin agar sistem dapat memperbarui data total pendapatan Anda dan menampilkan lencana yang sesuai di profil publik. Lencana adalah cerminan reputasi Anda di mata pembeli.',
     },
     {
       type: 'info',
       title: 'Ketentuan Penarikan Dana (Withdrawal)',
-      desc: 'Penarikan minimum Rp 10.000. Waktu proses 3×24 jam kerja (tidak termasuk hari libur nasional). Pastikan data rekening bank yang Anda masukkan BENAR, AKTIF, dan atas nama Anda sendiri. FREEWITHRIDHO tidak bertanggung jawab atas kegagalan transfer akibat kesalahan data rekening yang diinput oleh Partner.',
+      desc: 'Penarikan minimum Rp 100.000. Waktu proses 3×24 jam kerja. Pastikan data rekening bank BENAR, AKTIF, dan atas nama Anda sendiri. FREEWITHRIDHO tidak bertanggung jawab atas kegagalan transfer akibat kesalahan data rekening yang diinput Partner.',
     },
   ];
 

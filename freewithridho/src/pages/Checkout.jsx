@@ -3,31 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getProjectById } from '../services/projectService';
 import { getSettings } from '../services/projectService';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2, Tag, X, RefreshCw } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2, Tag, X, RefreshCw, QrCode } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, onSnapshot, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, limit } from 'firebase/firestore';
 import { validatePromoCode } from '../services/promoService';
+import { getProjectPrice } from '../utils/flashSaleHelper';
 import './Checkout.css';
-
-// Inject Midtrans Snap.js script dynamically
-const loadSnapScript = (clientKey, isSandbox) => {
-  return new Promise((resolve, reject) => {
-    // Remove old script if exists
-    const existing = document.getElementById('midtrans-snap');
-    if (existing) existing.remove();
-
-    const script = document.createElement('script');
-    script.id = 'midtrans-snap';
-    script.src = isSandbox
-      ? 'https://app.sandbox.midtrans.com/snap/snap.js'
-      : 'https://app.midtrans.com/snap/snap.js';
-    script.setAttribute('data-client-key', clientKey);
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Gagal memuat Midtrans Snap'));
-    document.head.appendChild(script);
-  });
-};
 
 const Checkout = () => {
   const { id } = useParams();
@@ -38,14 +20,17 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState(false);
-  const [midtransConfig, setMidtransConfig] = useState(null);
-  const [showSnap, setShowSnap] = useState(false);
-  const [pendingTransaction, setPendingTransaction] = useState(null); // existing PENDING trx
+  const [instanpayConfig, setInstanpayConfig] = useState(null);
+  const [pendingTransaction, setPendingTransaction] = useState(null);
 
   // Promo code state
   const [promoCodeInput, setPromoCodeInput] = useState('');
   const [validPromo, setValidPromo] = useState(null);
   const [checkingPromo, setCheckingPromo] = useState(false);
+
+  const [paymentDetails, setPaymentDetails] = useState(null);
+
+  const basePrice = project ? getProjectPrice(project) : 0;
 
   useEffect(() => {
     if (!user) {
@@ -57,7 +42,7 @@ const Checkout = () => {
       try {
         const [data, settings] = await Promise.all([
           getProjectById(id),
-          getSettings('midtrans')
+          getSettings('instanpay')
         ]);
 
         if (!data) {
@@ -68,14 +53,8 @@ const Checkout = () => {
           setProject(data);
         }
 
-        if (settings && settings.clientKey) {
-          setMidtransConfig(settings);
-          // Pre-load snap script
-          try {
-            await loadSnapScript(settings.clientKey, settings.environment !== 'production');
-          } catch (e) {
-            console.warn('Snap preload failed:', e.message);
-          }
+        if (settings && settings.apiKey) {
+          setInstanpayConfig(settings);
         }
       } catch (err) {
         setError('Gagal memuat detail proyek.');
@@ -116,6 +95,9 @@ const Checkout = () => {
         
         if (!isExpired) {
           setPendingTransaction({ id: doc.id, ...txData });
+          
+          // If a payment was pending, and we get an update that it's success (though the query filters PENDING, 
+          // let's say the webhook updates it to SETTLEMENT, the snapshot will be empty, redirecting logic below)
         } else {
           setPendingTransaction(null);
         }
@@ -125,16 +107,33 @@ const Checkout = () => {
     });
     return () => unsubscribe();
   }, [user, id]);
+  
+  // Real-time listener for current transaction success
+  useEffect(() => {
+    if (!paymentDetails || !user) return;
+    const q = query(
+      collection(db, 'transactions'),
+      where('merchantRef', '==', paymentDetails.merchantRef),
+      limit(1)
+    );
+    const unsubscribe = onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        const txData = snap.docs[0].data();
+        if (txData.status === 'SETTLEMENT' || txData.status === 'SUCCESS') {
+           toast.success('Pembayaran berhasil!');
+           navigate(`/success?reference=${paymentDetails.merchantRef}&transaction_status=settlement`);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [paymentDetails, user, navigate]);
 
   const handleCheckout = async () => {
     const loadingToast = toast.loading('Memproses pembayaran...');
     try {
       setProcessing(true);
 
-      // Request ke API lokal (Express Server)
-      const endpoint = '/api/create-transaction';
-
-      const basePrice = (project.discountPrice && project.discountPrice > 0) ? Number(project.discountPrice) : Number(project.price);
+      const endpoint = '/.netlify/functions/create-transaction';
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -148,19 +147,29 @@ const Checkout = () => {
         }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let data;
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Non-JSON response dari server:', text);
+        throw new Error(
+          response.status === 404
+            ? 'Function tidak ditemukan. Jalankan server dengan: netlify dev'
+            : `Server error (${response.status}): ${text.substring(0, 100)}`
+        );
+      }
       
       if (!response.ok) {
         throw new Error(data.message || 'Gagal memproses pembayaran');
       }
 
-      toast.success('Membuka gerbang pembayaran...', { id: loadingToast });
+      toast.success('Kode QRIS berhasil dibuat!', { id: loadingToast });
       
-      // Simpan transaksi sebagai PENDING di Firestore
       try {
         await addDoc(collection(db, 'transactions'), {
           merchantRef: data.merchantRef,
-          snapToken: data.reference || null,
           projectId: id,
           projectTitle: project.title,
           userId: user.uid,
@@ -170,13 +179,15 @@ const Checkout = () => {
           promoCode: validPromo ? validPromo.code : null,
           status: 'PENDING',
           createdAt: serverTimestamp(),
+          qrCodeSvg: data.qrCodeSvg,
+          qrisString: data.qrisString,
         });
       } catch (e) {
         console.warn('Gagal menyimpan transaksi PENDING:', e);
       }
 
-      // Buka popup Midtrans Snap ter-embed
-      openSnapEmbed(data.reference, data.merchantRef);
+      setPaymentDetails(data);
+      setProcessing(false);
 
     } catch (err) {
       console.error(err);
@@ -185,48 +196,23 @@ const Checkout = () => {
     }
   };
 
-  // Lanjutkan bayar dari transaksi PENDING yang sudah ada
   const handleResumePendingPayment = () => {
-    if (!pendingTransaction?.snapToken) {
-      toast.error('Token pembayaran tidak ditemukan. Silakan buat transaksi baru.');
+    if (!pendingTransaction?.qrCodeSvg) {
+      toast.error('Kode QR tidak ditemukan. Silakan buat transaksi baru.');
       return;
     }
-    openSnapEmbed(pendingTransaction.snapToken, pendingTransaction.merchantRef);
-  };
-
-  // Buka Midtrans Snap embed
-  const openSnapEmbed = (snapToken, merchantRef) => {
-    setShowSnap(true);
-    setTimeout(() => {
-      window.snap.embed(snapToken, {
-        embedId: 'snap-container',
-        onSuccess: function (result) {
-          toast.success('Pembayaran berhasil!');
-          navigate(`/success?reference=${merchantRef}&transaction_status=settlement`);
-        },
-        onPending: function (result) {
-          toast.info('Menunggu pembayaran Anda...');
-          navigate(`/success?reference=${merchantRef}&transaction_status=pending`);
-        },
-        onError: function (result) {
-          toast.error('Pembayaran gagal.');
-          setProcessing(false);
-          setShowSnap(false);
-        },
-        onClose: function () {
-          // Jangan batalkan transaksi — biarkan PENDING agar user bisa kembali lagi
-          toast('Pembayaran ditutup. Anda bisa melanjutkan kapan saja.', { icon: '⏸️' });
-          setProcessing(false);
-          setShowSnap(false);
-        }
-      });
-    }, 100);
+    setPaymentDetails({
+      qrCodeSvg: pendingTransaction.qrCodeSvg,
+      qrisString: pendingTransaction.qrisString,
+      merchantRef: pendingTransaction.merchantRef,
+      totalFormatted: `Rp ${pendingTransaction.amount.toLocaleString('id-ID')}`
+    });
   };
 
   const handleApplyPromo = async () => {
     if (!promoCodeInput.trim()) return;
     setCheckingPromo(true);
-    const basePrice = (project.discountPrice && project.discountPrice > 0) ? Number(project.discountPrice) : Number(project.price);
+    
     const result = await validatePromoCode(promoCodeInput, basePrice);
     
     if (result.valid) {
@@ -242,6 +228,18 @@ const Checkout = () => {
   const handleRemovePromo = () => {
     setValidPromo(null);
     setPromoCodeInput('');
+  };
+
+  const handleDownloadQR = () => {
+    if (!paymentDetails?.qrCodeSvg) return;
+    const svgBlob = new Blob([paymentDetails.qrCodeSvg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `QRIS-${paymentDetails.merchantRef}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (loading) return (
@@ -283,19 +281,19 @@ const Checkout = () => {
                 placeholder="Punya kode promo?"
                 value={promoCodeInput}
                 onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
-                disabled={validPromo !== null || checkingPromo}
+                disabled={validPromo !== null || checkingPromo || paymentDetails !== null}
                 className="promo-input"
               />
               {!validPromo ? (
                 <button
                   className="btn-apply-promo"
                   onClick={handleApplyPromo}
-                  disabled={!promoCodeInput.trim() || checkingPromo}
+                  disabled={!promoCodeInput.trim() || checkingPromo || paymentDetails !== null}
                 >
                   {checkingPromo ? 'Cek...' : 'Terapkan'}
                 </button>
               ) : (
-                <button className="btn-remove-promo" onClick={handleRemovePromo} title="Hapus Promo">
+                <button className="btn-remove-promo" onClick={handleRemovePromo} title="Hapus Promo" disabled={paymentDetails !== null}>
                   <X size={16} />
                 </button>
               )}
@@ -307,10 +305,10 @@ const Checkout = () => {
           )}
         </div>
 
-          {project.discountPrice && project.discountPrice > 0 ? (
+          {basePrice < project.price ? (
             <div className="summary-item">
               <span className="summary-label">Harga Diskon</span>
-              <span className="summary-value price">Rp {project.discountPrice.toLocaleString('id-ID')}</span>
+              <span className="summary-value price">Rp {basePrice.toLocaleString('id-ID')}</span>
             </div>
           ) : (
             <div className="summary-item">
@@ -327,24 +325,23 @@ const Checkout = () => {
           <div className="summary-item total">
             <span className="summary-label">Total Pembayaran</span>
             <span className="summary-value price final-price">
-              Rp {(validPromo ? validPromo.finalAmount : ((project.discountPrice && project.discountPrice > 0) ? project.discountPrice : project.price)).toLocaleString('id-ID')}
+              {paymentDetails?.totalFormatted || `Rp ${(validPromo ? validPromo.finalAmount : basePrice).toLocaleString('id-ID')}`}
             </span>
           </div>
         </div>
 
         <div className="checkout-security">
-          <ShieldCheck size={18} /> Pembayaran diproses dengan aman oleh Midtrans.
+          <ShieldCheck size={18} /> Pembayaran diproses dengan aman oleh Instanpay.
         </div>
 
-        {!midtransConfig?.clientKey && (
+        {!instanpayConfig?.apiKey && (
           <div className="checkout-warning">
-            ⚠️ Konfigurasi Midtrans belum diatur. Admin harus mengisi Client Key & Server Key terlebih dahulu di Admin Panel → Settings.
+            ⚠️ Konfigurasi Instanpay belum diatur. Admin harus mengisi API Key terlebih dahulu di Admin Panel → Settings.
           </div>
         )}
 
-        {!showSnap ? (
+        {!paymentDetails ? (
           <div className="checkout-pay-section">
-            {/* Jika ada PENDING transaction yang belum selesai, tampilkan tombol Lanjutkan Bayar */}
             {pendingTransaction && (
               <div className="pending-trx-notice">
                 <p>⏸️ Anda memiliki pembayaran yang belum selesai untuk proyek ini.</p>
@@ -361,17 +358,38 @@ const Checkout = () => {
             <button
               className="btn-pay"
               onClick={handleCheckout}
-              disabled={processing || !midtransConfig?.clientKey}
+              disabled={processing || !instanpayConfig?.apiKey}
             >
               {processing ? (
                 <><Loader2 size={18} className="spin-icon" /> Memproses...</>
               ) : (
-                'Lanjutkan ke Pembayaran'
+                'Bayar dengan QRIS'
               )}
             </button>
           </div>
         ) : (
-          <div id="snap-container" className="snap-embed-container"></div>
+          <div className="qris-container" style={{ textAlign: 'center', background: 'rgba(255,255,255,0.05)', padding: '2rem', borderRadius: '12px', marginTop: '1.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <h3 style={{ marginBottom: '1rem', color: '#fff' }}><QrCode style={{ display: 'inline', verticalAlign: 'middle', marginRight: 8 }}/> Scan QRIS untuk Membayar</h3>
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Buka aplikasi e-wallet atau m-banking Anda dan scan kode di bawah ini.</p>
+            
+            <div 
+              style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', marginBottom: '1.5rem' }}
+              dangerouslySetInnerHTML={{ __html: paymentDetails.qrCodeSvg }}
+            />
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+              <button 
+                onClick={handleDownloadQR}
+                className="btn-apply-promo" 
+                style={{ padding: '0.75rem 1.5rem', width: 'auto', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.3)' }}
+              >
+                Unduh QR Code
+              </button>
+              <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '1rem' }}>
+                Menunggu pembayaran... Halaman akan otomatis beralih jika pembayaran berhasil.
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </div>

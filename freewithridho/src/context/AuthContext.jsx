@@ -1,6 +1,6 @@
 // Auth Context — provides global authentication state to the whole app
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
@@ -54,13 +54,18 @@ export const AuthProvider = ({ children }) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  const register = async (email, password) => {
+  const register = async (email, password, name) => {
     const bannedRef = doc(db, 'banned_users', email.toLowerCase());
     const snap = await getDoc(bannedRef);
     if (snap.exists()) {
       throw new Error('Email ini telah diblokir dan tidak dapat digunakan lagi.');
     }
-    return createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // Save display name immediately so navbar shows it right away
+    if (name && name.trim()) {
+      await updateProfile(userCredential.user, { displayName: name.trim() });
+    }
+    return userCredential;
   };
 
   const logout = async () => {

@@ -1,5 +1,4 @@
-'use strict';
-const admin = require('firebase-admin');
+import admin from 'firebase-admin';
 
 // Initialize Firebase Admin once
 if (!admin.apps.length) {
@@ -13,25 +12,23 @@ if (!admin.apps.length) {
   }
 }
 
-exports.handler = async (event) => {
+// ✅ ESM format — kompatibel dengan Netlify CLI v17+
+export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ message: 'Method Not Allowed' }) };
   }
 
   try {
-    // Basic authorization check - you should ideally pass the admin's token in headers
-    // and verify it with admin.auth().verifyIdToken() to ensure only admin can delete users
+    // Basic authorization check
     const authHeader = event.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
       return { statusCode: 401, body: JSON.stringify({ message: 'Unauthorized' }) };
     }
     const token = authHeader.split('Bearer ')[1];
-    
+
     // Verify admin token
     const decodedToken = await admin.auth().verifyIdToken(token);
-    // You should check if decodedToken.email matches your admin email if possible
-    // (Assuming admin email is checked on frontend, this is an extra layer of security)
-    
+
     const { userId } = JSON.parse(event.body);
 
     if (!userId) {
@@ -44,13 +41,13 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true, message: 'User auth account deleted.' })
+      body: JSON.stringify({ success: true, message: 'User auth account deleted.' }),
     };
   } catch (error) {
     console.error('Error deleting user:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: error.message })
+      body: JSON.stringify({ success: false, message: error.message }),
     };
   }
 };

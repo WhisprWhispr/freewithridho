@@ -15,6 +15,7 @@ import { getProjectById, checkUserPurchase } from '../services/projectService';
 import { isWishlisted, toggleWishlist, isWishlistedFirestore, toggleWishlistFirestore } from '../services/wishlistService';
 import { listenToProjectReviews } from '../services/reviewService';
 import { listenToComments } from '../services/discussionService';
+import { isFlashSaleActive, getProjectPrice } from '../utils/flashSaleHelper';
 import DiscussionModal from '../components/DiscussionModal';
 import ReviewModal from '../components/ReviewModal';
 import './ProjectDetail.css';
@@ -251,7 +252,7 @@ const ProjectDetail = () => {
 
   const images = project.images?.filter(img => img.trim() !== '') || [];
   const isFree = !project.price || project.price === 0;
-  const finalPrice = (project.isFlashSale && project.discountPrice > 0) ? project.discountPrice : project.price;
+  const finalPrice = getProjectPrice(project);
 
   return (
     <div className="detail-page">
@@ -414,7 +415,7 @@ const ProjectDetail = () => {
                     <span className="price-label">Harga</span>
                     <span className="price-value free-price">Gratis</span>
                   </>
-                ) : project.isFlashSale ? (
+                ) : isFlashSaleActive(project) ? (
                   <>
                     <span className="price-label" style={{ color: '#ef4444', fontWeight: 600 }}>⚡ Flash Sale</span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>

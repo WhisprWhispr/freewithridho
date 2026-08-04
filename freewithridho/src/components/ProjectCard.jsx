@@ -3,6 +3,7 @@ import { Download, ChevronRight, Heart, Eye } from 'lucide-react';
 import { isWishlisted, toggleWishlist } from '../services/wishlistService';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { getProjectPrice } from '../utils/flashSaleHelper';
 import './ProjectCard.css';
 
 const ProjectCard = ({ project }) => {
@@ -26,8 +27,8 @@ const ProjectCard = ({ project }) => {
         <span className={`category-badge badge-${project.category ? project.category.toLowerCase() : 'all'}`}>
           {project.category || 'Uncategorized'}
         </span>
-        <span className={`price-badge ${project.price > 0 ? 'paid' : 'free'}`}>
-          {project.price > 0 ? `Rp ${project.price.toLocaleString('id-ID')}` : 'Gratis'}
+        <span className={`price-badge ${getProjectPrice(project) > 0 ? 'paid' : 'free'}`}>
+          {getProjectPrice(project) > 0 ? `Rp ${getProjectPrice(project).toLocaleString('id-ID')}` : 'Gratis'}
         </span>
       </div>
 

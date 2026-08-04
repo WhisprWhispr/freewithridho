@@ -58,6 +58,28 @@
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3) !important;
 }
 
+/* Elite Badge (Gold) */
+.badge-elite {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.35) !important;
+}
+
+.badge-elite:hover {
+  box-shadow: 0 4px 16px rgba(234, 179, 8, 0.3) !important;
+}
+
+/* Basic Badge (Gray) */
+.badge-basic {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+}
+
+.badge-basic:hover {
+  box-shadow: 0 4px 16px rgba(148, 163, 184, 0.2) !important;
+}
+
 /* ── Badge Popup ─────────────────────────────────────────── */
 .badge-popup-overlay {
   position: fixed;

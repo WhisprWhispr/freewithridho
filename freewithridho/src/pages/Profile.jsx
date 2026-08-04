@@ -239,8 +239,8 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                 <Star size={13} />
                 Member
               </span>
-              {partner && getBadgeTier(partner.totalEarnings) > 0 && (
-                <PartnerBadge tier={getBadgeTier(partner.totalEarnings)} size="sm" />
+              {partner && getBadgeTier(partner.totalEarnings !== undefined ? partner.totalEarnings : partner.balance) > 0 && (
+                <PartnerBadge tier={getBadgeTier(partner.totalEarnings !== undefined ? partner.totalEarnings : partner.balance)} size="sm" />
               )}
             </div>
           </div>

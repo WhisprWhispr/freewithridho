@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { listenToPartnerByUserId, submitWithdrawal } from '../services/partnerService';
 import { listenToProjects, addProject, deleteProject, updateProject } from '../services/projectService';
@@ -21,6 +23,8 @@ const emptyForm = {
   demoUrl: '',
   isFlashSale: false,
   discountPrice: 0,
+  flashSaleStartDate: '',
+  flashSaleEndDate: '',
 };
 
 const PartnerDashboard = () => {
@@ -60,10 +64,16 @@ const PartnerDashboard = () => {
         // Removed partner affiliate balance/count to focus on user referral
 
         // Load withdrawals once we have partner id
-        import('../services/partnerService').then(({ listenToWithdrawals }) => {
+        import('../services/partnerService').then(({ listenToWithdrawals, updatePartnerTotalEarnings }) => {
           listenToWithdrawals((allWithdrawals) => {
             const myWithdrawals = allWithdrawals.filter(w => w.partnerId === data.id);
             setPartnerWithdrawals(myWithdrawals);
+            
+            // Auto-cache total earnings to Firestore so Public Profile can read it without needing withdrawal data
+            const currentEarnings = (data.balance || 0) + myWithdrawals.reduce((sum, w) => sum + w.amount, 0);
+            if (currentEarnings !== data.totalEarnings) {
+              updatePartnerTotalEarnings(data.id, currentEarnings);
+            }
           });
         });
       }
@@ -190,6 +200,8 @@ const PartnerDashboard = () => {
       demoUrl: project.demoUrl || '',
       isFlashSale: project.isFlashSale || false,
       discountPrice: project.discountPrice || 0,
+      flashSaleStartDate: project.flashSaleStartDate || '',
+      flashSaleEndDate: project.flashSaleEndDate || '',
     });
     setEditingId(project.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -305,16 +317,26 @@ const PartnerDashboard = () => {
   let nextTierTarget = 0;
   let progressPercent = 100;
   let tierName = "Mitra Pemula";
-  let nextTierName = "Mitra Berprestasi";
+  let nextTierName = "Mitra Dasar";
 
   if (currentTier === 0) {
-    nextTierTarget = 500000;
+    nextTierTarget = 1000000;
     progressPercent = (currentEarnings / nextTierTarget) * 100;
   } else if (currentTier === 1) {
-    tierName = "Mitra Berprestasi";
+    tierName = "Mitra Dasar";
+    nextTierName = "Mitra Profesional";
+    nextTierTarget = 2000000;
+    progressPercent = ((currentEarnings - 1000000) / (2000000 - 1000000)) * 100;
+  } else if (currentTier === 2) {
+    tierName = "Mitra Profesional";
+    nextTierName = "Mitra Elite";
+    nextTierTarget = 5000000;
+    progressPercent = ((currentEarnings - 2000000) / (5000000 - 2000000)) * 100;
+  } else if (currentTier === 3) {
+    tierName = "Mitra Elite";
     nextTierName = "Mitra Terverifikasi";
-    nextTierTarget = 1000000;
-    progressPercent = ((currentEarnings - 500000) / 500000) * 100;
+    nextTierTarget = 10000000;
+    progressPercent = ((currentEarnings - 5000000) / (10000000 - 5000000)) * 100;
   } else {
     tierName = "Mitra Terverifikasi";
     nextTierName = "Max Tier";
@@ -717,48 +739,84 @@ const PartnerDashboard = () => {
                 {form.isFlashSale && (
                   <div style={{ 
                     marginTop: '1.25rem', 
-                    paddingTop: '1.25rem', 
-                    borderTop: '1px dashed rgba(239, 68, 68, 0.3)',
-                    animation: 'fadeInDown 0.3s ease forwards'
+                    padding: '1.25rem', 
+                    border: '1px dashed rgba(239, 68, 68, 0.3)',
+                    background: 'rgba(0,0,0,0.2)',
+                    borderRadius: '12px',
+                    animation: 'fadeInDown 0.3s ease forwards',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem'
                   }}>
-                    <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                      Harga Diskon Flash Sale *
-                    </label>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ 
-                        position: 'absolute', 
-                        left: '1rem', 
-                        color: '#f87171', 
-                        fontWeight: 700,
-                        fontSize: '1.1rem',
-                        pointerEvents: 'none'
-                      }}>
-                        Rp
-                      </span>
-                      <input 
-                        type="text" 
-                        placeholder="Misal: 50000"
-                        value={form.discountPrice !== '' && form.discountPrice !== undefined ? form.discountPrice.toLocaleString('id-ID') : ''}
-                        onChange={e => {
-                          const rawValue = e.target.value.replace(/\D/g, '');
-                          setForm({...form, discountPrice: rawValue ? parseInt(rawValue, 10) : ''});
-                        }} 
-                        required={form.isFlashSale} 
-                        style={{
-                          width: '100%',
-                          padding: '0.8rem 1rem 0.8rem 2.8rem',
-                          borderRadius: '8px',
-                          border: '2px solid rgba(239, 68, 68, 0.4)',
-                          background: 'rgba(0,0,0,0.2)',
-                          color: 'white',
+                    <div>
+                      <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                        Harga Diskon Flash Sale (Rp) *
+                      </label>
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <span style={{ 
+                          position: 'absolute', 
+                          left: '1rem', 
+                          color: '#f87171', 
                           fontWeight: 700,
                           fontSize: '1.1rem',
-                          outline: 'none',
-                          transition: 'border-color 0.2s',
-                        }}
-                        onFocus={(e) => e.target.style.borderColor = '#ef4444'}
-                        onBlur={(e) => e.target.style.borderColor = 'rgba(239, 68, 68, 0.4)'}
-                      />
+                          pointerEvents: 'none'
+                        }}>
+                          Rp
+                        </span>
+                        <input 
+                          type="text" 
+                          placeholder="Misal: 50000"
+                          value={form.discountPrice !== '' && form.discountPrice !== undefined ? form.discountPrice.toLocaleString('id-ID') : ''}
+                          onChange={e => {
+                            const rawValue = e.target.value.replace(/\D/g, '');
+                            setForm({...form, discountPrice: rawValue ? parseInt(rawValue, 10) : ''});
+                          }} 
+                          required={form.isFlashSale} 
+                          style={{
+                            width: '100%',
+                            padding: '0.8rem 1rem 0.8rem 2.8rem',
+                            borderRadius: '8px',
+                            border: '2px solid rgba(239, 68, 68, 0.4)',
+                            background: 'rgba(0,0,0,0.2)',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '1.1rem',
+                            outline: 'none',
+                            transition: 'border-color 0.2s',
+                          }}
+                          onFocus={(e) => e.target.style.borderColor = '#ef4444'}
+                          onBlur={(e) => e.target.style.borderColor = 'rgba(239, 68, 68, 0.4)'}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          Waktu Mulai *
+                        </label>
+                        <input 
+                          type="datetime-local"
+                          className="form-input" 
+                          value={form.flashSaleStartDate} 
+                          onChange={e => setForm({...form, flashSaleStartDate: e.target.value})}
+                          required={form.isFlashSale} 
+                          style={{ borderColor: 'rgba(239, 68, 68, 0.3)', width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ color: '#fca5a5', fontWeight: 600, display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          Waktu Berakhir *
+                        </label>
+                        <input 
+                          type="datetime-local"
+                          className="form-input" 
+                          value={form.flashSaleEndDate} 
+                          onChange={e => setForm({...form, flashSaleEndDate: e.target.value})}
+                          required={form.isFlashSale} 
+                          style={{ borderColor: 'rgba(239, 68, 68, 0.3)', width: '100%' }}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

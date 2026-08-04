@@ -5,6 +5,7 @@ import { listenToApprovedDevCount } from '../services/partnerService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import ProjectCard from '../components/ProjectCard';
+import { isFlashSaleActive } from '../utils/flashSaleHelper';
 import { Search, Code2, Users, Star, Zap, Clock } from 'lucide-react';
 import './Home.css';
 
@@ -64,7 +65,7 @@ const Home = () => {
   // Derived real-time stats
   const totalProjects = projects.length;
   const freeProjects = projects.filter(p => !p.price || p.price === 0).length;
-  const flashSaleProjects = projects.filter(p => p.isFlashSale && p.discountPrice);
+  const flashSaleProjects = projects.filter(p => isFlashSaleActive(p) && p.discountPrice);
 
   const countProjects = useCountUp(statsVisible ? totalProjects : 0);
   const countFree    = useCountUp(statsVisible ? freeProjects : 0);
@@ -158,64 +159,66 @@ const Home = () => {
       {/* Flash Sale Banner */}
       {!loading && flashSaleProjects.length > 0 && (
         <section className="flash-sale-section">
-          {/* Header */}
-          <div className="flash-sale-header">
-            <div className="flash-sale-title">
-              <div className="flash-icon-wrap">
-                <Zap size={20} className="flash-icon" />
+          <div className="flash-sale-container">
+            {/* Header */}
+            <div className="flash-sale-header">
+              <div className="flash-sale-title">
+                <div className="flash-icon-wrap">
+                  <Zap size={20} className="flash-icon" />
+                </div>
+                <div>
+                  <h2>⚡ Flash Sale</h2>
+                  <p className="flash-sale-subtitle">Penawaran terbatas, jangan sampai terlewat!</p>
+                </div>
+                <span className="flash-badge">🔥 HOT</span>
               </div>
-              <div>
-                <h2>⚡ Flash Sale</h2>
-                <p className="flash-sale-subtitle">Penawaran terbatas, jangan sampai terlewat!</p>
+
+              <div className="flash-countdown">
+                <div className="flash-countdown-label">
+                  <Clock size={14} />
+                  <span>Berakhir dalam</span>
+                </div>
+                <div className="countdown-blocks">
+                  <div className="countdown-block">
+                    <span>{String(flashCountdown.hours).padStart(2, '0')}</span>
+                    <small>JAM</small>
+                  </div>
+                  <div className="countdown-sep">:</div>
+                  <div className="countdown-block">
+                    <span>{String(flashCountdown.minutes).padStart(2, '0')}</span>
+                    <small>MNT</small>
+                  </div>
+                  <div className="countdown-sep">:</div>
+                  <div className="countdown-block">
+                    <span>{String(flashCountdown.seconds).padStart(2, '0')}</span>
+                    <small>DTK</small>
+                  </div>
+                </div>
               </div>
-              <span className="flash-badge">🔥 HOT</span>
             </div>
 
-            <div className="flash-countdown">
-              <div className="flash-countdown-label">
-                <Clock size={14} />
-                <span>Berakhir dalam</span>
-              </div>
-              <div className="countdown-blocks">
-                <div className="countdown-block">
-                  <span>{String(flashCountdown.hours).padStart(2, '0')}</span>
-                  <small>JAM</small>
+            {/* Flash Sale Items */}
+            <div className="flash-sale-grid">
+              {(showAllFlashSale ? flashSaleProjects : flashSaleProjects.slice(0, 3)).map(project => (
+                <div key={project.id} className="flash-sale-card-wrap">
+                  <div className="flash-sale-discount-badge">
+                    -{Math.round(((project.price - project.discountPrice) / project.price) * 100)}%
+                  </div>
+                  <ProjectCard project={project} isFlashSale />
                 </div>
-                <div className="countdown-sep">:</div>
-                <div className="countdown-block">
-                  <span>{String(flashCountdown.minutes).padStart(2, '0')}</span>
-                  <small>MNT</small>
-                </div>
-                <div className="countdown-sep">:</div>
-                <div className="countdown-block">
-                  <span>{String(flashCountdown.seconds).padStart(2, '0')}</span>
-                  <small>DTK</small>
-                </div>
-              </div>
+              ))}
             </div>
-          </div>
-
-          {/* Flash Sale Items */}
-          <div className="flash-sale-grid">
-            {(showAllFlashSale ? flashSaleProjects : flashSaleProjects.slice(0, 3)).map(project => (
-              <div key={project.id} className="flash-sale-card-wrap">
-                <div className="flash-sale-discount-badge">
-                  -{Math.round(((project.price - project.discountPrice) / project.price) * 100)}%
-                </div>
-                <ProjectCard project={project} isFlashSale />
+            {flashSaleProjects.length > 3 && (
+              <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <button 
+                  onClick={() => setShowAllFlashSale(!showAllFlashSale)}
+                  className="btn-see-all-flash"
+                >
+                  {showAllFlashSale ? 'Tampilkan Lebih Sedikit' : `Lihat Semua Diskon (${flashSaleProjects.length})`}
+                </button>
               </div>
-            ))}
+            )}
           </div>
-          {flashSaleProjects.length > 3 && (
-            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <button 
-                onClick={() => setShowAllFlashSale(!showAllFlashSale)}
-                className="btn-see-all-flash"
-              >
-                {showAllFlashSale ? 'Tampilkan Lebih Sedikit' : `Lihat Semua Diskon (${flashSaleProjects.length})`}
-              </button>
-            </div>
-          )}
         </section>
       )}
 

@@ -240,7 +240,7 @@
 
 /* ── Hamburger ─────────────────────────────────────────────── */
 .hamburger {
-  display: none;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 5px;
@@ -315,10 +315,25 @@
   padding: 0.35rem 0.75rem;
 }
 
+/* ── Notification Bell Visibility ────────────────────── */
+/* Bell lives in .navbar-right-actions — always visible on all screens */
+
+/* Right actions wrapper (bell + hamburger on mobile) */
+.navbar-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+
 /* ── Responsive ─────────────────────────────────────────── */
+/* navbar-links hidden on all screens — navigation via hamburger */
+.navbar-links { display: none; }
+
 @media (max-width: 768px) {
-  .navbar-links { display: none; }
-  .hamburger { display: flex; }
+  /* On mobile: desktop bell hidden, mobile bell shown */
+  .notif-bell-desktop { display: none; }
+  .notif-bell-mobile  { display: flex; align-items: center; }
 
   .navbar-logo .logo-text {
     font-size: 0.95rem;

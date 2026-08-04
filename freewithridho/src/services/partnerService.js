@@ -65,6 +65,17 @@ export async function approvePartnerApplication(id, adminName, adminSignature) {
 }
 
 /**
+ * Cache total earnings to partner document
+ */
+export async function updatePartnerTotalEarnings(id, totalEarnings) {
+  if (!id) return;
+  const docRef = doc(db, COLLECTION, id);
+  await updateDoc(docRef, {
+    totalEarnings: totalEarnings
+  }).catch(e => console.warn('Could not update totalEarnings cache:', e));
+}
+
+/**
  * Listen to total approved developers count (Real-time for Home)
  */
 export function listenToApprovedDevCount(callback) {

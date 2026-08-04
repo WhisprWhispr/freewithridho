@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { ShieldCheck, Star, Crown, X, Award } from 'lucide-react';
+import { ShieldCheck, Star, Crown, X, Award, Trophy } from 'lucide-react';
 import './PartnerBadge.css';
 
 /**
  * Determines badge tier from totalEarnings (all-time)
  * Tier 0 = no badge
- * Tier 1 = Green (Rp 500.000+)  — "Mitra Berprestasi"
- * Tier 2 = Blue (Rp 1.000.000+) — "Mitra Terverifikasi"
+ * Tier 1 = Bronze (Rp 1.000.000+)  — "Mitra Dasar"
+ * Tier 2 = Silver/Green (Rp 2.000.000+) — "Mitra Profesional"
+ * Tier 3 = Gold (Rp 5.000.000+) — "Mitra Elite"
+ * Tier 4 = Blue (Rp 10.000.000+) — "Mitra Terverifikasi"
  * Special = "Administrator"
  */
 export function getBadgeTier(totalEarnings) {
-  if ((totalEarnings || 0) >= 1_000_000) return 2;
-  if ((totalEarnings || 0) >= 500_000) return 1;
+  if ((totalEarnings || 0) >= 10_000_000) return 4;
+  if ((totalEarnings || 0) >= 5_000_000) return 3;
+  if ((totalEarnings || 0) >= 2_000_000) return 2;
+  if ((totalEarnings || 0) >= 1_000_000) return 1;
   return 0;
 }
 
@@ -25,23 +29,41 @@ const BADGE_CONFIG = {
       'Akun ini adalah Administrator resmi platform FREEWITHRIDHO. Bertanggung jawab penuh atas pengelolaan, keamanan, dan kualitas seluruh konten di platform.',
     popupColor: '#a78bfa',
   },
-  2: {
+  4: {
     label: 'Mitra Terverifikasi',
     icon: ShieldCheck,
     className: 'badge-verified',
     popupTitle: '🔵 Mitra Terverifikasi',
     popupDesc:
-      'Lencana Biru diberikan kepada partner yang telah berhasil mencapai total pendapatan kumulatif Rp 1.000.000. Mencerminkan kepercayaan tinggi dari komunitas dan konsistensi karya berkualitas.',
+      'Lencana Spesial Biru diberikan kepada partner yang telah mencapai total pendapatan kumulatif Rp 10.000.000. Mencerminkan level tertinggi, kepercayaan penuh dari komunitas, dan konsistensi karya luar biasa.',
     popupColor: '#3b82f6',
   },
-  1: {
-    label: 'Mitra Berprestasi',
+  3: {
+    label: 'Mitra Elite',
+    icon: Trophy,
+    className: 'badge-elite',
+    popupTitle: '🟡 Mitra Elite',
+    popupDesc:
+      'Lencana Emas diberikan kepada partner yang telah meraih total pendapatan kumulatif Rp 5.000.000. Tanda pengakuan atas dedikasi kelas atas di platform.',
+    popupColor: '#eab308',
+  },
+  2: {
+    label: 'Mitra Profesional',
     icon: Award,
     className: 'badge-achieved',
-    popupTitle: '🟢 Mitra Berprestasi',
+    popupTitle: '🟢 Mitra Profesional',
     popupDesc:
-      'Lencana Hijau diberikan kepada partner yang telah berhasil meraih total pendapatan kumulatif Rp 500.000. Tanda pengakuan atas dedikasi dan kontribusi nyata di platform.',
+      'Lencana Hijau diberikan kepada partner yang telah meraih total pendapatan kumulatif Rp 2.000.000. Menunjukkan profesionalisme dan penjualan yang konsisten.',
     popupColor: '#10b981',
+  },
+  1: {
+    label: 'Mitra Dasar',
+    icon: Star,
+    className: 'badge-basic',
+    popupTitle: '⚪ Mitra Dasar',
+    popupDesc:
+      'Lencana Dasar diberikan kepada partner yang telah meraih pendapatan pertama Rp 1.000.000. Awal dari perjalanan sukses di platform.',
+    popupColor: '#94a3b8',
   },
 };
 
