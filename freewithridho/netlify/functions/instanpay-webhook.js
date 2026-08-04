@@ -1,12 +1,14 @@
-import admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+
 const fetchFn = typeof fetch !== 'undefined' ? fetch : null;
 
 // Initialize Firebase Admin once
-if (!admin.apps.length) {
+if (!getApps().length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+    initializeApp({
+      credential: cert(serviceAccount),
     });
   } catch (error) {
     console.error('Firebase Admin initialization error:', error);
@@ -30,9 +32,9 @@ export const handler = async (event) => {
   try {
     // 1. Fetch Instanpay API Key from Firestore to verify the webhook
     let apiKey = process.env.INSTANPAY_API_KEY;
-    if (admin.apps.length) {
+    if (getApps().length) {
       try {
-        const db = admin.firestore();
+        const db = getFirestore();
         const settingsDoc = await db.collection('settings').doc('instanpay').get();
         if (settingsDoc.exists && settingsDoc.data().apiKey) {
           apiKey = settingsDoc.data().apiKey;
@@ -88,9 +90,9 @@ export const handler = async (event) => {
 
     // If actual status matches the paid status 
     if (actualStatus === 'SETTLEMENT' || actualStatus === 'SUCCESS' || actualStatus === 'PAID') {
-      if (admin.apps.length) {
+      if (getApps().length) {
         try {
-          const db = admin.firestore();
+          const db = getFirestore();
           const snapshot = await db
             .collection('transactions')
             .where('merchantRef', '==', reference)
@@ -103,7 +105,7 @@ export const handler = async (event) => {
             if (txData.status !== 'PAID' && txData.status !== 'SETTLEMENT' && txData.status !== 'SUCCESS') {
               await db.collection('transactions').doc(docId).update({
                 status: 'PAID',
-                paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                paidAt: FieldValue.serverTimestamp(),
               });
               console.log(`✅ Transaction ${docId} updated to PAID`);
 
