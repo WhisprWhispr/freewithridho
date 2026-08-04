@@ -119,7 +119,7 @@ const Checkout = () => {
     const unsubscribe = onSnapshot(q, (snap) => {
       if (!snap.empty) {
         const txData = snap.docs[0].data();
-        if (txData.status === 'SETTLEMENT' || txData.status === 'SUCCESS') {
+        if (txData.status === 'SETTLEMENT' || txData.status === 'SUCCESS' || txData.status === 'PAID') {
            toast.success('Pembayaran berhasil!');
            navigate(`/success?reference=${paymentDetails.merchantRef}&transaction_status=settlement`);
         }
