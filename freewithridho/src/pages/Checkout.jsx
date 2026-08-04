@@ -29,6 +29,7 @@ const Checkout = () => {
   const [checkingPromo, setCheckingPromo] = useState(false);
 
   const [paymentDetails, setPaymentDetails] = useState(null);
+  const [timeLeft, setTimeLeft] = useState('');
 
   const basePrice = project ? getProjectPrice(project) : 0;
 
@@ -128,6 +129,33 @@ const Checkout = () => {
     return () => unsubscribe();
   }, [paymentDetails, user, navigate]);
 
+  // Countdown timer for QRIS
+  useEffect(() => {
+    if (!paymentDetails || !paymentDetails.expiredAt) return;
+    
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      // Handle both date object or ISO string from backend
+      const expirationTime = new Date(paymentDetails.expiredAt).getTime();
+      const difference = expirationTime - now;
+
+      if (difference > 0) {
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        // format with leading zero
+        const mStr = minutes.toString().padStart(2, '0');
+        const sStr = seconds.toString().padStart(2, '0');
+        setTimeLeft(`${mStr}:${sStr}`);
+      } else {
+        setTimeLeft('Kedaluwarsa');
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [paymentDetails]);
+
   const handleCheckout = async () => {
     const loadingToast = toast.loading('Memproses pembayaran...');
     try {
@@ -181,6 +209,7 @@ const Checkout = () => {
           createdAt: serverTimestamp(),
           qrCodeSvg: data.qrCodeSvg,
           qrisString: data.qrisString,
+          expiredAt: data.expiredAt,
         });
       } catch (e) {
         console.warn('Gagal menyimpan transaksi PENDING:', e);
@@ -205,6 +234,7 @@ const Checkout = () => {
       qrCodeSvg: pendingTransaction.qrCodeSvg,
       qrisString: pendingTransaction.qrisString,
       merchantRef: pendingTransaction.merchantRef,
+      expiredAt: pendingTransaction.expiredAt || null,
       totalFormatted: `Rp ${pendingTransaction.amount.toLocaleString('id-ID')}`
     });
   };
@@ -372,9 +402,15 @@ const Checkout = () => {
             <h3 style={{ marginBottom: '1rem', color: '#fff' }}><QrCode style={{ display: 'inline', verticalAlign: 'middle', marginRight: 8 }}/> Scan QRIS untuk Membayar</h3>
             <p style={{ color: '#94a3b8', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Buka aplikasi e-wallet atau m-banking Anda dan scan kode di bawah ini.</p>
             
+            {paymentDetails.expiredAt && (
+              <div style={{ color: timeLeft === 'Kedaluwarsa' ? '#ef4444' : '#f59e0b', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '1.5rem', background: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px', display: 'inline-block' }}>
+                ⏳ Sisa Waktu: {timeLeft}
+              </div>
+            )}
+            
             <div 
-              style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', marginBottom: '1.5rem' }}
-              dangerouslySetInnerHTML={{ __html: paymentDetails.qrCodeSvg }}
+              style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', display: 'inline-block', marginBottom: '1.5rem', maxWidth: '300px', width: '100%' }}
+              dangerouslySetInnerHTML={{ __html: paymentDetails.qrCodeSvg.replace('<svg ', '<svg style="width: 100%; height: auto;" ') }}
             />
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
