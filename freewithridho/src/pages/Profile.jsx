@@ -110,7 +110,7 @@ const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
               </div>
               <div>
                 <div className="action-title">Pengaturan API</div>
-                <div className="action-desc">Konfigurasi Midtrans API Key</div>
+                <div className="action-desc">Konfigurasi INSTANPAY API Key</div>
               </div>
               <ChevronRight size={18} className="action-arrow" />
             </Link>

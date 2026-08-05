@@ -255,7 +255,7 @@ const BecomePartner = () => {
               <div className="benefit-icon">🛡️</div>
               <div>
                 <strong>Aman & Terpercaya</strong>
-                <p>Sistem transaksi terjamin aman dengan integrasi Midtrans.</p>
+                <p>Sistem transaksi terjamin aman dengan integrasi INSTANPAY.</p>
               </div>
             </li>
           </ul>

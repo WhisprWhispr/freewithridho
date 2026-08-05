@@ -28,7 +28,7 @@ const PrivacyPolicy = () => {
               <ul>
                 <li><strong>Data Identitas:</strong> Nama lengkap, alamat email, dan foto profil yang Anda berikan saat pendaftaran.</li>
                 <li><strong>Data Finansial (Partner):</strong> Nomor rekening bank, nama pemilik rekening, dan nama bank — digunakan semata-mata untuk keperluan pencairan dana (withdrawal).</li>
-                <li><strong>Data Transaksi:</strong> Riwayat pembelian, nomor pesanan, jumlah pembayaran, status transaksi, dan kode promo yang digunakan, diproses oleh Payment Gateway berlisensi (Midtrans).</li>
+                <li><strong>Data Transaksi:</strong> Riwayat pembelian, nomor pesanan, jumlah pembayaran, status transaksi, dan kode promo yang digunakan, diproses oleh Payment Gateway berlisensi (INSTANPAY).</li>
                 <li><strong>Data Referral & Afiliasi:</strong> Kode referral yang Anda gunakan saat pendaftaran dan kode referral milik Anda yang digunakan orang lain.</li>
                 <li><strong>Data Notifikasi:</strong> Status baca (read/unread) dari notifikasi platform yang kami kirimkan kepada Anda.</li>
                 <li><strong>Data Teknis:</strong> Alamat IP, jenis perangkat, dan informasi browser yang dikumpulkan secara otomatis untuk kepentingan keamanan dan analitik platform.</li>
@@ -60,7 +60,7 @@ const PrivacyPolicy = () => {
 
             <section>
               <h2>4. Ketentuan Pembagian Data kepada Pihak Ketiga</h2>
-              <p><strong>FREEWITHRIDHO berkomitmen untuk TIDAK pernah menjual, menyewakan, atau memperdagangkan informasi pribadi Anda kepada pihak manapun</strong> untuk tujuan komersial. Satu-satunya pengecualian adalah penyampaian data minimum kepada penyedia layanan teknis (seperti Midtrans untuk pembayaran, Firebase/Google untuk database dan autentikasi) yang diperlukan untuk menjalankan platform, dengan mereka terikat pada kebijakan kerahasiaan mereka sendiri.</p>
+              <p><strong>FREEWITHRIDHO berkomitmen untuk TIDAK pernah menjual, menyewakan, atau memperdagangkan informasi pribadi Anda kepada pihak manapun</strong> untuk tujuan komersial. Satu-satunya pengecualian adalah penyampaian data minimum kepada penyedia layanan teknis (seperti INSTANPAY untuk pembayaran, Firebase/Google untuk database dan autentikasi) yang diperlukan untuk menjalankan platform, dengan mereka terikat pada kebijakan kerahasiaan mereka sendiri.</p>
             </section>
 
             <section>

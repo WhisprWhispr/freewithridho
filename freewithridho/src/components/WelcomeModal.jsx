@@ -47,7 +47,7 @@ const WelcomeModal = ({ role = 'partner', storageKey, onClose }) => {
     {
       icon: <CheckCircle size={22} />,
       color: '#10b981',
-      title: 'Pengaturan API Midtrans',
+      title: 'Pengaturan API INSTANPAY',
       desc: 'Ganti mode Sandbox ↔ Production tanpa harus edit kode. Backend akan otomatis menggunakan key yang sesuai berdasarkan pengaturan di sini. Selalu uji di mode Sandbox terlebih dahulu sebelum Production.',
     },
     {

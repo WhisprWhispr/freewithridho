@@ -482,7 +482,7 @@ const ProjectDetail = () => {
                 <div className="feature-icon"><Shield size={16} /></div>
                 <div>
                   <div className="feature-title">Aman & Terpercaya</div>
-                  <div className="feature-sub">Pembayaran via Midtrans</div>
+                  <div className="feature-sub">Pembayaran via INSTANPAY</div>
                 </div>
               </div>
               <div className="feature-item">

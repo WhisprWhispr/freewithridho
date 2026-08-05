@@ -272,7 +272,7 @@ const Success = () => {
     pdf.setFont('helvetica', 'normal');
     pdf.text('Metode Pembayaran:', 14, currentY + 8);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Midtrans (QRIS/E-Wallet)', 14, currentY + 13);
+    pdf.text('INSTANPAY (QRIS/E-Wallet)', 14, currentY + 13);
 
     pdf.setFontSize(10);
     pdf.setTextColor(30, 41, 59);
@@ -398,7 +398,7 @@ const Success = () => {
         <Clock size={56} className="icon-pending" />
         <h1>Menunggu Konfirmasi</h1>
         <p>
-          Pembayaran Anda sedang diproses. Status akan diperbarui secara otomatis setelah Midtrans mengkonfirmasi pembayaran.
+          Pembayaran Anda sedang diproses. Status akan diperbarui secara otomatis setelah INSTANPAY mengkonfirmasi pembayaran.
         </p>
 
         <div className="transaction-info">
