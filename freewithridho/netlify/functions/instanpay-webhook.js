@@ -1,19 +1,22 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const admin = require('firebase-admin');
 
 const fetchFn = typeof fetch !== 'undefined' ? fetch : null;
 
 // Initialize Firebase Admin once
-if (!getApps().length) {
+if (!admin.apps.length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    initializeApp({
-      credential: cert(serviceAccount),
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
     });
   } catch (error) {
     console.error('Firebase Admin initialization error:', error);
   }
 }
+
+const db = admin.firestore();
 
 const headers = {
   'Content-Type': 'application/json',
@@ -30,27 +33,8 @@ export const handler = async (event) => {
   }
 
   try {
-    // 1. Fetch Instanpay API Key from Firestore to verify the webhook
+    // 1. Fetch Instanpay API Key dari env (bisa diabaikan jika tidak cek GET)
     let apiKey = process.env.INSTANPAY_API_KEY;
-    if (getApps().length) {
-      try {
-        const db = getFirestore();
-        const settingsDoc = await db.collection('settings').doc('instanpay').get();
-        if (settingsDoc.exists && settingsDoc.data().apiKey) {
-          apiKey = settingsDoc.data().apiKey;
-        }
-      } catch (e) {
-        console.warn('Could not read settings from Firestore:', e.message);
-      }
-    }
-
-    if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ success: false, message: 'Instanpay API Key not configured' }),
-      };
-    }
 
     const data = JSON.parse(event.body);
     const reference = data.reference || data.transactionId;
@@ -66,7 +50,6 @@ export const handler = async (event) => {
 
     // Karena endpoint GET verifikasi Instanpay mungkin berbeda/tidak ada,
     // kita akan menggunakan data dari payload webhook secara langsung.
-    // Pastikan URL webhook dirahasiakan.
     const actualStatus = webhookStatus;
     const amount = data.amount || data.totalAmount || data.baseAmount || 0;
 
@@ -74,9 +57,8 @@ export const handler = async (event) => {
 
     // If actual status matches the paid status 
     if (actualStatus === 'SETTLEMENT' || actualStatus === 'SUCCESS' || actualStatus === 'PAID') {
-      if (getApps().length) {
+      if (admin.apps.length) {
         try {
-          const db = getFirestore();
           const snapshot = await db
             .collection('transactions')
             .where('merchantRef', '==', reference)
@@ -89,7 +71,7 @@ export const handler = async (event) => {
             if (txData.status !== 'PAID' && txData.status !== 'SETTLEMENT' && txData.status !== 'SUCCESS') {
               await db.collection('transactions').doc(docId).update({
                 status: 'PAID',
-                paidAt: FieldValue.serverTimestamp(),
+                paidAt: admin.firestore.FieldValue.serverTimestamp(),
               });
               console.log(`✅ Transaction ${docId} updated to PAID`);
 
@@ -140,6 +122,8 @@ export const handler = async (event) => {
         } catch (e) {
           console.error('Firestore update error:', e.message);
         }
+      } else {
+        console.error('❌ Firebase Admin is not initialized. Cannot update Firestore.');
       }
     }
 
