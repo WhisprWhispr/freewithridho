@@ -30,6 +30,9 @@ const Checkout = () => {
 
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
+  
+  // Buyer input data state
+  const [buyerInputData, setBuyerInputData] = useState('');
 
   const basePrice = project ? getProjectPrice(project) : 0;
 
@@ -157,6 +160,11 @@ const Checkout = () => {
   }, [paymentDetails]);
 
   const handleCheckout = async () => {
+    if (project?.requiresInputData && !buyerInputData.trim()) {
+      toast.error(`Mohon isi ${project.inputDataLabel || 'data yang dibutuhkan'} terlebih dahulu.`);
+      return;
+    }
+    
     const loadingToast = toast.loading('Memproses pembayaran...');
     try {
       setProcessing(true);
@@ -210,6 +218,7 @@ const Checkout = () => {
           qrCodeSvg: data.qrCodeSvg,
           qrisString: data.qrisString,
           expiredAt: data.expiredAt,
+          buyerInputData: project?.requiresInputData ? buyerInputData.trim() : null,
         });
       } catch (e) {
         console.warn('Gagal menyimpan transaksi PENDING:', e);
@@ -385,6 +394,22 @@ const Checkout = () => {
                 <div className="pending-trx-divider">— atau buat transaksi baru —</div>
               </div>
             )}
+            
+            {project?.requiresInputData && (
+              <div className="checkout-input-section" style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)', marginBottom: '1.5rem', marginTop: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#818cf8', fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.95rem' }}>
+                  {project.inputDataLabel || 'Data Pesanan'} *
+                </label>
+                <input
+                  type="text"
+                  placeholder={`Masukkan ${project.inputDataLabel || 'data'}`}
+                  value={buyerInputData}
+                  onChange={(e) => setBuyerInputData(e.target.value)}
+                  style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.3)', background: 'rgba(0,0,0,0.2)', color: 'white', outline: 'none' }}
+                />
+              </div>
+            )}
+
             <button
               className="btn-pay"
               onClick={handleCheckout}

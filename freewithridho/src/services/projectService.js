@@ -148,6 +148,23 @@ export function listenToUserTransactions(userId, callback) {
   });
 }
 
+/**
+ * Real-time listener for all transactions (for Admin)
+ */
+export function listenToAllTransactions(callback) {
+  const q = query(
+    collection(db, 'transactions'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const transactions = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    callback(transactions);
+  }, (error) => {
+    console.error("Error listening to all transactions:", error);
+  });
+}
+
 
 /**
  * Get settings document from Firestore

@@ -93,7 +93,9 @@ const emptyForm = {
   isFlashSale: false,
   discountPrice: 0,
   flashSaleStartDate: '',
-  flashSaleEndDate: ''
+  flashSaleEndDate: '',
+  requiresInputData: false,
+  inputDataLabel: ''
 };
 
 const Admin = () => {
@@ -114,18 +116,22 @@ const Admin = () => {
   const [adminBalance, setAdminBalance] = useState(0);
   
   // Tab states
-  const [activeAdminTab, setActiveAdminTab] = useState('projects'); // 'projects', 'partners', 'withdrawals'
+  const [activeAdminTab, setActiveAdminTab] = useState('projects'); // 'projects', 'partners', 'withdrawals', 'transactions'
   
+  // Transactions state
+  const [transactions, setTransactions] = useState([]);
   // Partners state
   const [partners, setPartners] = useState([]);
 
   // Withdrawals state
   const [withdrawals, setWithdrawals] = useState([]);
   
-  // Real-time listener for partners and withdrawals
+  // Real-time listener for partners, withdrawals, and transactions
   useEffect(() => {
     let unsubscribePartners;
     let unsubscribeWithdrawals;
+    let unsubscribeTransactions;
+    
     import('../services/partnerService').then(({ listenToPartners, listenToWithdrawals }) => {
       unsubscribePartners = listenToPartners((data) => {
         setPartners(data);
@@ -134,9 +140,17 @@ const Admin = () => {
         setWithdrawals(data);
       });
     });
+    
+    import('../services/projectService').then(({ listenToAllTransactions }) => {
+      unsubscribeTransactions = listenToAllTransactions((data) => {
+        setTransactions(data);
+      });
+    });
+    
     return () => {
       if (unsubscribePartners) unsubscribePartners();
       if (unsubscribeWithdrawals) unsubscribeWithdrawals();
+      if (unsubscribeTransactions) unsubscribeTransactions();
     };
   }, []);
   
@@ -726,6 +740,17 @@ const Admin = () => {
           >
             <Tag size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Kode Promo
           </button>
+          <button 
+            className={`admin-tab-btn ${activeAdminTab === 'transactions' ? 'active' : ''}`}
+            onClick={() => setActiveAdminTab('transactions')}
+          >
+            <Receipt size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Riwayat Pesanan
+            {transactions.filter(t => t.status === 'PAID' && t.buyerInputData).length > 0 && (
+              <span className="admin-tab-badge admin-tab-badge-green">
+                {transactions.filter(t => t.status === 'PAID' && t.buyerInputData).length}
+              </span>
+            )}
+          </button>
           
           {!showWelcome && (
             <button 
@@ -977,18 +1002,76 @@ const Admin = () => {
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="downloadUrl">Link Unduh Source Code *</label>
-                    <input
-                      id="downloadUrl"
-                      name="downloadUrl"
-                      type="url"
-                      placeholder="https://github.com/user/repo atau https://drive.google.com/..."
-                      value={form.downloadUrl}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+  <div className="form-group">
+    <label htmlFor="downloadUrl">Link Unduh Source Code *</label>
+    <input
+      id="downloadUrl"
+      name="downloadUrl"
+      type="url"
+      placeholder="https://github.com/user/repo atau https://drive.google.com/..."
+      value={form.downloadUrl}
+      onChange={handleChange}
+      required
+    />
+  </div>
+
+  <div className="form-group" style={{ 
+    background: 'rgba(99, 102, 241, 0.05)', 
+    padding: '1.25rem', 
+    borderRadius: '12px', 
+    marginBottom: '1.5rem',
+    border: '1px solid rgba(99, 102, 241, 0.2)'
+  }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: form.requiresInputData ? '1rem' : '0' }}>
+      <div>
+        <h4 style={{ margin: 0, color: '#818cf8', fontSize: '1rem', fontWeight: 600 }}>📝 Butuh Data Pembeli?</h4>
+        <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>Aktifkan jika pembeli perlu mengisi sesuatu (misal: Email Google) saat checkout.</p>
+      </div>
+      <label style={{ position: 'relative', display: 'inline-block', width: '52px', height: '28px', cursor: 'pointer', flexShrink: 0 }}>
+        <input 
+          type="checkbox" 
+          checked={form.requiresInputData} 
+          onChange={e => setForm({...form, requiresInputData: e.target.checked})} 
+          style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+        />
+        <span style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: form.requiresInputData ? '#6366f1' : '#334155',
+          borderRadius: '34px',
+          transition: '0.3s',
+          boxShadow: form.requiresInputData ? '0 0 12px rgba(99, 102, 241, 0.4)' : 'none'
+        }}>
+          <span style={{
+            position: 'absolute',
+            content: '""',
+            height: '22px',
+            width: '22px',
+            left: form.requiresInputData ? '27px' : '3px',
+            bottom: '3px',
+            backgroundColor: 'white',
+            borderRadius: '50%',
+            transition: '0.3s',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+          }} />
+        </span>
+      </label>
+    </div>
+
+    {form.requiresInputData && (
+      <div>
+        <label style={{ color: '#818cf8', fontWeight: 500, fontSize: '0.9rem' }}>Label Input *</label>
+        <input 
+          type="text"
+          placeholder="Contoh: Masukkan Email Google Anda"
+          value={form.inputDataLabel}
+          onChange={e => setForm({...form, inputDataLabel: e.target.value})}
+          required={form.requiresInputData}
+          style={{ marginTop: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(99,102,241,0.3)', color: 'white' }}
+        />
+      </div>
+    )}
+  </div>
 
                   <div className="form-group">
                     <label>URL Gambar (Thumbnail & Galeri)</label>
@@ -1349,6 +1432,69 @@ const Admin = () => {
         {/* ── Promos Tab ── */}
         {activeAdminTab === 'promos' && (
           <PromoAdminTab />
+        )}
+
+        {activeAdminTab === 'transactions' && (
+          <section className="admin-section">
+            <div className="section-header">
+              <Receipt size={24} />
+              <h2>Riwayat Pesanan & Transaksi</h2>
+            </div>
+            
+            <div className="table-responsive">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>ID Ref</th>
+                    <th>Pembeli</th>
+                    <th>Proyek</th>
+                    <th>Data Pesanan (Form Input)</th>
+                    <th>Nominal</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.length > 0 ? transactions.map(tx => {
+                    const txTime = tx.createdAt ? new Date(tx.createdAt.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleString('id-ID') : '-';
+                    return (
+                      <tr key={tx.id}>
+                        <td style={{ fontSize: '0.85rem' }}>{txTime}</td>
+                        <td style={{ fontSize: '0.85rem' }}>{tx.merchantRef || '-'}</td>
+                        <td>
+                          <strong>{tx.userEmail}</strong>
+                        </td>
+                        <td>{tx.projectTitle}</td>
+                        <td>
+                          {tx.buyerInputData ? (
+                            <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: '#818cf8', marginBottom: '2px' }}>Isian Pembeli:</span>
+                              <strong>{tx.buyerInputData}</strong>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>- (Tidak butuh data)</span>
+                          )}
+                        </td>
+                        <td style={{ fontWeight: 600 }}>Rp {(tx.amount || 0).toLocaleString('id-ID')}</td>
+                        <td>
+                          <span className={`status-badge ${
+                            tx.status === 'PAID' || tx.status === 'SETTLEMENT' || tx.status === 'SUCCESS' ? 'completed' : 
+                            tx.status === 'PENDING' ? 'pending' : 'rejected'
+                          }`}>
+                            {tx.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  }) : (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>Belum ada transaksi.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
       </div>
 
