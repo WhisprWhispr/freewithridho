@@ -775,8 +775,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         to={`/project/${tx.projectId}`}
                         className="btn btn-success library-download-btn"
                       >
-                        <Download size={15} /> Unduh
-                        <ExternalLink size={13} />
+                        <ExternalLink size={15} /> Lihat Detail
                       </Link>
                     )}
                   </div>

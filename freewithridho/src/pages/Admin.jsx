@@ -95,7 +95,8 @@ const emptyForm = {
   flashSaleStartDate: '',
   flashSaleEndDate: '',
   requiresInputData: false,
-  inputDataLabel: ''
+  inputDataLabel: '',
+  type: 'code' // 'code' or 'service'
 };
 
 const Admin = () => {
@@ -563,8 +564,13 @@ const Admin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.description || !form.downloadUrl) {
-      toast.error('Judul, Deskripsi, dan Link Unduh wajib diisi.');
+    if (form.type === 'code' && (!form.title || !form.description || !form.downloadUrl)) {
+      toast.error('Judul, Deskripsi, dan Link Unduh wajib diisi untuk Source Code.');
+      return;
+    }
+    
+    if (form.type === 'service' && (!form.title || !form.description || !form.inputDataLabel)) {
+      toast.error('Judul, Deskripsi Layanan, dan Label Input wajib diisi untuk Jasa/Aktivasi.');
       return;
     }
     
@@ -796,8 +802,36 @@ const Admin = () => {
                 </div>
                 
                 <form className="admin-form" onSubmit={handleSubmit}>
+                  <div className="form-group" style={{ marginBottom: '1.5rem', background: 'rgba(30, 41, 59, 0.5)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 600, color: 'white' }}>Tipe Produk</label>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', background: form.type === 'code' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: `1px solid ${form.type === 'code' ? '#3b82f6' : 'rgba(255,255,255,0.2)'}`, borderRadius: '8px', flex: 1 }}>
+                        <input 
+                          type="radio" 
+                          name="productType" 
+                          value="code" 
+                          checked={form.type === 'code'} 
+                          onChange={(e) => setForm({ ...form, type: 'code', requiresInputData: false, inputDataLabel: '' })} 
+                          style={{ margin: 0 }}
+                        />
+                        <span>💻 Source Code</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', background: form.type === 'service' ? 'rgba(16, 185, 129, 0.2)' : 'transparent', border: `1px solid ${form.type === 'service' ? '#10b981' : 'rgba(255,255,255,0.2)'}`, borderRadius: '8px', flex: 1 }}>
+                        <input 
+                          type="radio" 
+                          name="productType" 
+                          value="service" 
+                          checked={form.type === 'service'} 
+                          onChange={(e) => setForm({ ...form, type: 'service', downloadUrl: '', demoUrl: '', requiresInputData: true })} 
+                          style={{ margin: 0 }}
+                        />
+                        <span>🚀 Jasa / Aktivasi</span>
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="form-group">
-                    <label>Judul Proyek</label>
+                    <label>Judul {form.type === 'service' ? 'Layanan/Jasa' : 'Proyek'}</label>
                     <input 
                       type="text" 
                       value={form.title}
@@ -977,101 +1011,85 @@ const Admin = () => {
                     </div>
                   )}
 
-                  <div className="form-group">
-                    <label htmlFor="demoUrl">Link Demo Web (Opsional)</label>
-                    <input
-                      id="demoUrl"
-                      name="demoUrl"
-                      type="url"
-                      placeholder="https://example.com/demo"
-                      value={form.demoUrl || ''}
-                      onChange={(e) => setForm({ ...form, demoUrl: e.target.value })}
-                    />
-                  </div>
+                  {form.type === 'code' && (
+                    <>
+                      <div className="form-group">
+                        <label htmlFor="demoUrl">Link Live Demo (Opsional)</label>
+                        <input
+                          id="demoUrl"
+                          name="demoUrl"
+                          type="url"
+                          placeholder="https://example.com/demo"
+                          value={form.demoUrl || ''}
+                          onChange={(e) => setForm({ ...form, demoUrl: e.target.value })}
+                        />
+                      </div>
 
-                  <div className="form-group">
-                    <label htmlFor="description">Deskripsi *</label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      rows={3}
-                      placeholder="Jelaskan secara singkat isi dan fitur dari source code ini..."
-                      value={form.description}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+                      <div className="form-group">
+                        <label htmlFor="description">Deskripsi *</label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          rows={3}
+                          placeholder="Jelaskan secara singkat isi dan fitur dari source code ini..."
+                          value={form.description}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
 
-  <div className="form-group">
-    <label htmlFor="downloadUrl">Link Unduh Source Code *</label>
-    <input
-      id="downloadUrl"
-      name="downloadUrl"
-      type="url"
-      placeholder="https://github.com/user/repo atau https://drive.google.com/..."
-      value={form.downloadUrl}
-      onChange={handleChange}
-      required
-    />
-  </div>
+                      <div className="form-group">
+                        <label htmlFor="downloadUrl">Link Unduh Source Code *</label>
+                        <input
+                          id="downloadUrl"
+                          name="downloadUrl"
+                          type="url"
+                          placeholder="https://github.com/user/repo atau https://drive.google.com/..."
+                          value={form.downloadUrl}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
 
-  <div className="form-group" style={{ 
-    background: 'rgba(99, 102, 241, 0.05)', 
-    padding: '1.25rem', 
-    borderRadius: '12px', 
-    marginBottom: '1.5rem',
-    border: '1px solid rgba(99, 102, 241, 0.2)'
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: form.requiresInputData ? '1rem' : '0' }}>
-      <div>
-        <h4 style={{ margin: 0, color: '#818cf8', fontSize: '1rem', fontWeight: 600 }}>📝 Butuh Data Pembeli?</h4>
-        <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>Aktifkan jika pembeli perlu mengisi sesuatu (misal: Email Google) saat checkout.</p>
-      </div>
-      <label style={{ position: 'relative', display: 'inline-block', width: '52px', height: '28px', cursor: 'pointer', flexShrink: 0 }}>
-        <input 
-          type="checkbox" 
-          checked={form.requiresInputData} 
-          onChange={e => setForm({...form, requiresInputData: e.target.checked})} 
-          style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
-        />
-        <span style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: form.requiresInputData ? '#6366f1' : '#334155',
-          borderRadius: '34px',
-          transition: '0.3s',
-          boxShadow: form.requiresInputData ? '0 0 12px rgba(99, 102, 241, 0.4)' : 'none'
-        }}>
-          <span style={{
-            position: 'absolute',
-            content: '""',
-            height: '22px',
-            width: '22px',
-            left: form.requiresInputData ? '27px' : '3px',
-            bottom: '3px',
-            backgroundColor: 'white',
-            borderRadius: '50%',
-            transition: '0.3s',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-          }} />
-        </span>
-      </label>
-    </div>
+                  {form.type === 'service' && (
+                    <>
+                      <div className="form-group">
+                        <label htmlFor="description">Deskripsi Layanan *</label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          rows={3}
+                          placeholder="Jelaskan detail jasa atau layanan aktivasi ini..."
+                          value={form.description}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
 
-    {form.requiresInputData && (
-      <div>
-        <label style={{ color: '#818cf8', fontWeight: 500, fontSize: '0.9rem' }}>Label Input *</label>
-        <input 
-          type="text"
-          placeholder="Contoh: Masukkan Email Google Anda"
-          value={form.inputDataLabel}
-          onChange={e => setForm({...form, inputDataLabel: e.target.value})}
-          required={form.requiresInputData}
-          style={{ marginTop: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(99,102,241,0.3)', color: 'white' }}
-        />
-      </div>
-    )}
-  </div>
+                      <div className="form-group" style={{ 
+                        background: 'rgba(16, 185, 129, 0.05)', 
+                        padding: '1.25rem', 
+                        borderRadius: '12px', 
+                        marginBottom: '1.5rem',
+                        border: '1px solid rgba(16, 185, 129, 0.2)'
+                      }}>
+                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#34d399', fontSize: '1rem', fontWeight: 600 }}>📝 Data yang Diminta dari Pembeli *</h4>
+                        <p style={{ margin: '0 0 1rem 0', fontSize: '0.8rem', color: '#94a3b8' }}>Tuliskan instruksi data apa yang harus diisi pembeli saat checkout.</p>
+                        
+                        <label style={{ color: '#34d399', fontWeight: 500, fontSize: '0.9rem' }}>Label Input *</label>
+                        <input 
+                          type="text"
+                          placeholder="Contoh: Masukkan Email Google Anda"
+                          value={form.inputDataLabel}
+                          onChange={e => setForm({...form, inputDataLabel: e.target.value})}
+                          required={form.type === 'service'}
+                          style={{ marginTop: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.3)', color: 'white' }}
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div className="form-group">
                     <label>URL Gambar (Thumbnail & Galeri)</label>

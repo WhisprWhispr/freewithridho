@@ -373,9 +373,15 @@ const Success = () => {
             </div>
           )}
 
-          <p className="success-note">
-            Anda juga dapat mengunduh source code kapan saja dari halaman <strong>Profil → Riwayat Pembelian</strong>.
-          </p>
+          {project?.downloadUrl ? (
+            <p className="success-note">
+              Anda juga dapat mengunduh source code kapan saja dari halaman <strong>Profil → Riwayat Pembelian</strong>.
+            </p>
+          ) : (
+            <p className="success-note">
+              Data pesanan Anda telah kami terima. Proses aktivasi/layanan akan segera dilakukan oleh Admin. Anda dapat mengecek status pesanan di halaman <strong>Profil → Riwayat Pembelian</strong>.
+            </p>
+          )}
 
           <Link to="/" className="btn-home">
             Kembali ke Beranda <ArrowRight size={18} />
