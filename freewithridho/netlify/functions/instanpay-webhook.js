@@ -1,22 +1,25 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const admin = require('firebase-admin');
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 const fetchFn = typeof fetch !== 'undefined' ? fetch : null;
 
+let adminInitError = null;
+
 // Initialize Firebase Admin once
-if (!admin.apps.length) {
+if (!getApps().length) {
   try {
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT environment variable is missing in Netlify');
+    }
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+    initializeApp({
+      credential: cert(serviceAccount),
     });
   } catch (error) {
+    adminInitError = error.message;
     console.error('Firebase Admin initialization error:', error);
   }
 }
-
-const db = admin.firestore();
 
 const headers = {
   'Content-Type': 'application/json',
@@ -33,7 +36,7 @@ export const handler = async (event) => {
   }
 
   try {
-    // 1. Fetch Instanpay API Key dari env (bisa diabaikan jika tidak cek GET)
+    // 1. Fetch Instanpay API Key from env (bisa bypass GET karena Instanpay kadang tidak punya API GET by reference)
     let apiKey = process.env.INSTANPAY_API_KEY;
 
     const data = JSON.parse(event.body);
@@ -48,8 +51,6 @@ export const handler = async (event) => {
       };
     }
 
-    // Karena endpoint GET verifikasi Instanpay mungkin berbeda/tidak ada,
-    // kita akan menggunakan data dari payload webhook secara langsung.
     const actualStatus = webhookStatus;
     const amount = data.amount || data.totalAmount || data.baseAmount || 0;
 
@@ -57,8 +58,9 @@ export const handler = async (event) => {
 
     // If actual status matches the paid status 
     if (actualStatus === 'SETTLEMENT' || actualStatus === 'SUCCESS' || actualStatus === 'PAID') {
-      if (admin.apps.length) {
+      if (getApps().length) {
         try {
+          const db = getFirestore();
           const snapshot = await db
             .collection('transactions')
             .where('merchantRef', '==', reference)
@@ -71,7 +73,7 @@ export const handler = async (event) => {
             if (txData.status !== 'PAID' && txData.status !== 'SETTLEMENT' && txData.status !== 'SUCCESS') {
               await db.collection('transactions').doc(docId).update({
                 status: 'PAID',
-                paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                paidAt: FieldValue.serverTimestamp(),
               });
               console.log(`✅ Transaction ${docId} updated to PAID`);
 
@@ -124,6 +126,11 @@ export const handler = async (event) => {
         }
       } else {
         console.error('❌ Firebase Admin is not initialized. Cannot update Firestore.');
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ success: false, message: 'Firebase Admin not initialized: ' + adminInitError })
+        };
       }
     }
 
@@ -137,7 +144,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ success: false, message: 'Internal server error' }),
+      body: JSON.stringify({ success: false, message: 'Internal server error: ' + err.message }),
     };
   }
 };
