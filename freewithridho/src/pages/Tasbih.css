@@ -1,0 +1,337 @@
+.tasbih-page {
+  padding: 2rem 5%;
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: calc(100vh - 160px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tasbih-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.total-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.total-badge:hover {
+  background: rgba(16, 185, 129, 0.25);
+  transform: translateY(-2px);
+}
+
+.tasbih-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.tasbih-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.tasbih-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dzikir-selector-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 1.5rem;
+}
+
+.dzikir-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.dzikir-select-btn:hover {
+  background: rgba(45, 61, 87, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dzikir-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.5rem;
+  z-index: 100;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.dzikir-dropdown button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 2px;
+}
+
+.dzikir-dropdown button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+.dzikir-dropdown button.active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.active-dzikir-display {
+  margin-bottom: 2rem;
+  animation: slideUpFade 0.4s ease forwards;
+}
+
+.dzikir-arabic {
+  font-size: 2.25rem;
+  font-family: 'Amiri', 'Scheherazade New', serif;
+  color: #38bdf8;
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.dzikir-translation {
+  color: #94a3b8;
+  font-size: 1rem;
+  font-style: italic;
+}
+
+.tasbih-counter-card {
+  position: relative;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 2rem;
+  border-radius: 32px;
+  text-align: center;
+  margin-bottom: 3rem;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 130, 246, 0.1);
+}
+
+.target-selector {
+  position: relative;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.target-btn {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.target-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.target-dropdown {
+  position: absolute;
+  top: 100%;
+  margin-top: 0.5rem;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 10;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  width: 150px;
+}
+
+.target-dropdown button {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  padding: 0.5rem;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.target-dropdown button:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: white;
+}
+
+.progress-ring-container {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(-90deg);
+}
+
+.counter-display {
+  font-size: 5rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  z-index: 2;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.tasbih-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.tap-btn {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  font-size: 2rem;
+  font-weight: 800;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.6), inset 0 -5px 15px rgba(0,0,0,0.2);
+  transition: all 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+.tap-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tap-btn:hover::before {
+  opacity: 1;
+}
+
+.tap-btn:active {
+  transform: scale(0.92);
+  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4), inset 0 -2px 5px rgba(0,0,0,0.2);
+}
+
+.reset-btn {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 1.25rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reset-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: rotate(-45deg);
+}
+
+@media (max-width: 768px) {
+  .progress-ring-container {
+    width: 240px;
+    height: 240px;
+  }
+  
+  .progress-ring {
+    width: 240px;
+    height: 240px;
+  }
+  
+  .progress-ring__circle,
+  .progress-ring__circle-bg {
+    r: 100;
+    cx: 120;
+    cy: 120;
+    stroke-dasharray: 628; /* 2 * PI * 100 */
+  }
+  
+  .counter-display {
+    font-size: 4.5rem;
+  }
+  
+  .tap-btn {
+    width: 140px;
+    height: 140px;
+  }
+}

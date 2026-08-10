@@ -11,7 +11,7 @@ import SalesAnalytics from '../components/SalesAnalytics';
 import WelcomeModal from '../components/WelcomeModal';
 import './PartnerDashboard.css';
 
-const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile'];
+const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile', 'Template Web'];
 
 const emptyForm = {
   title: '',
@@ -25,6 +25,9 @@ const emptyForm = {
   discountPrice: 0,
   flashSaleStartDate: '',
   flashSaleEndDate: '',
+  readme: '',
+  offersWebPackages: false,
+  domainOptions: [{ extension: '.com', price: 150000 }]
 };
 
 const PartnerDashboard = () => {
@@ -39,6 +42,7 @@ const PartnerDashboard = () => {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [readmeTab, setReadmeTab] = useState('edit');
 
   // Withdraw states
   const [withdrawForm, setWithdrawForm] = useState({
@@ -139,6 +143,39 @@ const PartnerDashboard = () => {
     );
   }
 
+  const handlePriceChange = (e) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    setForm({ ...form, price: rawValue ? parseInt(rawValue, 10) : '' });
+  };
+
+  const handleAddDomainOption = () => {
+    setForm(prev => ({
+      ...prev,
+      domainOptions: [...(prev.domainOptions || []), { extension: '', price: 0 }]
+    }));
+  };
+
+  const handleRemoveDomainOption = (index) => {
+    setForm(prev => {
+      const newOptions = [...prev.domainOptions];
+      newOptions.splice(index, 1);
+      return { ...prev, domainOptions: newOptions };
+    });
+  };
+
+  const handleDomainOptionChange = (index, field, value) => {
+    setForm(prev => {
+      const newOptions = [...prev.domainOptions];
+      if (field === 'price') {
+        const rawValue = value.replace(/\D/g, '');
+        newOptions[index][field] = rawValue ? parseInt(rawValue, 10) : 0;
+      } else {
+        newOptions[index][field] = value;
+      }
+      return { ...prev, domainOptions: newOptions };
+    });
+  };
+
   const handleImageChange = (index, value) => {
     const newImages = [...form.images];
     newImages[index] = value;
@@ -202,6 +239,9 @@ const PartnerDashboard = () => {
       discountPrice: project.discountPrice || 0,
       flashSaleStartDate: project.flashSaleStartDate || '',
       flashSaleEndDate: project.flashSaleEndDate || '',
+      readme: project.readme || '',
+      offersWebPackages: project.offersWebPackages || false,
+      domainOptions: project.domainOptions || [{ extension: '.com', price: 150000 }],
     });
     setEditingId(project.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -677,6 +717,14 @@ const PartnerDashboard = () => {
                 />
               </div>
               <div className="form-group">
+                <label>Readme File (.md)</label>
+                <input type="file" accept=".md,.txt" onChange={handleReadmeFile} />
+              </div>
+              <div className="form-group">
+                <label>Link Web Package (.zip/.rar)</label>
+                <input type="url" value={form.webPackageUrl} onChange={e => setForm({...form, webPackageUrl: e.target.value})} placeholder="https://..." />
+              </div>
+              <div className="form-group">
                 <label>Deskripsi</label>
                 <textarea rows="3" value={form.description} onChange={e => setForm({...form, description: e.target.value})} required />
               </div>
@@ -688,6 +736,59 @@ const PartnerDashboard = () => {
                 <label>Link Live Demo (Opsional)</label>
                 <input type="url" value={form.demoUrl} onChange={e => setForm({...form, demoUrl: e.target.value})} placeholder="https://demo.example.com" />
               </div>
+
+              {/* Package Options for Template Web */}
+              <div className="form-group checkbox-group" style={{ marginTop: '1.5rem', marginBottom: '0.5rem', background: 'rgba(30, 41, 59, 0.5)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', margin: 0, color: '#f1f5f9', fontWeight: 'bold' }}>
+                  <input 
+                    type="checkbox" 
+                    name="offersWebPackages"
+                    checked={form.offersWebPackages}
+                    onChange={(e) => setForm(prev => ({ ...prev, offersWebPackages: e.target.checked }))}
+                    style={{ width: '18px', height: '18px' }}
+                  />
+                  📦 Tawarkan Paket Hosting & Domain (Opsional)
+                </label>
+              </div>
+
+              {form.offersWebPackages && (
+                <div className="packages-form-grid" style={{ marginBottom: '1.5rem', padding: '1.25rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '12px' }}>
+                  <p style={{ margin: '0 0 1rem', fontSize: '0.9rem', color: '#cbd5e1' }}>
+                    Tambahkan pilihan ekstensi domain beserta total harga (Harga Hosting + Domain) yang akan dibebankan sebagai biaya tambahan.
+                  </p>
+                  
+                  {form.domainOptions?.map((opt, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: '0.8rem', marginBottom: '0.3rem' }}>Ekstensi Domain</label>
+                        <input 
+                          type="text" 
+                          value={opt.extension} 
+                          onChange={(e) => handleDomainOptionChange(idx, 'extension', e.target.value)} 
+                          placeholder="Misal: .com" 
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: '0.8rem', marginBottom: '0.3rem' }}>Harga Tambahan (Rp)</label>
+                        <input 
+                          type="text" 
+                          value={opt.price ? opt.price.toLocaleString('id-ID') : ''} 
+                          onChange={(e) => handleDomainOptionChange(idx, 'price', e.target.value)} 
+                          placeholder="150000" 
+                        />
+                      </div>
+                      {form.domainOptions.length > 1 && (
+                        <button type="button" onClick={() => handleRemoveDomainOption(idx)} style={{ marginTop: '1.8rem', background: '#ef4444', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>
+                          Hapus
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" onClick={handleAddDomainOption} style={{ marginTop: '0.5rem', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid #3b82f6', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    + Tambah Ekstensi
+                  </button>
+                </div>
+              )}
               <div className="form-group flash-sale-group" style={{ 
                 background: form.isFlashSale ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(185, 28, 28, 0.15))' : 'rgba(255, 255, 255, 0.03)', 
                 padding: '1.25rem', 

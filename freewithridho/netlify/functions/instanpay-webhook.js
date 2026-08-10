@@ -54,7 +54,11 @@ export const handler = async (event) => {
     const actualStatus = webhookStatus;
     const amount = data.amount || data.totalAmount || data.baseAmount || 0;
 
-    console.log(`Callback — Order: ${reference}, Webhook Status: ${actualStatus}`);
+    if (data.type === 'CRYPTO') {
+      console.log(`Callback [CRYPTO] — Order: ${reference}, Status: ${actualStatus}, USD: ${data.amount_usd}, Hash: ${data.tx_hash}`);
+    } else {
+      console.log(`Callback [QRIS] — Order: ${reference}, Status: ${actualStatus}`);
+    }
 
     // If actual status matches the paid status 
     if (actualStatus === 'SETTLEMENT' || actualStatus === 'SUCCESS' || actualStatus === 'PAID') {
@@ -81,6 +85,8 @@ export const handler = async (event) => {
               if (txData.projectId) {
                 try {
                   const projectDoc = await db.collection('projects').doc(txData.projectId).get();
+                  // For crypto, 'amount' from payload might be undefined or in USD, 
+                  // so fallback to txData.originalAmount (which is in IDR) is crucial.
                   const txAmount = parseFloat(amount) || parseFloat(txData.originalAmount) || 0;
 
                   if (projectDoc.exists && projectDoc.data().ownerId) {

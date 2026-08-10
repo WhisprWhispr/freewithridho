@@ -17,8 +17,29 @@ import PublicProfile from './pages/PublicProfile';
 import { PrivacyPolicy, TermsOfService } from './pages/Legal';
 import About from './pages/About';
 import PrayerTimes from './pages/PrayerTimes';
+import Quran from './pages/Quran';
+import SurahDetail from './pages/SurahDetail';
+import Tasbih from './pages/Tasbih';
+import AsmaulHusna from './pages/AsmaulHusna';
+import DoaHarian from './pages/DoaHarian';
+import ZakatCalculator from './pages/ZakatCalculator';
+import Support from './pages/Support';
+import Contact from './pages/Contact';
+import DataSource from './pages/DataSource';
+import MosqueDonation from './pages/MosqueDonation';
+
+// New Islamic Features
+import YasinTahlil from './pages/YasinTahlil';
+import KalenderHijriah from './pages/KalenderHijriah';
+import Sholawat from './pages/Sholawat';
+import KisahNabi from './pages/KisahNabi';
+import KisahNabiDetail from './pages/KisahNabiDetail';
+import ArtikelIslami from './pages/ArtikelIslami';
+import ArtikelIslamiDetail from './pages/ArtikelIslamiDetail';
+
 import Footer from './components/Footer';
 import InstallPWA from './components/InstallPWA';
+import WhatsAppFloat from './components/WhatsAppFloat';
 import './App.css';
 
 function App() {
@@ -89,6 +110,26 @@ function App() {
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/about" element={<About />} />
               <Route path="/jadwal-sholat" element={<PrayerTimes />} />
+              <Route path="/quran" element={<Quran />} />
+              <Route path="/quran/:id" element={<SurahDetail />} />
+              <Route path="/tasbih" element={<Tasbih />} />
+              <Route path="/asmaul-husna" element={<AsmaulHusna />} />
+              <Route path="/doa-harian" element={<DoaHarian />} />
+              <Route path="/kalkulator-zakat" element={<ZakatCalculator />} />
+              
+              {/* New Islamic Features */}
+              <Route path="/yasin-tahlil" element={<YasinTahlil />} />
+              <Route path="/kalender-hijriah" element={<KalenderHijriah />} />
+              <Route path="/sholawat" element={<Sholawat />} />
+              <Route path="/kisah-nabi" element={<KisahNabi />} />
+              <Route path="/kisah-nabi/:id" element={<KisahNabiDetail />} />
+              <Route path="/artikel-islami" element={<ArtikelIslami />} />
+              <Route path="/artikel-islami/:id" element={<ArtikelIslamiDetail />} />
+
+              <Route path="/dukung-kami" element={<Support />} />
+              <Route path="/hubungi-kami" element={<Contact />} />
+              <Route path="/sumber-data" element={<DataSource />} />
+              <Route path="/donasi-masjid" element={<MosqueDonation />} />
               <Route
                 path="/admin"
                 element={
@@ -97,10 +138,17 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="*" element={
+                <div className="not-found" style={{ textAlign: 'center', padding: '100px 20px' }}>
+                  <h1>404</h1>
+                  <p>Halaman tidak ditemukan.</p>
+                </div>
+              } />
             </Routes>
           </main>
           <Footer />
           <InstallPWA />
+          <WhatsAppFloat />
         </div>
       </Router>
     </AuthProvider>

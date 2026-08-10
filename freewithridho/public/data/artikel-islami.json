@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "category": "Fiqih",
+    "title": "Memahami Hukum dan Keutamaan Qiyamul Lail",
+    "author": "Tim Redaksi",
+    "date": "12 Oct 2026",
+    "readTime": "5 Menit",
+    "image": "https://images.unsplash.com/photo-1542816417-0983c9c9ad53?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "content": "Qiyamul Lail atau sholat malam adalah salah satu ibadah sunnah yang sangat ditekankan. Allah berfirman dalam Al-Quran bahwa pada sebagian malam hari hendaklah kita bertahajud sebagai ibadah tambahan. Manfaatnya sangat besar, mulai dari ketenangan batin, kesehatan, hingga doa yang lebih mudah diijabah di sepertiga malam terakhir..."
+  },
+  {
+    "id": 2,
+    "category": "Akhlak",
+    "title": "Adab Berbicara dalam Islam",
+    "author": "Ustaz Abdullah",
+    "date": "15 Oct 2026",
+    "readTime": "3 Menit",
+    "image": "https://images.unsplash.com/photo-1596700689408-72f10b7a42b1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "content": "Dalam Islam, lisan adalah sesuatu yang harus sangat dijaga. Nabi Muhammad SAW bersabda: 'Barangsiapa beriman kepada Allah dan hari akhir, hendaklah ia berkata baik atau diam.' Mengontrol ucapan menghindarkan kita dari fitnah, ghibah, dan menyakiti hati orang lain..."
+  },
+  {
+    "id": 3,
+    "category": "Sejarah",
+    "title": "Peristiwa Hijrah yang Mengubah Peradaban",
+    "author": "Ahmad Tariq",
+    "date": "20 Oct 2026",
+    "readTime": "7 Menit",
+    "image": "https://images.unsplash.com/photo-1580226485089-6e3a9dc7bc58?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "content": "Peristiwa hijrahnya Nabi Muhammad SAW dari Mekkah ke Madinah bukan sekadar perpindahan fisik. Ia adalah tonggak berdirinya peradaban Islam yang kokoh, berlandaskan persaudaraan (ukhuwah) antara Muhajirin dan Anshar, serta piagam Madinah yang menjamin toleransi..."
+  }
+]

@@ -20,6 +20,7 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import PromoAdminTab from '../components/PromoAdminTab';
+import MosqueAdminTab from '../components/MosqueAdminTab';
 import WelcomeModal from '../components/WelcomeModal';
 import { generatePartnerPDF } from '../utils/pdfGenerator';
 import './Admin.css';
@@ -79,7 +80,7 @@ const AdminSignaturePad = ({ canvasRef, onHasSignature }) => {
   );
 };
 
-const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile'];
+const CATEGORIES = ['Basic', 'Premium', 'Web', 'Game', 'Mobile', 'Template Web'];
 
 const emptyForm = {
   title: '',
@@ -93,10 +94,13 @@ const emptyForm = {
   isFlashSale: false,
   discountPrice: 0,
   flashSaleStartDate: '',
+  flashSaleStartDate: '',
   flashSaleEndDate: '',
   requiresInputData: false,
   inputDataLabel: '',
-  type: 'code' // 'code' or 'service'
+  type: 'code', // 'code' or 'service'
+  offersWebPackages: false,
+  domainOptions: [{ extension: '.com', price: 150000 }]
 };
 
 const Admin = () => {
@@ -117,7 +121,7 @@ const Admin = () => {
   const [adminBalance, setAdminBalance] = useState(0);
   
   // Tab states
-  const [activeAdminTab, setActiveAdminTab] = useState('projects'); // 'projects', 'partners', 'withdrawals', 'transactions'
+  const [activeAdminTab, setActiveAdminTab] = useState('projects'); // 'projects', 'partners', 'withdrawals', 'transactions', 'mosques'
   
   // Transactions state
   const [transactions, setTransactions] = useState([]);
@@ -253,8 +257,37 @@ const Admin = () => {
   };
 
   const handlePriceChange = (e) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
-    setForm((prev) => ({ ...prev, price: rawValue ? parseInt(rawValue, 10) : '' }));
+    const { name, value } = e.target;
+    const rawValue = value.replace(/\D/g, '');
+    setForm((prev) => ({ ...prev, [name]: rawValue ? parseInt(rawValue, 10) : '' }));
+  };
+
+  const handleAddDomainOption = () => {
+    setForm(prev => ({
+      ...prev,
+      domainOptions: [...(prev.domainOptions || []), { extension: '', price: 0 }]
+    }));
+  };
+
+  const handleRemoveDomainOption = (index) => {
+    setForm(prev => {
+      const newOptions = [...prev.domainOptions];
+      newOptions.splice(index, 1);
+      return { ...prev, domainOptions: newOptions };
+    });
+  };
+
+  const handleDomainOptionChange = (index, field, value) => {
+    setForm(prev => {
+      const newOptions = [...prev.domainOptions];
+      if (field === 'price') {
+        const rawValue = value.replace(/\D/g, '');
+        newOptions[index][field] = rawValue ? parseInt(rawValue, 10) : 0;
+      } else {
+        newOptions[index][field] = value;
+      }
+      return { ...prev, domainOptions: newOptions };
+    });
   };
 
   const handleImageChange = (index, value) => {
@@ -757,6 +790,12 @@ const Admin = () => {
               </span>
             )}
           </button>
+          <button 
+            className={`admin-tab-btn ${activeAdminTab === 'mosques' ? 'active' : ''}`}
+            onClick={() => setActiveAdminTab('mosques')}
+          >
+            <BookOpen size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Donasi Masjid
+          </button>
           
           {!showWelcome && (
             <button 
@@ -826,6 +865,17 @@ const Admin = () => {
                           style={{ margin: 0 }}
                         />
                         <span>🚀 Jasa / Aktivasi</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', background: form.type === 'template' ? 'rgba(139, 92, 246, 0.2)' : 'transparent', border: `1px solid ${form.type === 'template' ? '#8b5cf6' : 'rgba(255,255,255,0.2)'}`, borderRadius: '8px', flex: 1 }}>
+                        <input 
+                          type="radio" 
+                          name="productType" 
+                          value="template" 
+                          checked={form.type === 'template'} 
+                          onChange={(e) => setForm({ ...form, type: 'template', requiresInputData: false })} 
+                          style={{ margin: 0 }}
+                        />
+                        <span>🌐 Template Web</span>
                       </label>
                     </div>
                   </div>
@@ -1008,6 +1058,59 @@ const Admin = () => {
                           </div>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Package Options for Template Web */}
+                  <div className="form-group checkbox-group" style={{ marginTop: '1.5rem', marginBottom: '0.5rem', background: 'rgba(30, 41, 59, 0.5)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', margin: 0, color: '#f1f5f9', fontWeight: 'bold' }}>
+                      <input 
+                        type="checkbox" 
+                        name="offersWebPackages"
+                        checked={form.offersWebPackages}
+                        onChange={(e) => setForm(prev => ({ ...prev, offersWebPackages: e.target.checked }))}
+                        style={{ width: '18px', height: '18px' }}
+                      />
+                      📦 Tawarkan Paket Hosting & Domain (Opsional)
+                    </label>
+                  </div>
+
+                  {form.offersWebPackages && (
+                    <div className="packages-form-grid" style={{ marginBottom: '1.5rem', padding: '1.25rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '12px' }}>
+                      <p style={{ margin: '0 0 1rem', fontSize: '0.9rem', color: '#cbd5e1' }}>
+                        Tambahkan pilihan ekstensi domain beserta total harga (Harga Hosting + Domain) yang akan dibebankan sebagai biaya tambahan.
+                      </p>
+                      
+                      {form.domainOptions?.map((opt, idx) => (
+                        <div key={idx} style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', alignItems: 'flex-start' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ fontSize: '0.8rem', marginBottom: '0.3rem' }}>Ekstensi Domain</label>
+                            <input 
+                              type="text" 
+                              value={opt.extension} 
+                              onChange={(e) => handleDomainOptionChange(idx, 'extension', e.target.value)} 
+                              placeholder="Misal: .com" 
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ fontSize: '0.8rem', marginBottom: '0.3rem' }}>Harga Tambahan (Rp)</label>
+                            <input 
+                              type="text" 
+                              value={opt.price ? opt.price.toLocaleString('id-ID') : ''} 
+                              onChange={(e) => handleDomainOptionChange(idx, 'price', e.target.value)} 
+                              placeholder="150000" 
+                            />
+                          </div>
+                          {form.domainOptions.length > 1 && (
+                            <button type="button" onClick={() => handleRemoveDomainOption(idx)} style={{ marginTop: '1.8rem', background: '#ef4444', color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>
+                              Hapus
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button type="button" onClick={handleAddDomainOption} style={{ marginTop: '0.5rem', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: '1px solid #3b82f6', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                        + Tambah Ekstensi
+                      </button>
                     </div>
                   )}
 
@@ -1452,6 +1555,12 @@ const Admin = () => {
           <PromoAdminTab />
         )}
 
+        {/* ── Mosques Tab ── */}
+        {activeAdminTab === 'mosques' && (
+          <MosqueAdminTab />
+        )}
+
+        {/* ── Transactions Tab ── */}
         {activeAdminTab === 'transactions' && (
           <section className="admin-section">
             <div className="section-header">

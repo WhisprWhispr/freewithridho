@@ -9,7 +9,7 @@ import { isFlashSaleActive } from '../utils/flashSaleHelper';
 import { Search, Code2, Users, Star, Zap, Clock } from 'lucide-react';
 import './Home.css';
 
-const CATEGORIES = ['All', 'Basic', 'Premium', 'Web', 'Game', 'Mobile'];
+const CATEGORIES = ['All', 'Basic', 'Premium', 'Web', 'Game', 'Mobile', 'Template Web'];
 
 // Countdown Timer Hook — hitung mundur ke tengah malam
 function useFlashSaleCountdown() {

@@ -1,0 +1,188 @@
+.kisah-page {
+  padding: 2rem 5%;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: calc(100vh - 160px);
+}
+
+.kisah-nav {
+  margin-bottom: 2rem;
+}
+
+.kisah-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.kisah-icon {
+  color: #10b981;
+  margin-bottom: 1rem;
+}
+
+.kisah-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.kisah-header p {
+  color: #94a3b8;
+}
+
+.nabi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.nabi-card {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.nabi-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.nabi-number {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.05);
+  transition: color 0.3s;
+}
+
+.nabi-card:hover .nabi-number {
+  color: rgba(16, 185, 129, 0.2);
+}
+
+.nabi-name {
+  color: #f1f5f9;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.nabi-summary {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  flex-grow: 1;
+  margin-bottom: 1rem;
+}
+
+.read-more {
+  color: #10b981;
+  font-size: 0.85rem;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+/* Modal Styles */
+.nabi-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.nabi-modal {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUpFade 0.4s ease;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.close-modal-btn:hover {
+  background: rgba(239, 68, 68, 0.8);
+}
+
+.modal-content-scroll {
+  overflow-y: auto;
+  max-height: 85vh;
+}
+
+.modal-hero {
+  position: relative;
+  height: 200px;
+  width: 100%;
+}
+
+.nabi-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, #0f172a 0%, transparent 100%);
+  padding: 2rem 1.5rem 1rem;
+}
+
+.modal-hero-overlay h2 {
+  color: white;
+  font-size: 2rem;
+  margin: 0;
+}
+
+.modal-body {
+  padding: 2rem 1.5rem;
+}
+
+.full-story {
+  color: #cbd5e1;
+  line-height: 1.8;
+  white-space: pre-line;
+  font-size: 1.05rem;
+}

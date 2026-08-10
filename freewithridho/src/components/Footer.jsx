@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Scale, Code, Users, Clock } from 'lucide-react';
+import { Shield, Scale, Code, Users, Clock, Coffee, Mail, Info, BookOpen } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -41,6 +41,32 @@ const Footer = () => {
             <li>
               <Link to="/become-partner">
                 <Users size={14} /> Jadi Partner
+              </Link>
+            </li>
+            <li>
+              <Link to="/dukung-kami">
+                <Coffee size={14} /> Dukung Kami
+              </Link>
+            </li>
+            <li>
+              <Link to="/donasi-masjid">
+                <BookOpen size={14} /> Donasi Masjid
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className="footer-links">
+          <h4>Bantuan & Info</h4>
+          <ul>
+            <li>
+              <Link to="/hubungi-kami">
+                <Mail size={14} /> Hubungi Kami
+              </Link>
+            </li>
+            <li>
+              <Link to="/sumber-data">
+                <Info size={14} /> Sumber Data
               </Link>
             </li>
           </ul>

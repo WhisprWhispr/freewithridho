@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, LayoutDashboard, LogOut, LogIn, User, ChevronDown, Package, Home } from 'lucide-react';
+import { Code2, LayoutDashboard, LogOut, LogIn, User, ChevronDown, Package, Home, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { listenToPartnerByUserId } from '../services/partnerService';
 import NotificationBell from './NotificationBell';

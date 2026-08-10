@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getProjectById } from '../services/projectService';
 import { getSettings } from '../services/projectService';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2, Tag, X, RefreshCw, QrCode } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, ShieldCheck, Loader2, Tag, X, RefreshCw, QrCode, Copy } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, limit } from 'firebase/firestore';
@@ -22,6 +22,8 @@ const Checkout = () => {
   const [processing, setProcessing] = useState(false);
   const [instanpayConfig, setInstanpayConfig] = useState(null);
   const [pendingTransaction, setPendingTransaction] = useState(null);
+  
+  const [paymentMethod, setPaymentMethod] = useState('qris'); // 'qris' or 'crypto'
 
   // Promo code state
   const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -34,7 +36,27 @@ const Checkout = () => {
   // Buyer input data state
   const [buyerInputData, setBuyerInputData] = useState('');
 
-  const basePrice = project ? getProjectPrice(project) : 0;
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const selectedPackage = searchParams.get('pkg') || 'source_code';
+  const domainExt = searchParams.get('ext') || '';
+  const customDomain = searchParams.get('domain') || '';
+
+  const getDynamicPrice = (proj) => {
+    if (!proj) return 0;
+    let base = getProjectPrice(proj) || 0;
+    if (!proj.offersWebPackages || selectedPackage !== 'hosting_domain') return base;
+    
+    if (domainExt && proj.domainOptions) {
+      const selectedOpt = proj.domainOptions.find(opt => opt.extension === domainExt);
+      if (selectedOpt) {
+        return base + (Number(selectedOpt.price) || 0);
+      }
+    }
+    return base;
+  };
+
+  const basePrice = project ? getDynamicPrice(project) : 0;
 
   useEffect(() => {
     if (!user) {
@@ -178,8 +200,11 @@ const Checkout = () => {
           projectId: id,
           userId: user.uid,
           userEmail: user.email,
-          projectTitle: project.title,
+          projectTitle: project.title + (selectedPackage === 'hosting_domain' ? ` (Hosting & Domain: ${customDomain}${domainExt})` : ''),
           amount: validPromo ? validPromo.finalAmount : basePrice,
+          paymentMethod: paymentMethod, // 'qris' or 'crypto'
+          chain: 'BSC',
+          token: 'USDT'
         }),
       });
 
@@ -201,6 +226,42 @@ const Checkout = () => {
         throw new Error(data.message || 'Gagal memproses pembayaran');
       }
 
+      if (paymentMethod === 'crypto') {
+        toast.success('Pesanan Crypto Berhasil Dibuat!', { id: loadingToast });
+        
+        try {
+          await addDoc(collection(db, 'transactions'), {
+            merchantRef: data.reference,
+            gatewayOrderId: data.gatewayOrderId,
+            projectId: id,
+            projectTitle: project.title,
+            userId: user.uid,
+            userEmail: user.email,
+            amount: validPromo ? validPromo.finalAmount : basePrice,
+            originalAmount: basePrice,
+            amountUsd: data.amount_usd,
+            promoCode: validPromo ? validPromo.code : null,
+            status: 'PENDING',
+            createdAt: serverTimestamp(),
+            expiredAt: data.expiredAt,
+            buyerInputData: project?.requiresInputData ? buyerInputData.trim() : null,
+            packageType: selectedPackage,
+            domainExtension: domainExt,
+            customDomainName: customDomain,
+            paymentMethod: 'crypto',
+            depositAddress: data.deposit_address,
+            paymentUrl: data.payment_url,
+          });
+        } catch (e) {
+          console.warn('Gagal menyimpan transaksi PENDING crypto:', e);
+        }
+
+        setProcessing(false);
+        // Redirect to Instanpay Crypto Payment URL
+        window.location.href = data.payment_url;
+        return;
+      }
+
       toast.success('Kode QRIS berhasil dibuat!', { id: loadingToast });
       
       try {
@@ -219,6 +280,9 @@ const Checkout = () => {
           qrisString: data.qrisString,
           expiredAt: data.expiredAt,
           buyerInputData: project?.requiresInputData ? buyerInputData.trim() : null,
+          packageType: selectedPackage,
+          domainExtension: domainExt,
+          customDomainName: customDomain,
         });
       } catch (e) {
         console.warn('Gagal menyimpan transaksi PENDING:', e);
@@ -304,8 +368,15 @@ const Checkout = () => {
 
         <div className="checkout-summary">
           <div className="summary-item">
-            <span className="summary-label">Proyek</span>
-            <span className="summary-value">{project.title}</span>
+            <span>Produk</span>
+            <span className="summary-value">
+              {project.title}
+              {project.offersWebPackages && selectedPackage === 'hosting_domain' && (
+                <div style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '4px' }}>
+                  + Hosting & Domain ({customDomain}{domainExt})
+                </div>
+              )}
+            </span>
           </div>
           <div className="summary-item">
             <span className="summary-label">Akun Pembeli</span>
@@ -369,6 +440,34 @@ const Checkout = () => {
           </div>
         </div>
 
+        {/* Payment Method Selection for Admin Items */}
+        {project?.developerName === 'Admin' && !paymentDetails && (
+          <div className="payment-method-section" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem', marginTop: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', color: '#f8fafc', marginBottom: '1rem' }}>Pilih Metode Pembayaran</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderRadius: '8px', cursor: 'pointer', border: `1px solid ${paymentMethod === 'qris' ? '#8b5cf6' : 'rgba(255,255,255,0.1)'}`, background: paymentMethod === 'qris' ? 'rgba(139,92,246,0.1)' : 'transparent', transition: 'all 0.2s' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input type="radio" name="paymentMethod" checked={paymentMethod === 'qris'} onChange={() => setPaymentMethod('qris')} style={{ margin: 0 }} />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ color: paymentMethod === 'qris' ? '#fff' : '#cbd5e1', fontWeight: 600 }}>QRIS (Otomatis)</span>
+                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Verifikasi instan via Instanpay</span>
+                  </div>
+                </div>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', borderRadius: '8px', cursor: 'pointer', border: `1px solid ${paymentMethod === 'crypto' ? '#8b5cf6' : 'rgba(255,255,255,0.1)'}`, background: paymentMethod === 'crypto' ? 'rgba(139,92,246,0.1)' : 'transparent', transition: 'all 0.2s' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input type="radio" name="paymentMethod" checked={paymentMethod === 'crypto'} onChange={() => setPaymentMethod('crypto')} style={{ margin: 0 }} />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ color: paymentMethod === 'crypto' ? '#fff' : '#cbd5e1', fontWeight: 600 }}>Crypto Wallet (Manual)</span>
+                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Transfer via USDT / Aset Digital lain</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
+
         <div className="checkout-security">
           <ShieldCheck size={18} /> Pembayaran diproses dengan aman oleh Instanpay.
         </div>
@@ -413,12 +512,12 @@ const Checkout = () => {
             <button
               className="btn-pay"
               onClick={handleCheckout}
-              disabled={processing || !instanpayConfig?.apiKey}
+              disabled={processing || (paymentMethod === 'qris' && !instanpayConfig?.apiKey)}
             >
               {processing ? (
                 <><Loader2 size={18} className="spin-icon" /> Memproses...</>
               ) : (
-                'Bayar dengan QRIS'
+                <>Lanjut Pembayaran {paymentMethod === 'crypto' ? 'Crypto' : 'QRIS'}</>
               )}
             </button>
           </div>

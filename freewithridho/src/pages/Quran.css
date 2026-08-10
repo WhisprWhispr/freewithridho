@@ -1,0 +1,206 @@
+.quran-page {
+  padding: 2rem 5%;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 200px);
+}
+
+.quran-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.quran-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #3b82f6, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.quran-header p {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.search-container {
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+.surah-search-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.5);
+  color: #f1f5f9;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.surah-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.surah-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.surah-card {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.surah-card:hover {
+  transform: translateY(-5px);
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.surah-number {
+  margin-right: 1.2rem;
+}
+
+.number-hex {
+  width: 45px;
+  height: 45px;
+  background: rgba(59, 130, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.number-hex span {
+  transform: rotate(-45deg);
+  color: #3b82f6;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.surah-info {
+  flex: 1;
+}
+
+.surah-name {
+  color: #f1f5f9;
+  font-size: 1.2rem;
+  margin: 0 0 0.3rem 0;
+}
+
+.surah-arti {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.surah-arabic {
+  font-size: 1.8rem;
+  font-family: 'Scheherazade New', serif; /* Or any classic arabic font */
+  color: #10b981;
+  text-align: right;
+  margin-left: 1rem;
+}
+
+.surah-meta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.8rem 1.5rem;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  justify-content: space-between;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.3s ease;
+}
+
+.surah-card:hover .surah-meta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.quran-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0;
+  color: #94a3b8;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.no-results {
+  text-align: center;
+  padding: 4rem 0;
+  color: #64748b;
+}
+
+.no-results-icon {
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.no-results h3 {
+  color: #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .surah-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .quran-header h1 {
+    font-size: 2rem;
+  }
+}

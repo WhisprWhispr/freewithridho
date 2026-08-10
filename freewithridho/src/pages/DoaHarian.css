@@ -1,0 +1,232 @@
+.doa-page {
+  padding: 2rem 5%;
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: calc(100vh - 160px);
+}
+
+.doa-nav {
+  margin-bottom: 2rem;
+}
+
+.doa-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.doa-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #3b82f6, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.doa-header p {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.doa-search {
+  max-width: 500px;
+  margin: 0 auto 1.5rem;
+  position: relative;
+}
+
+.doa-search .search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+.doa-search input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(8px);
+  color: #f1f5f9;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.doa-search input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.doa-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.category-btn {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #cbd5e1;
+}
+
+.category-btn.active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2));
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.doa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.doa-card {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 24px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+.doa-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #3b82f6, #10b981);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.doa-card:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+.doa-card:hover::before {
+  opacity: 1;
+}
+
+.doa-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.doa-category-tag {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.copy-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #94a3b8;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+}
+
+.doa-title {
+  color: #f8fafc;
+  font-size: 1.4rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.doa-arabic {
+  font-size: 2.2rem;
+  font-family: 'Scheherazade New', serif;
+  color: #10b981;
+  text-align: right;
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+}
+
+.doa-latin {
+  color: #60a5fa;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.doa-translation-container {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 12px;
+  border-left: 3px solid #10b981;
+  margin-top: 1rem;
+}
+
+.translation-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #10b981;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.doa-translation {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  margin: 0;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.no-doa {
+  text-align: center;
+  color: #94a3b8;
+  padding: 3rem 0;
+  background: rgba(30, 41, 59, 0.3);
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}

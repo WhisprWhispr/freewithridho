@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Clock, Maximize, Minimize, AlertCircle, RefreshCw, Sun, Moon, Sunrise, Sunset, BookOpen } from 'lucide-react';
+import { MapPin, Clock, Maximize, Minimize, AlertCircle, RefreshCw, Sun, Moon, Sunrise, Sunset, BookOpen, Menu, X, Heart, Calculator, List, CalendarDays, Star, Library } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import './PrayerTimes.css';
 
 const PrayerTimes = () => {
-  const [permission, setPermission] = useState('pending');
+  const [permission, setPermission] = useState('default');
   const [times, setTimes] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,6 +13,12 @@ const PrayerTimes = () => {
   const [locationName, setLocationName] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // New States for Advanced Features
+  const [activePrayer, setActivePrayer] = useState(null);
+  const [nextPrayer, setNextPrayer] = useState(null);
+  const [countdown, setCountdown] = useState('');
 
   const containerRef = useRef(null);
 
@@ -28,6 +35,12 @@ const PrayerTimes = () => {
     
     // Fetch a daily quote
     fetchQuote();
+    
+    // Default load Jakarta (-6.2088, 106.8456)
+    if (!times && permission === 'default') {
+      setLoading(true);
+      fetchPrayerTimes(-6.2088, 106.8456);
+    }
 
     return () => {
       clearInterval(timer);
@@ -91,7 +104,6 @@ const PrayerTimes = () => {
 
   const addMinutesToTime = (timeStr, minutesToAdd) => {
     if (!timeStr) return timeStr;
-    // Assuming format "HH:mm" or "HH:mm (WIB)"
     const pureTime = timeStr.split(' ')[0];
     const [hours, minutes] = pureTime.split(':').map(Number);
     const date = new Date();
@@ -103,13 +115,74 @@ const PrayerTimes = () => {
     return `${newHours}:${newMins}`;
   };
 
+  const parseTime = (timeStr) => {
+    if (!timeStr) return new Date();
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  };
+
+  useEffect(() => {
+    if (!times) return;
+
+    const calculatePrayerStatus = () => {
+      const now = new Date();
+      const schedule = [
+         { name: 'Imsak', time: parseTime(times.timings.Imsak) },
+         { name: 'Subuh', time: parseTime(times.timings.Subuh) },
+         { name: 'Terbit', time: parseTime(times.timings.Terbit) },
+         { name: 'Dzuhur', time: parseTime(times.timings.Dzuhur) },
+         { name: 'Ashar', time: parseTime(times.timings.Ashar) },
+         { name: 'Maghrib', time: parseTime(times.timings.Maghrib) },
+         { name: 'Isya', time: parseTime(times.timings.Isya) },
+      ];
+
+      let currentActive = null;
+      let upcoming = null;
+
+      for (let i = 0; i < schedule.length; i++) {
+         if (now >= schedule[i].time) {
+            currentActive = schedule[i].name;
+         }
+         if (now < schedule[i].time && !upcoming) {
+            upcoming = schedule[i];
+         }
+      }
+
+      if (!upcoming) {
+         const tomorrowImsak = new Date(schedule[0].time);
+         tomorrowImsak.setDate(tomorrowImsak.getDate() + 1);
+         upcoming = { name: 'Imsak', time: tomorrowImsak };
+         currentActive = 'Isya';
+      }
+
+      setActivePrayer(currentActive);
+      setNextPrayer(upcoming.name);
+
+      const diff = upcoming.time - now;
+      if (diff > 0) {
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        const hStr = h > 0 ? `${h} Jam ` : '';
+        const mStr = m > 0 ? `${m} Menit ` : '';
+        const sStr = `${String(s).padStart(2, '0')} Detik`;
+        setCountdown(`${hStr}${mStr}${sStr}`);
+      }
+    };
+
+    calculatePrayerStatus();
+    const interval = setInterval(calculatePrayerStatus, 1000);
+    return () => clearInterval(interval);
+  }, [times]);
+
   const handleGrantPermission = () => {
-    // Attempt fullscreen on user interaction
-    requestFullscreen();
-    
     setLoading(true);
     if (!navigator.geolocation) {
       setError('Geolocation tidak didukung oleh browser Anda.');
+      toast.error('Geolocation tidak didukung oleh browser Anda.');
       setPermission('denied');
       setLoading(false);
       return;
@@ -124,6 +197,7 @@ const PrayerTimes = () => {
       (err) => {
         setPermission('denied');
         setError('Akses lokasi ditolak atau gagal. Mohon izinkan akses lokasi di pengaturan browser Anda.');
+        toast.error('Akses lokasi ditolak atau gagal.');
         setLoading(false);
       },
       {
@@ -193,49 +267,70 @@ const PrayerTimes = () => {
 
   return (
     <div className="prayer-times-wrapper" ref={containerRef}>
-      {permission === 'pending' || permission === 'denied' ? (
-        <div className="permission-modal-container">
-          <div className="permission-modal">
-            <div className="modal-icon-wrapper">
-              <MapPin size={48} className="modal-icon" />
-            </div>
-            <h2>Izin Lokasi Diperlukan</h2>
-            <p>
-              Untuk menampilkan jadwal sholat yang akurat sesuai dengan daerah Anda, 
-              kami membutuhkan akses lokasi perangkat Anda (GPS).
-            </p>
-            {error && (
-              <div className="error-alert">
-                <AlertCircle size={20} />
-                <span>{error}</span>
-              </div>
-            )}
-            <button 
-              className="grant-btn" 
-              onClick={handleGrantPermission}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <RefreshCw size={20} className="spin" /> Memproses...
-                </>
-              ) : (
-                'Berikan Izin Lokasi'
-              )}
+        {/* Islamic Dashboard Internal Menu */}
+        <div className={`islamic-menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)}></div>
+        <div className={`islamic-side-menu ${isMenuOpen ? 'open' : ''}`}>
+          <div className="side-menu-header">
+            <h3>Fitur Islami</h3>
+            <button className="close-menu-btn" onClick={() => setIsMenuOpen(false)}>
+              <X size={24} />
             </button>
-            <p className="modal-note">
-              Akses lokasi hanya digunakan untuk perhitungan jadwal sholat dan tidak disimpan di server kami.
-            </p>
+          </div>
+          <div className="side-menu-links">
+            <Link to="/quran" className="side-menu-item">
+              <BookOpen size={20} /> Al-Quran Digital
+            </Link>
+            <Link to="/yasin-tahlil" className="side-menu-item">
+              <BookOpen size={20} /> Yasin & Tahlil
+            </Link>
+            <Link to="/kalender-hijriah" className="side-menu-item">
+              <CalendarDays size={20} /> Kalender Hijriah
+            </Link>
+            <Link to="/sholawat" className="side-menu-item">
+              <Star size={20} /> Kumpulan Sholawat
+            </Link>
+            <Link to="/kisah-nabi" className="side-menu-item">
+              <Library size={20} /> Kisah 25 Nabi
+            </Link>
+            <Link to="/artikel-islami" className="side-menu-item">
+              <BookOpen size={20} /> Artikel Islami
+            </Link>
+            <Link to="/tasbih" className="side-menu-item">
+              <List size={20} /> Tasbih Digital
+            </Link>
+            <Link to="/asmaul-husna" className="side-menu-item">
+              <Heart size={20} /> Asmaul Husna
+            </Link>
+            <Link to="/doa-harian" className="side-menu-item">
+              <Clock size={20} /> Doa Harian
+            </Link>
+            <Link to="/kalkulator-zakat" className="side-menu-item">
+              <Calculator size={20} /> Kalkulator Zakat
+            </Link>
           </div>
         </div>
-      ) : (
+
         <div className="prayer-dashboard">
+          
+
+
           <div className="dashboard-header">
             <div className="header-left">
-              <h2>Jadwal Sholat</h2>
-              <div className="location-badge">
-                <MapPin size={16} />
-                <span>{locationName}</span>
+              <div className="header-title-row">
+                <button className="icon-btn hamburger-menu-btn" onClick={() => setIsMenuOpen(true)} title="Menu Islami">
+                  <Menu size={24} />
+                </button>
+                <h2>Dashboard Islami</h2>
+              </div>
+              <div className="header-action-row">
+                <div className="location-badge">
+                  <MapPin size={16} />
+                  <span>{locationName}</span>
+                </div>
+                <button className="use-location-btn" onClick={handleGrantPermission} disabled={loading} title="Gunakan Lokasi Saat Ini">
+                  {loading && permission === 'granted' ? <RefreshCw size={14} className="spin" /> : <MapPin size={14} />} 
+                  Gunakan Lokasi Saya
+                </button>
               </div>
             </div>
             <div className="header-right">
@@ -257,18 +352,27 @@ const PrayerTimes = () => {
                   {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </div>
                 <div className="current-date">
-                  {times.date} &bull; {times.hijri}
+                  <span className="gregorian-date">{times.date}</span>
+                  <span className="hijri-badge">{times.hijri}</span>
                 </div>
+                
+                {countdown && (
+                  <div className="countdown-container">
+                    <span className="countdown-label">Menuju {nextPrayer}:</span>
+                    <span className="countdown-timer">{countdown}</span>
+                  </div>
+                )}
               </div>
 
               <div className="prayer-cards-container">
                 {Object.entries(times.timings).map(([name, time]) => (
-                  <div className="prayer-card" key={name}>
+                  <div className={`prayer-card ${activePrayer === name ? 'active-prayer' : ''}`} key={name}>
                     <div className="prayer-card-icon">
                       {prayerIcons[name]}
                     </div>
                     <div className="prayer-name">{name}</div>
                     <div className="prayer-time">{time}</div>
+                    {activePrayer === name && <div className="active-indicator">Sekarang</div>}
                   </div>
                 ))}
               </div>
@@ -282,14 +386,9 @@ const PrayerTimes = () => {
                   <cite className="quote-author">- {quote.author}</cite>
                 </div>
               )}
-              
-              <div className="footer-note">
-                Created by: Team SukaCoding.
-              </div>
             </>
           )}
         </div>
-      )}
     </div>
   );
 };

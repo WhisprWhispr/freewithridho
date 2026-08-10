@@ -7,7 +7,7 @@ import 'highlight.js/styles/github-dark.css';
 import { Download, ArrowLeft, FileText, ShoppingCart, LockOpen,
   Heart, Tag, Star, ZoomIn, X, ChevronLeft, ChevronRight,
   Shield, Zap, Package, User, Share2, Link2, MessageCircle,
-  Hash, Copy, Check, MonitorPlay, ExternalLink
+  Hash, Copy, Check, MonitorPlay, ExternalLink, Loader2, Info
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -56,6 +56,14 @@ const ProjectDetail = () => {
   const [hasPurchased, setHasPurchased] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, index: 0 });
+  
+  // Custom Domain Package States
+  const [useWebPackage, setUseWebPackage] = useState(false);
+  const [selectedExtension, setSelectedExtension] = useState('');
+  const [customDomainName, setCustomDomainName] = useState('');
+  const [checkingDomain, setCheckingDomain] = useState(false);
+  const [domainStatus, setDomainStatus] = useState(null); // 'available' | 'unavailable' | 'error' | null
+  const [showDomainInfo, setShowDomainInfo] = useState(false);
 
   // Wishlist state
   const [wishlisted, setWishlisted] = useState(false);
@@ -82,8 +90,68 @@ const ProjectDetail = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
 
   const handleBuy = () => {
-    if (!user) navigate('/login');
-    else navigate(`/checkout/${id}`);
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
+    if (useWebPackage && !customDomainName.trim()) {
+      toast.error('Mohon masukkan nama domain kustom yang Anda inginkan (misal: namatoko)');
+      return;
+    }
+    
+    if (useWebPackage) {
+      navigate(`/checkout/${id}?pkg=hosting_domain&ext=${selectedExtension}&domain=${encodeURIComponent(customDomainName.trim())}`);
+    } else {
+      navigate(`/checkout/${id}`);
+    }
+  };
+
+  const checkDomain = async () => {
+    if (!customDomainName.trim()) {
+      toast.error('Masukkan nama domain terlebih dahulu');
+      return;
+    }
+    
+    const fullDomain = `${customDomainName.trim()}${selectedExtension || '.com'}`;
+    setCheckingDomain(true);
+    setDomainStatus(null);
+    
+    try {
+      // Using Google DNS over HTTPS (JSON format)
+      const response = await fetch(`https://dns.google/resolve?name=${fullDomain}&type=A`);
+      const data = await response.json();
+      
+      // Status: 0 = NOERROR (exists/registered), 3 = NXDOMAIN (doesn't exist/might be available)
+      if (data.Status === 3) {
+         setDomainStatus('available');
+         toast.success(`Domain ${fullDomain} tersedia!`);
+      } else if (data.Status === 0) {
+         setDomainStatus('unavailable');
+         toast.error(`Maaf, domain ${fullDomain} sudah terdaftar.`);
+      } else {
+         setDomainStatus('error');
+         toast.error('Gagal mengecek ketersediaan domain.');
+      }
+    } catch (e) {
+      console.error(e);
+      setDomainStatus('error');
+      toast.error('Gagal menghubungi server pengecekan domain.');
+    } finally {
+      setCheckingDomain(false);
+    }
+  };
+
+  const getDynamicPrice = () => {
+    if (!project) return 0;
+    let base = isFlashSaleActive(project) ? (project.discountPrice || 0) : (project.price || 0);
+    if (!project.offersWebPackages || !useWebPackage) return base;
+    
+    const selectedOpt = project.domainOptions?.find(opt => opt.extension === selectedExtension);
+    if (selectedOpt) {
+      return base + (Number(selectedOpt.price) || 0);
+    }
+    return base;
   };
 
   const handleFreeDownload = (e) => {
@@ -191,6 +259,9 @@ const ProjectDetail = () => {
         const data = await getProjectById(id);
         if (!data) { setError('Proyek tidak ditemukan.'); return; }
         setProject(data);
+        if (data.offersWebPackages && data.domainOptions?.length > 0) {
+          setSelectedExtension(data.domainOptions[0].extension);
+        }
 
         // Wishlist check (Firestore)
         if (user) {
@@ -407,6 +478,93 @@ const ProjectDetail = () => {
               </div>
             )}
 
+            {/* Package Selection */}
+            {project.offersWebPackages && !hasPurchased && project.domainOptions?.length > 0 && (
+              <div className="package-selection-box" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: useWebPackage ? '1rem' : '0' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={useWebPackage} 
+                      onChange={(e) => setUseWebPackage(e.target.checked)} 
+                      style={{ width: '18px', height: '18px', accentColor: '#8b5cf6' }} 
+                    />
+                    <span style={{ fontSize: '1rem', color: '#f8fafc', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Package size={18} style={{ color: '#8b5cf6' }} /> Tambah Paket Hosting & Custom Domain
+                    </span>
+                  </label>
+                  <button 
+                    onClick={() => setShowDomainInfo(true)}
+                    style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.2rem' }}
+                    title="Apa itu Custom Domain?"
+                  >
+                    <Info size={18} />
+                  </button>
+                </div>
+
+                {useWebPackage && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem', animation: 'fadeIn 0.3s ease' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '0.4rem', display: 'block' }}>Ekstensi Domain Pilihan</label>
+                      <select 
+                        value={selectedExtension} 
+                        onChange={(e) => setSelectedExtension(e.target.value)}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none' }}
+                      >
+                        {project.domainOptions.map((opt, idx) => (
+                          <option key={idx} value={opt.extension}>
+                            {opt.extension} (+ Rp {opt.price?.toLocaleString('id-ID')})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '0.4rem', display: 'block' }}>Nama Domain Impian Anda</label>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flex: 1, alignItems: 'center', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}>
+                          <input 
+                            type="text" 
+                            placeholder="namatoko"
+                            value={customDomainName} 
+                            onChange={(e) => {
+                              setCustomDomainName(e.target.value.replace(/\s+/g, '').toLowerCase());
+                              setDomainStatus(null);
+                            }}
+                            style={{ flex: 1, padding: '0.75rem', background: 'transparent', border: 'none', color: 'white', outline: 'none' }}
+                          />
+                          <div style={{ padding: '0.75rem 1rem', background: 'rgba(139,92,246,0.2)', borderLeft: '1px solid rgba(139,92,246,0.4)', borderRadius: '0 8px 8px 0', color: '#c4b5fd', fontWeight: 600 }}>
+                            {selectedExtension || '.com'}
+                          </div>
+                        </div>
+                        <button 
+                          onClick={checkDomain}
+                          disabled={checkingDomain || !customDomainName.trim()}
+                          style={{ 
+                            marginLeft: '0.5rem', 
+                            padding: '0.75rem 1rem', 
+                            background: checkingDomain ? '#475569' : '#3b82f6', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '8px', 
+                            cursor: (checkingDomain || !customDomainName.trim()) ? 'not-allowed' : 'pointer',
+                            fontWeight: 600
+                          }}
+                        >
+                          {checkingDomain ? <Loader2 size={18} className="spin" /> : 'Periksa'}
+                        </button>
+                      </div>
+                      <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        Tanpa spasi. Contoh: bukawarung
+                        {domainStatus === 'available' && <span style={{ color: '#10b981', marginLeft: '0.5rem', fontWeight: 'bold' }}>✓ Domain Tersedia</span>}
+                        {domainStatus === 'unavailable' && <span style={{ color: '#ef4444', marginLeft: '0.5rem', fontWeight: 'bold' }}>✗ Domain Sudah Digunakan</span>}
+                      </small>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Price Box */}
             <div className="detail-price-box">
               <div className="price-left">
@@ -415,7 +573,7 @@ const ProjectDetail = () => {
                     <span className="price-label">Harga</span>
                     <span className="price-value free-price">Gratis</span>
                   </>
-                ) : isFlashSaleActive(project) ? (
+                ) : isFlashSaleActive(project) && !project.offersWebPackages ? (
                   <>
                     <span className="price-label" style={{ color: '#ef4444', fontWeight: 600 }}>⚡ Flash Sale</span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -429,10 +587,13 @@ const ProjectDetail = () => {
                   </>
                 ) : (
                   <>
-                    <span className="price-label">Harga</span>
+                    <span className="price-label">Total Harga</span>
                     <span className="price-value paid-price">
-                      Rp {project.price?.toLocaleString('id-ID')}
+                      Rp {getDynamicPrice().toLocaleString('id-ID')}
                     </span>
+                    {project.offersWebPackages && useWebPackage && (
+                       <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '4px' }}>Termasuk biaya layanan tambahan</span>
+                    )}
                   </>
                 )}
               </div>
@@ -729,6 +890,43 @@ const ProjectDetail = () => {
           </div>
         </div>
       )}
+      {/* Domain Info Modal */}
+      {showDomainInfo && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', animation: 'fadeIn 0.2s ease' }}>
+          <div className="modal-content" style={{ background: '#0f172a', padding: '2rem', borderRadius: '16px', maxWidth: '500px', width: '100%', border: '1px solid rgba(139,92,246,0.3)', position: 'relative', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+            <button 
+              onClick={() => setShowDomainInfo(false)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#cbd5e1', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              <X size={18} />
+            </button>
+            <h2 style={{ fontSize: '1.4rem', color: '#f8fafc', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Info size={24} style={{ color: '#8b5cf6' }} /> Mengapa Harus Custom Domain?
+            </h2>
+            <div style={{ color: '#cbd5e1', fontSize: '0.95rem', lineHeight: 1.6 }}>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong>Custom Domain</strong> adalah alamat unik website Anda di internet (misal: <em>www.namabisnisanda.com</em>). Memiliki domain sendiri memberikan dampak yang sangat besar untuk bisnis Anda:
+              </p>
+              <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <li><strong>Meningkatkan Kredibilitas:</strong> Bisnis terlihat jauh lebih profesional dan terpercaya di mata pelanggan dibandingkan memakai domain gratisan.</li>
+                <li><strong>Mudah Diingat:</strong> Pelanggan lebih mudah mengingat dan mengetik nama <em>brand</em> Anda secara langsung.</li>
+                <li><strong>Meningkatkan SEO:</strong> Mesin pencari seperti Google lebih memprioritaskan website dengan <em>custom domain</em>, sehingga mempermudah calon klien menemukan bisnis Anda.</li>
+                <li><strong>Identitas Email:</strong> Anda dapat memiliki email profesional dengan nama domain Anda sendiri (misal: <em>admin@namabisnisanda.com</em>).</li>
+              </ul>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                Dengan membeli paket Hosting & Domain ini, kami akan membantu seluruh proses pendaftaran, konfigurasi *server*, hingga website Anda benar-benar *live* dan bisa diakses dunia!
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowDomainInfo(false)}
+              style={{ width: '100%', marginTop: '1.5rem', padding: '0.8rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Saya Mengerti
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

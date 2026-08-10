@@ -71,10 +71,8 @@ export const handler = async (event) => {
       };
     }
 
-    const INSTANPAY_URL = 'https://instanpay.net/api/v1/payments';
-
     const body = JSON.parse(event.body);
-    const { projectId, userId, userEmail, projectTitle, amount } = body;
+    const { projectId, userId, userEmail, projectTitle, amount, paymentMethod, chain, token } = body;
 
     if (!projectId || !userId || !userEmail || !amount) {
       return {
@@ -84,54 +82,123 @@ export const handler = async (event) => {
       };
     }
 
-    const payload = {
-      amount: Number(amount),
-      customer_name: userEmail.split('@')[0],
-      webhook_url: `${SITE_URL}/.netlify/functions/instanpay-webhook`
-    };
+    if (paymentMethod === 'crypto') {
+      const CRYPTO_URL = 'https://instanpay.net/api/v1/crypto-payments';
+      
+      // Convert IDR to USD. Rate: 1 USD = Rp 15.000
+      const USD_RATE = 15000;
+      let amountUsd = Number(amount) / USD_RATE;
+      if (amountUsd < 0.01) amountUsd = 0.01;
+      
+      // Format to 2 decimal places
+      amountUsd = parseFloat(amountUsd.toFixed(2));
 
-    console.log('🌐 Instanpay URL:', INSTANPAY_URL);
+      const payload = {
+        amount_usd: amountUsd,
+        chain: chain || 'BSC',
+        token: token || 'USDT',
+        customer_name: userEmail.split('@')[0],
+        customer_email: userEmail
+      };
 
-    const instanpayRes = await fetchFn(INSTANPAY_URL, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-API-Key': apiKey,
-      },
-      body: JSON.stringify(payload),
-    });
+      console.log('🌐 Instanpay Crypto URL:', CRYPTO_URL);
 
-    const instanpayData = await instanpayRes.json();
-    console.log('Instanpay response status:', instanpayRes.status);
+      const instanpayRes = await fetchFn(CRYPTO_URL, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+        body: JSON.stringify(payload),
+      });
 
-    if (!instanpayRes.ok || !instanpayData.success) {
-      const errMsg = instanpayData.message || JSON.stringify(instanpayData);
-      console.error('Instanpay error:', errMsg);
+      const instanpayData = await instanpayRes.json();
+      console.log('Instanpay Crypto response status:', instanpayRes.status);
+
+      if (!instanpayRes.ok || !instanpayData.success) {
+        const errMsg = instanpayData.message || JSON.stringify(instanpayData);
+        console.error('Instanpay Crypto error:', errMsg);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ success: false, message: errMsg }),
+        };
+      }
+
+      const txData = instanpayData.data;
+
       return {
-        statusCode: 400,
+        statusCode: 200,
         headers,
-        body: JSON.stringify({ success: false, message: errMsg }),
+        body: JSON.stringify({
+          success: true,
+          reference: txData.transactionId,
+          merchantRef: txData.transactionId,
+          gatewayOrderId: txData.gatewayOrderId,
+          amount_usd: txData.amount_usd,
+          chain: txData.chain,
+          token: txData.token,
+          deposit_address: txData.deposit_address,
+          payment_url: txData.payment_url,
+          expiredAt: txData.expires_at,
+          paymentMethod: 'crypto',
+        }),
+      };
+    } else {
+      // Default: QRIS
+      const INSTANPAY_URL = 'https://instanpay.net/api/v1/payments';
+
+      const payload = {
+        amount: Number(amount),
+        customer_name: userEmail.split('@')[0],
+        webhook_url: `${SITE_URL}/.netlify/functions/instanpay-webhook`
+      };
+
+      console.log('🌐 Instanpay QRIS URL:', INSTANPAY_URL);
+
+      const instanpayRes = await fetchFn(INSTANPAY_URL, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const instanpayData = await instanpayRes.json();
+      console.log('Instanpay QRIS response status:', instanpayRes.status);
+
+      if (!instanpayRes.ok || !instanpayData.success) {
+        const errMsg = instanpayData.message || JSON.stringify(instanpayData);
+        console.error('Instanpay QRIS error:', errMsg);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ success: false, message: errMsg }),
+        };
+      }
+
+      const txData = instanpayData.data;
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          reference: txData.transactionId,
+          merchantRef: txData.transactionId, // Using Instanpay's txId as our reference
+          qrCodeSvg: txData.qrCodeSvg,
+          qrisString: txData.qrisString,
+          totalAmount: txData.totalAmount,
+          totalFormatted: txData.totalFormatted,
+          expiredAt: txData.expiredAt,
+          baseAmount: txData.baseAmount,
+          paymentMethod: 'qris',
+        }),
       };
     }
-
-    const txData = instanpayData.data;
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        reference: txData.transactionId,
-        merchantRef: txData.transactionId, // Using Instanpay's txId as our reference
-        qrCodeSvg: txData.qrCodeSvg,
-        qrisString: txData.qrisString,
-        totalAmount: txData.totalAmount,
-        totalFormatted: txData.totalFormatted,
-        expiredAt: txData.expiredAt,
-        baseAmount: txData.baseAmount,
-      }),
-    };
   } catch (err) {
     console.error('create-transaction error:', err);
     return {

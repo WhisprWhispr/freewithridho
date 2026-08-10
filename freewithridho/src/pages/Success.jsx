@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, AlertCircle, Clock, ArrowRight, Download, Package } from 'lucide-react';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { CheckCircle, AlertCircle, Clock, ArrowRight, Download, Package, MessageCircle, X, Copy } from 'lucide-react';
+import { collection, query, where, getDocs, updateDoc, doc, getDoc } from 'firebase/firestore';
+import { toast } from 'react-hot-toast';
 import { db } from '../firebase';
 import emailjs from '@emailjs/browser';
 import { jsPDF } from 'jspdf';
@@ -19,6 +20,19 @@ const Success = () => {
   const [transaction, setTransaction] = useState(null);
   const [project, setProject] = useState(null);
   const [verifyError, setVerifyError] = useState(false);
+
+  // States for Developer Contact Modal
+  const [showDevContactModal, setShowDevContactModal] = useState(false);
+  const [developerPhone, setDeveloperPhone] = useState(null);
+  
+  // State for Admin Phone (Crypto Payment)
+  const adminPhone = '6281275623551'; 
+  const dummyCryptoAddress = 'ALAMAT-WALLET-CRYPTO-ANDA'; // Placeholder
+  
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Disalin ke clipboard!');
+  };
 
   useEffect(() => {
     if (!reference) {
@@ -66,6 +80,19 @@ const Success = () => {
               // Referral commissions are now credited instantly when the code is saved in Profile, 
               // so we no longer do it here at checkout.
               
+              // Fetch Developer Phone if packageType is hosting_domain
+              if (txData.packageType === 'hosting_domain' && projectData?.ownerId) {
+                try {
+                  const devDoc = await getDoc(doc(db, 'users', projectData.ownerId));
+                  if (devDoc.exists()) {
+                    setDeveloperPhone(devDoc.data().phone || null);
+                    setShowDevContactModal(true);
+                  }
+                } catch (e) {
+                  console.error('Failed to fetch developer phone', e);
+                }
+              }
+
               // Send email if not sent yet
               if (!txData.emailSent) {
                 let emailSentSuccessfully = false;
@@ -387,6 +414,50 @@ const Success = () => {
             Kembali ke Beranda <ArrowRight size={18} />
           </Link>
         </div>
+
+        {/* Developer Contact Modal */}
+        {showDevContactModal && (
+          <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', animation: 'fadeIn 0.3s ease' }}>
+            <div className="modal-content" style={{ background: '#0f172a', padding: '2rem', borderRadius: '16px', maxWidth: '450px', width: '100%', border: '1px solid rgba(139,92,246,0.3)', position: 'relative', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+              <button 
+                onClick={() => setShowDevContactModal(false)}
+                style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#cbd5e1', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+              
+              <div style={{ width: '64px', height: '64px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                <CheckCircle size={32} color="#10b981" />
+              </div>
+              
+              <h2 style={{ fontSize: '1.5rem', color: '#f8fafc', marginBottom: '0.75rem' }}>Pesanan Berhasil!</h2>
+              
+              <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                Terima kasih telah memesan paket <strong>Hosting & Custom Domain ({transaction.customDomainName}{transaction.domainExtension})</strong> untuk website ini. 
+                <br/><br/>
+                Tahap selanjutnya adalah aktivasi server dan konfigurasi domain. Silakan hubungi Developer kami via WhatsApp untuk mempercepat proses setup website Anda.
+              </p>
+
+              {developerPhone ? (
+                <a 
+                  href={`https://wa.me/${developerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Halo, saya baru saja membeli template ${project?.title || 'Website'} beserta layanan Hosting & Domain (${transaction.customDomainName}${transaction.domainExtension}). Berikut Nomor Referensi Pembayaran saya: ${transaction.merchantRef}. Mohon bantuannya untuk proses setup selanjutnya. Terima kasih!`)}`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#25D366', color: '#fff', textDecoration: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: 'bold', fontSize: '1rem', transition: 'transform 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <MessageCircle size={20} />
+                  Hubungi Developer Sekarang
+                </a>
+              ) : (
+                <p style={{ color: '#ef4444', fontSize: '0.9rem', background: 'rgba(239,68,68,0.1)', padding: '0.75rem', borderRadius: '8px' }}>
+                  Maaf, nomor WhatsApp Developer tidak tersedia saat ini. Silakan hubungi admin utama.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -404,6 +475,12 @@ const Success = () => {
         <div className="transaction-info">
           <span>Ref: <strong>{reference}</strong></span>
         </div>
+        
+        {transaction?.paymentMethod === 'crypto' && (
+          <p className="success-note" style={{ color: '#8b5cf6' }}>
+            Info: Pembayaran Crypto (USDT) membutuhkan waktu konfirmasi jaringan (sekitar 1-3 menit).
+          </p>
+        )}
 
         <p className="success-note">
           Jika sudah membayar dan tombol unduh belum muncul, coba refresh halaman ini dalam beberapa menit. Atau cek di <strong>Profil → Riwayat Pembelian</strong>.

@@ -1,0 +1,274 @@
+.hijri-page {
+  padding: 2rem 5%;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: calc(100vh - 160px);
+}
+
+.hijri-nav {
+  margin-bottom: 2rem;
+}
+
+.hijri-header-section {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.hijri-icon {
+  color: #10b981;
+  margin-bottom: 1rem;
+}
+
+.hijri-header-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hijri-header-section p {
+  color: #94a3b8;
+}
+
+.calendar-container {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+}
+
+.calendar-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.month-nav-btn {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.month-nav-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.current-month-display {
+  text-align: center;
+}
+
+.current-month-display h2 {
+  font-size: 1.5rem;
+  color: #f8fafc;
+  margin: 0 0 0.25rem;
+}
+
+.hijri-subtitle {
+  color: #10b981;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.calendar-header-day {
+  text-align: center;
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.calendar-cell {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.calendar-cell:not(.empty):hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.calendar-cell.empty {
+  background: transparent;
+  border: none;
+}
+
+.gregorian-day {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.hijri-day {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.calendar-cell.today {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.calendar-cell.today .gregorian-day {
+  color: #60a5fa;
+}
+
+/* Puasa Senin-Kamis (Orange) */
+.calendar-cell.fasting-senin, .calendar-cell.fasting-kamis {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.indicator-senin, .indicator-kamis {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+/* Puasa Ayyamul Bidh (Green) */
+.calendar-cell.fasting-ayyamul_bidh {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.indicator-ayyamul_bidh {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.hijri-month-label {
+  position: absolute;
+  bottom: 4px;
+  font-size: 0.6rem;
+  color: #38bdf8;
+  opacity: 0.7;
+}
+
+.loading-calendar {
+  text-align: center;
+  padding: 4rem;
+  color: #64748b;
+}
+
+.calendar-legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legend-color.today-color {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+.legend-color.fasting-color-senin {
+  background: rgba(245, 158, 11, 0.4);
+}
+
+.legend-color.fasting-color-ayyamul {
+  background: rgba(16, 185, 129, 0.4);
+}
+
+@media (max-width: 768px) {
+  .hijri-page {
+    padding: 1.5rem 3%;
+  }
+
+  .calendar-container {
+    padding: 1rem 0.5rem;
+    overflow-x: hidden;
+  }
+  
+  .calendar-grid {
+    gap: 0.25rem;
+  }
+
+  .calendar-header-day {
+    font-size: 0.7rem;
+  }
+  
+  .calendar-cell {
+    border-radius: 6px;
+  }
+  
+  .gregorian-day {
+    font-size: 0.95rem;
+  }
+  
+  .hijri-day {
+    font-size: 0.65rem;
+  }
+  
+  .hijri-month-label {
+    display: none;
+  }
+
+  .indicator-senin, .indicator-kamis, .indicator-ayyamul_bidh {
+    width: 4px;
+    height: 4px;
+    top: 4px;
+    right: 4px;
+  }
+  
+  .calendar-legend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-left: 0.5rem;
+  }
+}
