@@ -172,18 +172,7 @@ export default defineConfig({
               },
             },
           },
-          {
-            // Cache Midtrans Snap JS
-            urlPattern: /^https:\/\/app\.midtrans\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'midtrans-cache',
-              expiration: {
-                maxEntries: 5,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 hari
-              },
-            },
-          },
+
         ],
         cleanupOutdatedCaches: true,
         skipWaiting: true,

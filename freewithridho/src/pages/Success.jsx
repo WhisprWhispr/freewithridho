@@ -12,7 +12,7 @@ import './Success.css';
 const Success = () => {
   const [searchParams] = useSearchParams();
   const reference = searchParams.get('reference');
-  const status = searchParams.get('status'); // bisa 'pending' dari callback Midtrans
+  const status = searchParams.get('status');
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -51,14 +51,13 @@ const Success = () => {
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
-          // Transaksi belum masuk Firestore (delay callback Midtrans), tunggu dulu
+          // Transaksi belum masuk Firestore, tunggu dulu
           setTransaction({ status: 'PENDING', merchantRef: reference });
         } else {
           let txData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
           
           // --- SMART DEMO BYPASS ---
-          // Because Midtrans webhooks can't reach localhost/Netlify without a backend, 
-          // we use the transaction_status passed from Checkout.jsx (or Midtrans redirect) to smartly update the status.
+          // Smart update based on URL params (fallback)
           const urlStatus = searchParams.get('transaction_status') || searchParams.get('status');
           if (txData.status === 'PENDING' && (urlStatus === 'settlement' || urlStatus === 'capture' || urlStatus === 'success')) {
             console.warn('Smart bypass: Auto-approving because payment was successful.');
