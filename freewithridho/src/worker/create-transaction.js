@@ -27,8 +27,12 @@ export async function createTransaction(request, env) {
   try {
     const SITE_URL = env.URL || new URL(request.url).origin;
 
-    // Dapatkan konfigurasi Instanpay
-    const apiKey = await getInstanpayConfig(env);
+    const body = await request.json();
+    const { projectId, userId, userEmail, projectTitle, amount, paymentMethod, chain, token, instanpayApiKey } = body;
+
+    // Gunakan API Key dari frontend (karena Admin sudah login dan bisa baca dari Firestore),
+    // atau gunakan dari Cloudflare Variables sebagai fallback.
+    const apiKey = instanpayApiKey || await getInstanpayConfig(env);
 
     if (!apiKey) {
       return new Response(JSON.stringify({
@@ -36,9 +40,6 @@ export async function createTransaction(request, env) {
         message: 'Instanpay API Key tidak ditemukan. Tambahkan INSTANPAY_API_KEY di Cloudflare Variables atau di Admin Panel.',
       }), { status: 500, headers });
     }
-
-    const body = await request.json();
-    const { projectId, userId, userEmail, projectTitle, amount, paymentMethod, chain, token } = body;
 
     if (!projectId || !userId || !userEmail || !amount) {
       return new Response(JSON.stringify({ success: false, message: 'Data tidak lengkap.' }), { status: 400, headers });

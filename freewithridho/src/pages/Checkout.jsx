@@ -204,7 +204,8 @@ const Checkout = () => {
           amount: validPromo ? validPromo.finalAmount : basePrice,
           paymentMethod: paymentMethod, // 'qris' or 'crypto'
           chain: 'BSC',
-          token: 'USDT'
+          token: 'USDT',
+          instanpayApiKey: instanpayConfig?.apiKey // Pass API Key dari frontend langsung ke backend
         }),
       });
 
