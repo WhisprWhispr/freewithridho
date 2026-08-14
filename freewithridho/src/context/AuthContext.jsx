@@ -40,8 +40,9 @@ export const AuthProvider = ({ children }) => {
 
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-    // Tolak login jika email belum diverifikasi
-    if (!userCredential.user.emailVerified) {
+    // Tolak login jika email belum diverifikasi (kecuali Admin)
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
+    if (!userCredential.user.emailVerified && email !== adminEmail) {
       await signOut(auth);
       throw new Error('Email belum diverifikasi. Silakan cek kotak masuk email Anda dan klik link verifikasi.');
     }

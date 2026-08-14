@@ -64,14 +64,30 @@ const Register = () => {
     navigate('/login');
   };
 
-  const handleResend = async () => {
+  const handleResend = async (e) => {
+    if (e) e.preventDefault();
     if (resendCooldown > 0) return;
+    
+    // Cek limit harian (3 kali per hari)
+    const today = new Date().toDateString();
+    const limitData = JSON.parse(localStorage.getItem('resendEmailLimit') || '{}');
+    if (limitData.date === today && limitData.count >= 3) {
+      toast.error('Batas kirim ulang email tercapai (3x sehari). Coba besok lagi.');
+      return;
+    }
+
     const currentUser = auth.currentUser;
     if (!currentUser) return;
+
     try {
       await sendEmailVerification(currentUser);
       toast.success('📧 Email verifikasi berhasil dikirim ulang!');
-      setResendCooldown(60);
+      
+      // Update limit
+      const newCount = limitData.date === today ? (limitData.count || 0) + 1 : 1;
+      localStorage.setItem('resendEmailLimit', JSON.stringify({ date: today, count: newCount }));
+
+      setResendCooldown(180); // 3 menit
       cooldownRef.current = setInterval(() => {
         setResendCooldown(prev => {
           if (prev <= 1) { clearInterval(cooldownRef.current); return 0; }
@@ -269,7 +285,7 @@ const Register = () => {
                   <ExternalLink size={14} />
                 </button>
 
-                <button className="verify-resend" onClick={handleResend} disabled={resendCooldown > 0}>
+                <button type="button" className="verify-resend" onClick={handleResend} disabled={resendCooldown > 0}>
                   <RefreshCw size={13} />
                   {resendCooldown > 0 ? `Kirim Ulang (${resendCooldown}s)` : 'Kirim Ulang Email Verifikasi'}
                 </button>
