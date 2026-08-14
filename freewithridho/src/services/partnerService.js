@@ -79,9 +79,10 @@ export async function updatePartnerTotalEarnings(id, totalEarnings) {
  * Listen to total approved developers count (Real-time for Home)
  */
 export function listenToApprovedDevCount(callback) {
-  const q = query(collection(db, COLLECTION), where('status', '==', 'approved'));
+  // Ambil semua partner dan filter di sisi JS (tidak perlu index Firestore)
+  const q = collection(db, COLLECTION);
   return onSnapshot(q, (snapshot) => {
-    const actualCount = snapshot.docs.length;
+    const actualCount = snapshot.docs.filter(d => d.data().status === 'approved').length;
     // Add +1 so it includes the Admin as the first developer
     callback(1 + actualCount);
   }, (err) => {

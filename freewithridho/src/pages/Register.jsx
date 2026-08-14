@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, LogIn, Eye, EyeOff, Gift } from 'lucide-react';
+import { User, LogIn, Eye, EyeOff, Gift, Mail, ExternalLink, RefreshCw, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { saveReferredBy, ensureReferralCode } from '../services/referralService';
+import { sendEmailVerification, signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 import './Login.css';
+import './Register.css';
 
 const Register = () => {
-  const { register, user } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -17,28 +20,73 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // If already logged in, redirect
+  // ── Verification Modal State ──────────────────────────
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const pollRef = useRef(null);
+  const cooldownRef = useRef(null);
+
+  // Cleanup on unmount
   useEffect(() => {
-    if (user) {
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
-      if (user.email === adminEmail) {
-        navigate('/admin');
-      } else {
-        navigate('/');
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  // Start polling Firebase every 3s for email verification
+  const startPolling = () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      try {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
+        await currentUser.reload();
+        if (auth.currentUser?.emailVerified) {
+          clearInterval(pollRef.current);
+          setIsVerified(true);
+          setTimeout(() => navigate('/'), 3000);
+        }
+      } catch (e) {
+        console.warn('Verification poll:', e.message);
       }
+    }, 3000);
+  };
+
+  const handleCloseModal = async () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    if (!isVerified) {
+      try { await signOut(auth); } catch (_) {}
     }
-  }, [user, navigate]);
+    setShowVerifyModal(false);
+    navigate('/login');
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+    try {
+      await sendEmailVerification(currentUser);
+      toast.success('📧 Email verifikasi berhasil dikirim ulang!');
+      setResendCooldown(60);
+      cooldownRef.current = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) { clearInterval(cooldownRef.current); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch {
+      toast.error('Gagal mengirim ulang. Tunggu beberapa menit lagi.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast.error('Nama lengkap wajib diisi.');
-      return;
-    }
-    if (!email || !password) {
-      toast.error('Email dan password wajib diisi.');
-      return;
-    }
+    if (!name.trim()) { toast.error('Nama lengkap wajib diisi.'); return; }
+    if (!email || !password) { toast.error('Email dan password wajib diisi.'); return; }
 
     const toastId = toast.loading('Sedang mendaftar...');
     try {
@@ -46,42 +94,29 @@ const Register = () => {
       const userCredential = await register(email, password, name.trim());
       const uid = userCredential.user.uid;
 
-      // Ensure referral code is created for the new user
       await ensureReferralCode(uid);
 
-      // Apply referral code if provided
       if (referralCode.trim()) {
         const result = await saveReferredBy(uid, referralCode.trim());
         if (result.valid) {
-          toast.success(`✅ Kode referral berhasil dipakai dari: ${result.ownerName || 'Pengguna'}`, { duration: 4000 });
+          toast.success(`✅ Kode referral dari: ${result.ownerName || 'Pengguna'}`, { duration: 3000 });
         } else {
-          toast.error(`⚠️ Kode referral tidak valid: ${result.message}`, { duration: 4000 });
+          toast.error(`⚠️ Kode referral tidak valid`, { duration: 3000 });
         }
       }
 
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
-      if (email === adminEmail) {
-        toast.success('Registrasi Admin berhasil!', { id: toastId });
-        navigate('/admin');
-      } else {
-        toast.success(`Selamat datang, ${name.trim()}! 🎉`, { id: toastId });
-        navigate('/');
-      }
+      toast.dismiss(toastId);
+      setShowVerifyModal(true);
+      startPolling();
+
     } catch (err) {
       console.error(err);
       let errMsg = err.message || 'Registrasi gagal. Cek koneksi Anda.';
       switch (err.code) {
-        case 'auth/email-already-in-use':
-          errMsg = 'Email sudah terdaftar. Silakan login.';
-          break;
-        case 'auth/weak-password':
-          errMsg = 'Password terlalu lemah (minimal 6 karakter).';
-          break;
-        case 'auth/invalid-email':
-          errMsg = 'Format email tidak valid.';
-          break;
-        default:
-          break;
+        case 'auth/email-already-in-use': errMsg = 'Email sudah terdaftar. Silakan login.'; break;
+        case 'auth/weak-password': errMsg = 'Password terlalu lemah (minimal 6 karakter).'; break;
+        case 'auth/invalid-email': errMsg = 'Format email tidak valid.'; break;
+        default: break;
       }
       toast.error(errMsg, { id: toastId });
     } finally {
@@ -91,8 +126,8 @@ const Register = () => {
 
   return (
     <div className="login-page">
-      <div className="login-glow-top"></div>
-      <div className="login-glow-bottom"></div>
+      <div className="login-glow-top" />
+      <div className="login-glow-bottom" />
 
       <div className="login-card">
         <div className="login-header">
@@ -101,7 +136,6 @@ const Register = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          {/* Name Field */}
           <div className="form-group">
             <label htmlFor="reg-name">Nama Lengkap <span style={{ color: '#ef4444' }}>*</span></label>
             <div className="password-input-wrapper">
@@ -118,7 +152,6 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Email Field */}
           <div className="form-group">
             <label htmlFor="reg-email">Email <span style={{ color: '#ef4444' }}>*</span></label>
             <input
@@ -132,7 +165,6 @@ const Register = () => {
             />
           </div>
 
-          {/* Password Field */}
           <div className="form-group">
             <label htmlFor="reg-password">Password <span style={{ color: '#ef4444' }}>*</span></label>
             <div className="password-input-wrapper">
@@ -145,18 +177,12 @@ const Register = () => {
                 autoComplete="new-password"
                 required
               />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword((v) => !v)}
-                tabIndex={-1}
-              >
+              <button type="button" className="toggle-password" onClick={() => setShowPassword(v => !v)} tabIndex={-1}>
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
-          {/* Referral Code Field */}
           <div className="form-group">
             <label htmlFor="reg-referral">
               Kode Referral <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '0.8rem' }}>(opsional)</span>
@@ -174,16 +200,12 @@ const Register = () => {
               <Gift size={18} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#6366f1', pointerEvents: 'none' }} />
             </div>
             <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
-Punya kode referral? Masukkan di sini agar Anda dan teman Anda sama-sama mendapatkan keuntungan.
+              Punya kode referral? Masukkan di sini agar Anda dan teman Anda mendapatkan keuntungan.
             </small>
           </div>
 
           <button type="submit" className="btn-login" disabled={loading}>
-            {loading ? (
-              <><span className="btn-spinner"></span> Mendaftar...</>
-            ) : (
-              <><LogIn size={18} /> Daftar Sekarang</>
-            )}
+            {loading ? <><span className="btn-spinner" /> Mendaftar...</> : <><LogIn size={18} /> Daftar Sekarang</>}
           </button>
         </form>
 
@@ -191,8 +213,78 @@ Punya kode referral? Masukkan di sini agar Anda dan teman Anda sama-sama mendapa
           Sudah punya akun? <Link to="/login">Masuk di sini</Link>
         </p>
       </div>
+
+      {/* ── Email Verification Modal ──────────────────── */}
+      {showVerifyModal && (
+        <div className="verify-overlay">
+          <div className={`verify-card ${isVerified ? 'verify-card--success' : 'verify-card--waiting'}`}>
+
+            {!isVerified && (
+              <button className="verify-close" onClick={handleCloseModal} title="Tutup & login nanti">
+                <X size={16} />
+              </button>
+            )}
+
+            <div className={`verify-icon ${isVerified ? 'verify-icon--success' : 'verify-icon--waiting'}`}>
+              {isVerified ? '✅' : '✉️'}
+            </div>
+
+            {isVerified ? (
+              <>
+                <h2 className="verify-title">Email Terverifikasi! 🎉</h2>
+                <p className="verify-desc">
+                  Selamat datang di <strong>FreeWithRidho</strong>! Akun Anda telah berhasil diverifikasi
+                  dan kini aktif sepenuhnya. Anda siap menjelajahi ribuan source code premium pilihan kami.
+                </p>
+                <div className="verify-progress-wrap">
+                  <div className="verify-progress-bar" />
+                </div>
+                <p className="verify-redirect-hint">⏳ Mengalihkan ke beranda dalam 3 detik...</p>
+              </>
+            ) : (
+              <>
+                <h2 className="verify-title">Verifikasi Email Anda ✉️</h2>
+                <p className="verify-subtitle">Kami telah mengirimkan tautan verifikasi ke:</p>
+                <div className="verify-email-chip">{email}</div>
+
+                <div className="verify-spam-note">
+                  <span className="verify-spam-icon">📁</span>
+                  <span>
+                    <strong>Tidak menemukan email?</strong> Periksa folder{' '}
+                    <strong>Spam</strong>, <strong>Junk</strong>, atau <strong>Promosi</strong>{' '}
+                    di kotak masuk Anda. Email verifikasi kadang tersaring secara otomatis.
+                  </span>
+                </div>
+
+                <div className="verify-waiting">
+                  <span className="verify-waiting-text">Menunggu verifikasi</span>
+                  <span className="verify-dot" />
+                  <span className="verify-dot" />
+                  <span className="verify-dot" />
+                </div>
+
+                <button className="verify-btn-primary" onClick={() => window.open('https://mail.google.com', '_blank')}>
+                  <Mail size={17} />
+                  Buka Gmail
+                  <ExternalLink size={14} />
+                </button>
+
+                <button className="verify-resend" onClick={handleResend} disabled={resendCooldown > 0}>
+                  <RefreshCw size={13} />
+                  {resendCooldown > 0 ? `Kirim Ulang (${resendCooldown}s)` : 'Kirim Ulang Email Verifikasi'}
+                </button>
+
+                <p className="verify-auto-hint">
+                  Halaman akan otomatis terperbarui setelah Anda mengklik tautan di email.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Register;
+

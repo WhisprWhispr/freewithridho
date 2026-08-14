@@ -39,9 +39,16 @@ const NotificationBell = () => {
   // Real-time listener for notifications collection
   useEffect(() => {
     // Listen to global notifications (promo, flash sale, announcements)
-    const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
+    // Tanpa orderBy agar tidak butuh index Firestore — sort di sisi JS
+    const q = query(collection(db, 'notifications'));
     const unsub = onSnapshot(q, (snap) => {
-      const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const items = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const tA = a.createdAt?.toMillis?.() || new Date(a.createdAt || 0).getTime();
+          const tB = b.createdAt?.toMillis?.() || new Date(b.createdAt || 0).getTime();
+          return tB - tA;
+        });
       setNotifications(items);
     }, (err) => {
       console.warn('Notification listener error:', err);

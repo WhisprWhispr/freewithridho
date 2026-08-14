@@ -56,18 +56,23 @@ const Login = () => {
     } catch (err) {
       console.error(err);
       let errMsg = 'Login gagal. Cek koneksi Anda.';
-      switch (err.code) {
-        case 'auth/user-not-found':
-        case 'auth/invalid-credential':
-        case 'auth/wrong-password':
-          errMsg = 'Email atau password salah.';
-          break;
-        case 'auth/invalid-email':
-          errMsg = 'Format email tidak valid.';
-          break;
-        case 'auth/too-many-requests':
-          errMsg = 'Terlalu banyak percobaan login. Coba lagi beberapa saat.';
-          break;
+      // Tampilkan pesan custom (misal: email belum verifikasi, akun diblokir)
+      if (err.message && !err.code) {
+        errMsg = err.message;
+      } else {
+        switch (err.code) {
+          case 'auth/user-not-found':
+          case 'auth/invalid-credential':
+          case 'auth/wrong-password':
+            errMsg = 'Email atau password salah.';
+            break;
+          case 'auth/invalid-email':
+            errMsg = 'Format email tidak valid.';
+            break;
+          case 'auth/too-many-requests':
+            errMsg = 'Terlalu banyak percobaan login. Coba lagi beberapa saat.';
+            break;
+        }
       }
       toast.error(errMsg, { id: toastId });
     } finally {
