@@ -40,7 +40,15 @@ export default {
     }
 
     // Fallback to serve static frontend assets
-    return env.ASSETS.fetch(request);
+    try {
+      if (env.ASSETS && env.ASSETS.fetch) {
+        return await env.ASSETS.fetch(request);
+      } else {
+        throw new Error('env.ASSETS is undefined. [assets] binding failed.');
+      }
+    } catch (e) {
+      return new Response('Frontend asset Error: ' + e.message, { status: 500 });
+    }
   }
 };
 // Trigger redeploy to pick up new env vars
