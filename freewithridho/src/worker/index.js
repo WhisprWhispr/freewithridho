@@ -43,3 +43,4 @@ export default {
     return env.ASSETS.fetch(request);
   }
 };
+// Trigger redeploy to pick up new env vars
