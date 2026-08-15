@@ -24,7 +24,7 @@ const Login = () => {
         return;
       }
 
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'supportfreewithridho@gmail.com';
       if (user.email === adminEmail) {
         navigate('/admin');
       } else {
@@ -45,7 +45,7 @@ const Login = () => {
       setLoading(true);
       await login(email, password);
       
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'ridhosandhika18022022@gmail.com';
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'supportfreewithridho@gmail.com';
       if (email === adminEmail) {
         toast.success('Login Admin berhasil!', { id: toastId });
         navigate('/admin');
