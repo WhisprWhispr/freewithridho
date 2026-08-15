@@ -27,6 +27,7 @@ const emptyForm = {
   flashSaleEndDate: '',
   readme: '',
   offersWebPackages: false,
+  webPackageDescription: '',
   domainOptions: [{ extension: '.com', price: 150000 }]
 };
 
@@ -261,6 +262,7 @@ const PartnerDashboard = () => {
       flashSaleEndDate: project.flashSaleEndDate || '',
       readme: project.readme || '',
       offersWebPackages: project.offersWebPackages || false,
+      webPackageDescription: project.webPackageDescription || '',
       domainOptions: project.domainOptions || [{ extension: '.com', price: 150000 }],
     });
     setEditingId(project.id);
@@ -758,24 +760,36 @@ const PartnerDashboard = () => {
               </div>
 
               {/* Package Options for Template Web */}
-              <div className="form-group checkbox-group" style={{ marginTop: '1.5rem', marginBottom: '0.5rem', background: 'rgba(30, 41, 59, 0.5)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', margin: 0, color: '#f1f5f9', fontWeight: 'bold' }}>
-                  <input 
-                    type="checkbox" 
-                    name="offersWebPackages"
-                    checked={form.offersWebPackages}
-                    onChange={(e) => setForm(prev => ({ ...prev, offersWebPackages: e.target.checked }))}
-                    style={{ width: '18px', height: '18px' }}
-                  />
-                  📦 Tawarkan Paket Hosting & Domain (Opsional)
-                </label>
-              </div>
+              {form.category === 'Template Web' && (
+                <div className="form-group checkbox-group" style={{ marginTop: '1.5rem', marginBottom: '0.5rem', background: 'rgba(30, 41, 59, 0.5)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', margin: 0, color: '#f1f5f9', fontWeight: 'bold' }}>
+                    <input 
+                      type="checkbox" 
+                      name="offersWebPackages"
+                      checked={form.offersWebPackages}
+                      onChange={(e) => setForm(prev => ({ ...prev, offersWebPackages: e.target.checked }))}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    📦 Tawarkan Paket Hosting & Domain (Opsional)
+                  </label>
+                </div>
+              )}
 
-              {form.offersWebPackages && (
+              {form.category === 'Template Web' && form.offersWebPackages && (
                 <div className="packages-form-grid" style={{ marginBottom: '1.5rem', padding: '1.25rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '12px' }}>
                   <p style={{ margin: '0 0 1rem', fontSize: '0.9rem', color: '#cbd5e1' }}>
                     Tambahkan pilihan ekstensi domain beserta total harga (Harga Hosting + Domain) yang akan dibebankan sebagai biaya tambahan.
                   </p>
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.8rem', marginBottom: '0.3rem' }}>Deskripsi Paket Web (Opsional)</label>
+                    <textarea 
+                      rows="2" 
+                      value={form.webPackageDescription} 
+                      onChange={e => setForm({...form, webPackageDescription: e.target.value})} 
+                      placeholder="Misal: Hosting 1GB, Setup dalam 1 hari" 
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                    />
+                  </div>
                   
                   {form.domainOptions?.map((opt, idx) => (
                     <div key={idx} style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', alignItems: 'flex-start' }}>

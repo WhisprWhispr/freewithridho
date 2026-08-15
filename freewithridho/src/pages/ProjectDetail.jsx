@@ -502,6 +502,12 @@ const ProjectDetail = () => {
                   </button>
                 </div>
 
+                {project.webPackageDescription && (
+                  <p style={{ margin: '0.5rem 0 1rem 0', fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                    {project.webPackageDescription}
+                  </p>
+                )}
+
                 {useWebPackage && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem', animation: 'fadeIn 0.3s ease' }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
