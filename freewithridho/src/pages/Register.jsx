@@ -247,7 +247,7 @@ const Register = () => {
           <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', marginBottom: '0.5rem' }}>
             <div 
               className="cf-turnstile" 
-              data-sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
+              data-sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAAEMK0ikWTCNE94mo"} 
               data-callback="handleTurnstileSuccess"
               data-theme="dark"
             ></div>
