@@ -722,25 +722,14 @@ const ProjectDetail = () => {
 
         {/* ─── Gallery ──────────────────────────────────────── */}
         {images.length > 1 && (
-          <div className="detail-section">
-            <h2 className="section-heading">
-              <ZoomIn size={18} /> Screenshot Gallery
-              <span className="section-count">{images.length} foto</span>
-            </h2>
-            <div className="detail-gallery">
-              {images.map((imgUrl, index) => (
-                <div
-                  key={index}
-                  className="gallery-thumb"
-                  onClick={() => openLightbox(index)}
-                >
-                  <img src={imgUrl} alt={`Screenshot ${index + 1}`} loading="lazy" />
-                  <div className="gallery-thumb-overlay">
-                    <ZoomIn size={20} />
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="detail-section" style={{ marginTop: '0.5rem' }}>
+            <button 
+               className="btn btn-secondary gallery-open-btn" 
+               style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', padding: '1rem', fontSize: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' }}
+               onClick={() => openLightbox(0)}
+            >
+              <ZoomIn size={18} /> Lihat Galeri Screenshot ({images.length} Foto)
+            </button>
           </div>
         )}
 
