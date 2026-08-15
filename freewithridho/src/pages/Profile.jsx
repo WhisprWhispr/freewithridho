@@ -4,7 +4,7 @@ import {
   User, Mail, Calendar, ShoppingBag, Download, Clock,
   CheckCircle, XCircle, AlertCircle, LogOut, ChevronRight,
   Package, Wallet, Star, ArrowLeft, ExternalLink,
-  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key, Heart, Share2, MessageCircle, Send, X
+  LayoutDashboard, ShieldCheck, Settings, BarChart3, Key, Heart, Share2, MessageCircle, Send, X, Edit2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { listenToUserTransactions, getAllProjects } from '../services/projectService';
@@ -16,7 +16,6 @@ import { generatePartnerCertificatePDF, generatePartnerPDF } from '../utils/pdfG
 import ProjectCard from '../components/ProjectCard';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import AvatarModal from '../components/AvatarModal';
-import { Edit2 } from 'lucide-react';
 import './Profile.css';
 
 const STATUS_CONFIG = {
