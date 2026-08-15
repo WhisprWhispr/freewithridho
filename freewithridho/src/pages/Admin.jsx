@@ -224,7 +224,7 @@ const Admin = () => {
       return;
     }
 
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'supportfreewithridho@gmail.com';
+    const adminEmail = 'supportfreewithridho@gmail.com';
     if (user.email !== adminEmail) {
       navigate('/');
       return;
