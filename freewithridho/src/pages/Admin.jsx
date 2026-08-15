@@ -4,6 +4,7 @@ import { getAllProjects, addProject, deleteProject, updateProject, getSettings, 
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getAdminStats, listenToAdminStats } from '../services/adminStatsService';
+import { deleteFeedback } from '../services/feedbackService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -14,7 +15,7 @@ import 'highlight.js/styles/github-dark.css';
 import {
   Plus, Trash2, Upload, LogOut, FileText, Eye, Edit2, Settings, Key,
   ShieldCheck, BarChart3, TrendingUp, DollarSign, Briefcase,
-  Receipt, Users, Check, X, Download, Wallet, Tag, BookOpen
+  Receipt, Users, Check, X, Download, Wallet, Tag, BookOpen, Heart
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -132,11 +133,15 @@ const Admin = () => {
   // Withdrawals state
   const [withdrawals, setWithdrawals] = useState([]);
   
+  // Feedbacks state
+  const [feedbacks, setFeedbacks] = useState([]);
+  
   // Real-time listener for partners, withdrawals, and transactions
   useEffect(() => {
     let unsubscribePartners;
     let unsubscribeWithdrawals;
     let unsubscribeTransactions;
+    let unsubscribeFeedbacks;
     
     import('../services/partnerService').then(({ listenToPartners, listenToWithdrawals }) => {
       unsubscribePartners = listenToPartners((data) => {
@@ -153,10 +158,17 @@ const Admin = () => {
       });
     });
     
+    import('../services/feedbackService').then(({ listenToFeedbacks }) => {
+      unsubscribeFeedbacks = listenToFeedbacks((data) => {
+        setFeedbacks(data);
+      });
+    });
+    
     return () => {
       if (unsubscribePartners) unsubscribePartners();
       if (unsubscribeWithdrawals) unsubscribeWithdrawals();
       if (unsubscribeTransactions) unsubscribeTransactions();
+      if (unsubscribeFeedbacks) unsubscribeFeedbacks();
     };
   }, []);
   
@@ -189,6 +201,17 @@ const Admin = () => {
 
   // Welcome modal state
   const [showWelcome, setShowWelcome] = useState(true);
+
+  const handleDeleteFeedback = async (id) => {
+    if (window.confirm("Yakin ingin menghapus dukungan ini?")) {
+      try {
+        await deleteFeedback(id);
+        toast.success("Dukungan berhasil dihapus");
+      } catch (e) {
+        toast.error("Gagal menghapus dukungan");
+      }
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -796,6 +819,17 @@ const Admin = () => {
             onClick={() => setActiveAdminTab('mosques')}
           >
             <BookOpen size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Donasi Masjid
+          </button>
+          <button 
+            className={`admin-tab-btn ${activeAdminTab === 'feedbacks' ? 'active' : ''}`}
+            onClick={() => setActiveAdminTab('feedbacks')}
+          >
+            <Heart size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}/> Dukungan
+            {feedbacks.length > 0 && (
+              <span className="admin-tab-badge admin-tab-badge-blue">
+                {feedbacks.length}
+              </span>
+            )}
           </button>
           
           {!showWelcome && (
@@ -1571,6 +1605,48 @@ const Admin = () => {
         {/* ── Mosques Tab ── */}
         {activeAdminTab === 'mosques' && (
           <MosqueAdminTab />
+        )}
+
+        {/* ── Feedbacks Tab ── */}
+        {activeAdminTab === 'feedbacks' && (
+          <section className="admin-section">
+            <div className="section-header">
+              <Heart size={24} />
+              <h2>Dukungan & Pesan Pengguna</h2>
+            </div>
+            <div className="table-responsive">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Pesan</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {feedbacks.length > 0 ? feedbacks.map(fb => (
+                    <tr key={fb.id}>
+                      <td>{fb.createdAt?.toDate ? fb.createdAt.toDate().toLocaleString('id-ID') : 'Baru saja'}</td>
+                      <td>{fb.name}</td>
+                      <td>{fb.email || '-'}</td>
+                      <td>{fb.message}</td>
+                      <td>
+                        <button className="btn-icon btn-danger" onClick={() => handleDeleteFeedback(fb.id)} title="Hapus">
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="5" className="empty-state">Belum ada dukungan masuk.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
 
         {/* ── Transactions Tab ── */}
