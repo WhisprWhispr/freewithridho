@@ -112,9 +112,21 @@ const ProjectDetail = () => {
       return;
     }
     
-    const fullDomain = `${customDomainName.trim()}${selectedExtension || '.com'}`;
+    const ext = selectedExtension || '.com';
+    const fullDomain = `${customDomainName.trim()}${ext}`;
     setCheckingDomain(true);
     setDomainStatus(null);
+    
+    // Bypass DNS check for wildcard subdomain providers where DNS always resolves
+    const wildcardExtensions = ['.netlify.app', '.vercel.app', '.web.app', '.firebaseapp.com'];
+    if (wildcardExtensions.includes(ext)) {
+      setTimeout(() => {
+        setDomainStatus('available');
+        toast.success(`Domain ${fullDomain} bisa digunakan!`);
+        setCheckingDomain(false);
+      }, 600);
+      return;
+    }
     
     try {
       // Using Google DNS over HTTPS (JSON format)
