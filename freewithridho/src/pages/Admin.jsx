@@ -1127,7 +1127,7 @@ const Admin = () => {
                     </div>
                   )}
 
-                  {form.type === 'code' && (
+                  {(form.type === 'code' || form.type === 'template') && (
                     <>
                       <div className="form-group">
                         <label htmlFor="demoUrl">Link Live Demo (Opsional)</label>

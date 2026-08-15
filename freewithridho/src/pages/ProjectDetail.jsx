@@ -56,6 +56,8 @@ const ProjectDetail = () => {
   const [hasPurchased, setHasPurchased] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, index: 0 });
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
   
   // Custom Domain Package States
   const [useWebPackage, setUseWebPackage] = useState(false);
@@ -241,6 +243,22 @@ const ProjectDetail = () => {
     setLightbox(prev => ({ ...prev, index: (prev.index + 1) % imgs.length }));
   }, [project]);
 
+  // Touch handlers for swiping
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+    if (distance > minSwipeDistance) nextImage();
+    if (distance < -minSwipeDistance) prevImage();
+  };
+
   // Close lightbox on ESC
   useEffect(() => {
     const handler = (e) => {
@@ -394,7 +412,13 @@ const ProjectDetail = () => {
 
       {/* ─── Lightbox ─────────────────────────────────────── */}
       {lightbox.open && images.length > 0 && (
-        <div className="lightbox-overlay" onClick={closeLightbox}>
+        <div 
+          className="lightbox-overlay" 
+          onClick={closeLightbox}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <button className="lightbox-close" onClick={closeLightbox}><X size={20} /></button>
           {images.length > 1 && (
             <>

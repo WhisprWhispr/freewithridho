@@ -366,16 +366,33 @@
 
 /* ── Gallery ─────────────────────────────────────────────── */
 .detail-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  display: flex;
+  overflow-x: auto;
   gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+.detail-gallery::-webkit-scrollbar {
+  height: 6px;
+}
+.detail-gallery::-webkit-scrollbar-track {
+  background: transparent;
+}
+.detail-gallery::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }
 
 .gallery-thumb {
+  flex: 0 0 auto;
+  min-width: 180px;
   aspect-ratio: 16/10;
   border-radius: 10px;
   overflow: hidden;
   cursor: zoom-in;
+  scroll-snap-align: start;
   position: relative;
   background: rgba(15,23,42,0.5);
   border: 1px solid rgba(255,255,255,0.05);
