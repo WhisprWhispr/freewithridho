@@ -38,11 +38,7 @@ export const generatePartnerPDF = async (data) => {
   doc.setFillColor(217, 119, 6);
   doc.rect(0, 55, pw, 1.5, 'F');
 
-  // Logo
-  if (logoBase64) {
-    try { doc.addImage(logoBase64, 'PNG', ML, 9, 35, 35); }
-    catch (e) { console.warn('Logo load failed:', e); }
-  }
+  // Logo (Image removed by request)
 
   // Nama platform & deskripsi (kanan logo)
   doc.setFontSize(18);
@@ -297,15 +293,7 @@ export const generatePartnerCertificatePDF = async (user, partner) => {
   // Load logo real
   const logoBase64 = await loadLogoBase64();
 
-  // Logo di tengah atas sertifikat
-  if (logoBase64) {
-    try {
-      // Tampilkan logo di tengah atas dengan ukuran besar
-      doc.addImage(logoBase64, 'PNG', pageWidth / 2 - 45, 60, 90, 60);
-    } catch (e) {
-      console.warn('Logo load failed:', e);
-    }
-  }
+  // Logo di tengah atas sertifikat (Image removed by request)
   
   // SKU RESMI (Top Right)
   const stampId = partner.id || `PRT-${Date.now().toString().slice(-8)}`;

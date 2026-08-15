@@ -56,7 +56,6 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          <img src="/FREEWITHRIDHO.jpeg" alt="FREEWITHRIDHO Logo" className="logo-img" />
           <span className="logo-text">FREEWITHRIDHO</span>
         </Link>
 
