@@ -63,7 +63,7 @@ const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
                 getInitials(currentUser.email)
               )}
             </div>
-            <button className="edit-avatar-btn" onClick={() => setShowAvatarModal(true)} style={{ position: 'absolute', bottom: 0, right: 0, background: '#3b82f6', border: 'none', borderRadius: '50%', padding: '0.4rem', cursor: 'pointer', color: 'white', zIndex: 10 }} title="Ganti Avatar">
+            <button className="edit-avatar-btn" onClick={(e) => { e.stopPropagation(); setShowAvatarModal(true); }} style={{ position: 'absolute', bottom: 0, right: 0, background: '#3b82f6', border: 'none', borderRadius: '50%', padding: '0.4rem', cursor: 'pointer', color: 'white', zIndex: 10 }} title="Ganti Avatar">
               <Edit2 size={14} />
             </button>
           </div>
@@ -257,7 +257,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                 getInitials(currentUser.email)
               )}
             </div>
-            <button className="edit-avatar-btn" onClick={() => setShowAvatarModal(true)} style={{ position: 'absolute', bottom: 0, right: 0, background: '#3b82f6', border: 'none', borderRadius: '50%', padding: '0.4rem', cursor: 'pointer', color: 'white', zIndex: 10 }} title="Ganti Avatar">
+            <button className="edit-avatar-btn" onClick={(e) => { e.stopPropagation(); setShowAvatarModal(true); }} style={{ position: 'absolute', bottom: 0, right: 0, background: '#3b82f6', border: 'none', borderRadius: '50%', padding: '0.4rem', cursor: 'pointer', color: 'white', zIndex: 10 }} title="Ganti Avatar">
               <Edit2 size={14} />
             </button>
           </div>
