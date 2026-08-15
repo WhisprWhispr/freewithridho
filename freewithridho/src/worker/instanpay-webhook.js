@@ -1,5 +1,5 @@
 // Helper untuk memanggil Firestore REST API
-async function firestoreQuery(collection, field, operator, value, env) {
+export async function firestoreQuery(collection, field, operator, value, env) {
   const projectId = env.VITE_FIREBASE_PROJECT_ID;
   const apiKey = env.VITE_FIREBASE_API_KEY;
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery?key=${apiKey}`;
@@ -37,7 +37,7 @@ async function firestoreQuery(collection, field, operator, value, env) {
   return null;
 }
 
-async function firestoreGetDoc(collection, docId, env) {
+export async function firestoreGetDoc(collection, docId, env) {
   const projectId = env.VITE_FIREBASE_PROJECT_ID;
   const apiKey = env.VITE_FIREBASE_API_KEY;
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}?key=${apiKey}`;
@@ -54,7 +54,7 @@ async function firestoreGetDoc(collection, docId, env) {
   };
 }
 
-async function firestoreUpdateDoc(name, fieldsToUpdate, env) {
+export async function firestoreUpdateDoc(name, fieldsToUpdate, env) {
   const projectId = env.VITE_FIREBASE_PROJECT_ID;
   const apiKey = env.VITE_FIREBASE_API_KEY;
   

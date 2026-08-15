@@ -546,8 +546,39 @@ const Checkout = () => {
               >
                 Unduh QR Code
               </button>
+              
+              <button
+                onClick={async () => {
+                  try {
+                    const toastId = toast.loading('Mengecek status pembayaran...');
+                    const res = await fetch('/.netlify/functions/check-payment', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        merchantRef: paymentDetails.merchantRef,
+                        instanpayApiKey: instanpayConfig?.apiKey,
+                        paymentMethod: paymentMethod
+                      })
+                    });
+                    const data = await res.json();
+                    if (data.success && data.status === 'PAID') {
+                      toast.success('Pembayaran Berhasil Dikonfirmasi!', { id: toastId });
+                      navigate(`/success?reference=${paymentDetails.merchantRef}&transaction_status=settlement`);
+                    } else {
+                      toast.error('Pembayaran belum diterima. Pastikan Anda sudah transfer sesuai nominal.', { id: toastId });
+                    }
+                  } catch (err) {
+                    toast.error('Gagal mengecek status pembayaran. Coba lagi nanti.');
+                  }
+                }}
+                className="btn-pay"
+                style={{ marginTop: '0.5rem', width: '100%', background: '#10b981', padding: '0.85rem' }}
+              >
+                Saya Sudah Bayar
+              </button>
+
               <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '1rem' }}>
-                Menunggu pembayaran... Halaman akan otomatis beralih jika pembayaran berhasil.
+                Atau tunggu... Halaman akan otomatis beralih jika terdeteksi berhasil.
               </p>
             </div>
           </div>

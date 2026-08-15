@@ -1,6 +1,7 @@
 import { createTransaction } from './create-transaction.js';
 import { instanpayWebhook } from './instanpay-webhook.js';
 import { deleteUser } from './delete-user.js';
+import { checkPayment } from './check-payment.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -26,6 +27,9 @@ export default {
         }
         if (path === '/.netlify/functions/instanpay-webhook') {
           return await instanpayWebhook(request, env);
+        }
+        if (path === '/.netlify/functions/check-payment') {
+          return await checkPayment(request, env);
         }
         if (path === '/.netlify/functions/delete-user') {
           return await deleteUser(request, env);
