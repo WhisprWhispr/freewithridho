@@ -74,9 +74,6 @@ const ProjectDetail = () => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Live Preview state
-  const [showDemoModal, setShowDemoModal] = useState(false);
-
   // Detail tab state: 'readme' | 'reviews' | 'discussion'
   const [detailTab, setDetailTab] = useState('readme');
 
@@ -651,13 +648,15 @@ const ProjectDetail = () => {
 
             {/* Live Preview Button */}
             {project.demoUrl && (
-              <button 
-                onClick={() => setShowDemoModal(true)} 
+              <a 
+                href={project.demoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn btn-outline" 
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)' }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', textDecoration: 'none' }}
               >
                 <MonitorPlay size={18} /> Live Preview
-              </button>
+              </a>
             )}
 
             {/* Feature list */}
@@ -888,27 +887,6 @@ const ProjectDetail = () => {
         />
       )}
 
-      {/* ── Demo Modal ───────────────────────────────────── */}
-      {showDemoModal && project.demoUrl && (
-        <div className="demo-modal-overlay">
-          <div className="demo-modal-content">
-            <div className="demo-modal-header">
-              <h3>Live Preview: {project.title}</h3>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <a href={project.demoUrl} target="_blank" rel="noreferrer" className="btn-open-new-tab">
-                  Buka di Tab Baru <ExternalLink size={14} />
-                </a>
-                <button className="btn-close-demo" onClick={() => setShowDemoModal(false)}>
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="demo-modal-body">
-              <iframe src={project.demoUrl} title="Live Demo" className="demo-iframe" />
-            </div>
-          </div>
-        </div>
-      )}
       {/* Domain Info Modal */}
       {showDomainInfo && (
         <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', animation: 'fadeIn 0.2s ease' }}>
