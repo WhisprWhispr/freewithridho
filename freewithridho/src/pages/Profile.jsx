@@ -16,7 +16,7 @@ import { generatePartnerCertificatePDF, generatePartnerPDF } from '../utils/pdfG
 import ProjectCard from '../components/ProjectCard';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import AvatarModal from '../components/AvatarModal';
-import { Edit2 } from 'lucide-react';
+import { Edit2, ShieldCheck } from 'lucide-react';
 import './Profile.css';
 
 const STATUS_CONFIG = {
@@ -49,14 +49,21 @@ const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
         {/* Admin Hero Card */}
         <div className="profile-hero-card admin-hero-card">
           <div className="profile-avatar-ring admin-ring" style={{ position: 'relative' }}>
-            <div className="profile-avatar admin-avatar" style={{ overflow: 'hidden' }}>
+            <div className="profile-avatar admin-avatar" style={{ overflow: 'hidden', position: 'relative' }}>
               {currentUser.photoURL ? (
-                <img src={currentUser.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <>
+                  <img src={currentUser.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {currentUser.photoURL.includes('#verified') && (
+                    <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '2px solid #0f172a', display: 'flex', zIndex: 5 }}>
+                      <ShieldCheck size={16} color="white" />
+                    </div>
+                  )}
+                </>
               ) : (
                 getInitials(currentUser.email)
               )}
             </div>
-            <button className="edit-avatar-btn" onClick={() => setShowAvatarModal(true)} style={{ position: 'absolute', bottom: 0, right: 0, background: '#3b82f6', border: 'none', borderRadius: '50%', padding: '0.4rem', cursor: 'pointer', color: 'white' }} title="Ganti Avatar">
+            <button className="edit-avatar-btn" onClick={() => setShowAvatarModal(true)} style={{ position: 'absolute', bottom: 0, right: 0, background: '#3b82f6', border: 'none', borderRadius: '50%', padding: '0.4rem', cursor: 'pointer', color: 'white', zIndex: 10 }} title="Ganti Avatar">
               <Edit2 size={14} />
             </button>
           </div>
@@ -152,7 +159,7 @@ const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
           </div>
         </div>
       </div>
-      <AvatarModal isOpen={showAvatarModal} onClose={() => setShowAvatarModal(false)} user={currentUser} onAvatarUpdated={(url) => setCurrentUser({...currentUser, photoURL: url})} />
+      <AvatarModal isOpen={showAvatarModal} onClose={() => setShowAvatarModal(false)} user={currentUser} onAvatarUpdated={(url) => setCurrentUser({...currentUser, photoURL: url})} isAdmin={true} />
     </div>
   );
 };
@@ -236,14 +243,21 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
         {/* Header Card */}
         <div className="profile-hero-card">
           <div className="profile-avatar-ring" style={{ position: 'relative' }}>
-            <div className="profile-avatar" style={{ overflow: 'hidden' }}>
+            <div className="profile-avatar" style={{ overflow: 'hidden', position: 'relative' }}>
               {currentUser.photoURL ? (
-                <img src={currentUser.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <>
+                  <img src={currentUser.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {currentUser.photoURL.includes('#verified') && (
+                    <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '2px solid #0f172a', display: 'flex', zIndex: 5 }}>
+                      <ShieldCheck size={16} color="white" />
+                    </div>
+                  )}
+                </>
               ) : (
                 getInitials(currentUser.email)
               )}
             </div>
-            <button className="edit-avatar-btn" onClick={() => setShowAvatarModal(true)} style={{ position: 'absolute', bottom: 0, right: 0, background: '#3b82f6', border: 'none', borderRadius: '50%', padding: '0.4rem', cursor: 'pointer', color: 'white' }} title="Ganti Avatar">
+            <button className="edit-avatar-btn" onClick={() => setShowAvatarModal(true)} style={{ position: 'absolute', bottom: 0, right: 0, background: '#3b82f6', border: 'none', borderRadius: '50%', padding: '0.4rem', cursor: 'pointer', color: 'white', zIndex: 10 }} title="Ganti Avatar">
               <Edit2 size={14} />
             </button>
           </div>
@@ -891,7 +905,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
           </div>
         </div>
       )}
-      <AvatarModal isOpen={showAvatarModal} onClose={() => setShowAvatarModal(false)} user={currentUser} onAvatarUpdated={(url) => setCurrentUser({...currentUser, photoURL: url})} />
+      <AvatarModal isOpen={showAvatarModal} onClose={() => setShowAvatarModal(false)} user={currentUser} onAvatarUpdated={(url) => setCurrentUser({...currentUser, photoURL: url})} isAdmin={false} />
     </div>
   );
 };
