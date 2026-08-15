@@ -118,7 +118,7 @@ const WITHDRAWALS_COLLECTION = 'withdrawals';
 
 export async function submitWithdrawal(data) {
   const colRef = collection(db, WITHDRAWALS_COLLECTION);
-  const feeRate = data.amount < 500000 ? 0.05 : 0.10;
+  const feeRate = 0.05; // 5% fee for all amounts
   const feeAmount = Math.floor(data.amount * feeRate);
   const netAmount = data.amount - feeAmount;
 

@@ -200,7 +200,7 @@ const PartnerDashboard = () => {
 
     // --- ANTI JUDOL / CONTENT MODERATION SYSTEM ---
     const forbiddenKeywords = ['judol', 'judi', 'slot', 'gacor', 'zeus', 'toto', 'togel', 'casino', 'poker', 'maxwin'];
-    const textToCheck = `${form.title} ${form.description}`.toLowerCase();
+    const textToCheck = `${form.title} ${form.description} ${form.readme}`.toLowerCase();
     
     const hasForbiddenKeyword = forbiddenKeywords.some(keyword => textToCheck.includes(keyword));
 
@@ -1008,7 +1008,7 @@ const PartnerDashboard = () => {
               />
               <small style={{ color: '#94a3b8', display: 'block', marginTop: '4px' }}>Maksimal: Rp 5.000.000</small>
               <small style={{ color: '#f59e0b', display: 'block', marginTop: '4px' }}>
-                * Biaya platform: 5% (penarikan &lt; Rp 500.000), 10% (penarikan ≥ Rp 500.000).
+                * Biaya platform: 5% flat untuk semua nominal penarikan.
               </small>
             </div>
             <div className="form-group">
