@@ -16,10 +16,10 @@ const Contact = () => {
         
         <ul className="info-list">
           <li>
-            <strong>Email:</strong> <em>support@freewithridho.com</em>
+            <strong>Email:</strong> <em>supportfreewithridho@gmail.com</em>
           </li>
           <li>
-            <strong>WhatsApp:</strong> <em>+62 812-3456-7890</em>
+            <strong>WhatsApp:</strong> <em>+62 823-7132-6584</em>
           </li>
           <li>
             <strong>Jam Operasional:</strong> <em>Senin - Jumat (09:00 - 17:00 WIB)</em>
@@ -27,11 +27,11 @@ const Contact = () => {
         </ul>
 
         <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="mailto:support@freewithridho.com" className="info-btn" style={{ background: '#ef4444' }}>
+          <a href="mailto:supportfreewithridho@gmail.com?subject=Pertanyaan/Dukungan%20Layanan%20FreeWithRidho&body=Halo%20Tim%20FreeWithRidho,%0A%0ASaya%20menghubungi%20Anda%20terkait%20layanan%20yang%20diberikan.%20Berikut%20adalah%20detail%20pesan%20saya:%0A%0A[Silakan%20tulis%20pesan%20Anda%20di%20sini]%0A%0ATerima%20kasih." className="info-btn" style={{ background: '#ef4444' }}>
             <Mail size={20} />
             Kirim Email
           </a>
-          <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer" className="info-btn" style={{ background: '#10b981' }}>
+          <a href="https://wa.me/6282371326584?text=Halo%20Tim%20FreeWithRidho,%20perkenalkan%20saya%20[Nama%20Anda].%20Saya%20ingin%20berkonsultasi%20atau%20bertanya%20seputar%20layanan%20Anda.%20Terima%20kasih." target="_blank" rel="noreferrer" className="info-btn" style={{ background: '#10b981' }}>
             <MessageCircle size={20} />
             Chat WhatsApp
           </a>
