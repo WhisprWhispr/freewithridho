@@ -14,6 +14,7 @@ const PublicProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [partner, setPartner] = useState(null);
+  const [profileUser, setProfileUser] = useState(null);
   const [isAdminProfile, setIsAdminProfile] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,16 @@ const PublicProfile = () => {
       setProjects(projectsData);
     }, (e) => {
       console.error('Failed to listen to user projects', e);
+    });
+
+    // Realtime listener for user profile
+    let unsubUser;
+    import('firebase/firestore').then(({ doc }) => {
+      unsubUser = onSnapshot(doc(db, 'users', userId), (docSnap) => {
+        if (docSnap.exists()) {
+          setProfileUser(docSnap.data());
+        }
+      });
     });
 
     // Realtime listener for partner data
@@ -57,6 +68,7 @@ const PublicProfile = () => {
     return () => {
       unsubProjects();
       if (unsubPartner) unsubPartner();
+      if (unsubUser) unsubUser();
     };
   }, [userId]);
 
@@ -79,8 +91,12 @@ const PublicProfile = () => {
         <div className="public-profile-header admin-profile-header">
           <div className="public-profile-cover admin-cover"></div>
           <div className="public-profile-info-container">
-            <div className="public-profile-avatar admin-avatar-icon">
-              <ShieldCheck size={44} />
+            <div className="public-profile-avatar admin-avatar-icon" style={{ overflow: 'hidden', padding: profileUser?.photoURL ? 0 : undefined, background: profileUser?.photoURL ? '#1e293b' : undefined }}>
+              {profileUser?.photoURL ? (
+                <img src={profileUser.photoURL} alt="Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <ShieldCheck size={44} />
+              )}
             </div>
             <div className="public-profile-details" style={{ flex: 1 }}>
 
@@ -195,8 +211,12 @@ const PublicProfile = () => {
       <div className="public-profile-header">
         <div className="public-profile-cover"></div>
         <div className="public-profile-info-container">
-          <div className="public-profile-avatar">
-            {partner.fullName ? partner.fullName[0].toUpperCase() : 'D'}
+          <div className="public-profile-avatar" style={{ overflow: 'hidden', padding: profileUser?.photoURL ? 0 : undefined, background: profileUser?.photoURL ? '#1e293b' : undefined }}>
+            {profileUser?.photoURL ? (
+              <img src={profileUser.photoURL} alt="Partner Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              partner.fullName ? partner.fullName[0].toUpperCase() : 'D'
+            )}
           </div>
           <div className="public-profile-details" style={{ flex: 1 }}>
 

@@ -5,7 +5,7 @@ const WhatsAppFloat = () => {
   const [isHovered, setIsHovered] = useState(false);
 
   // Admin phone number
-  const phoneNumber = '6281275623551 '; 
+  const phoneNumber = '6282371326584'; 
   const message = 'Halo Admin FreeWithRidho, saya tertarik dengan layanan/produk Anda dan ingin berkonsultasi lebih lanjut. Terima kasih.';
 
   const handleWhatsAppClick = () => {

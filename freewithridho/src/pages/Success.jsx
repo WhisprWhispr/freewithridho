@@ -26,7 +26,7 @@ const Success = () => {
   const [developerPhone, setDeveloperPhone] = useState(null);
   
   // State for Admin Phone (Crypto Payment)
-  const adminPhone = '6281275623551'; 
+  const adminPhone = '6282371326584'; 
   const dummyCryptoAddress = 'ALAMAT-WALLET-CRYPTO-ANDA'; // Placeholder
   
   const handleCopy = (text) => {
