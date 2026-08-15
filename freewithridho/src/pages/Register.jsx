@@ -20,6 +20,29 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [turnstileToken, setTurnstileToken] = useState(null);
+
+  // Load Turnstile Script
+  useEffect(() => {
+    window.handleTurnstileSuccess = (token) => {
+      setTurnstileToken(token);
+    };
+    
+    // Check if script already exists to avoid duplicates if navigating back and forth
+    if (!document.getElementById('turnstile-script')) {
+      const script = document.createElement('script');
+      script.id = 'turnstile-script';
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      delete window.handleTurnstileSuccess;
+    };
+  }, []);
+
   // ── Verification Modal State ──────────────────────────
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -103,6 +126,7 @@ const Register = () => {
     e.preventDefault();
     if (!name.trim()) { toast.error('Nama lengkap wajib diisi.'); return; }
     if (!email || !password) { toast.error('Email dan password wajib diisi.'); return; }
+    if (!turnstileToken) { toast.error('Silakan selesaikan verifikasi Cloudflare terlebih dahulu.'); return; }
 
     const toastId = toast.loading('Sedang mendaftar...');
     try {
@@ -220,7 +244,16 @@ const Register = () => {
             </small>
           </div>
 
-          <button type="submit" className="btn-login" disabled={loading}>
+          <div className="form-group" style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', marginBottom: '0.5rem' }}>
+            <div 
+              className="cf-turnstile" 
+              data-sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
+              data-callback="handleTurnstileSuccess"
+              data-theme="dark"
+            ></div>
+          </div>
+
+          <button type="submit" className="btn-login" disabled={loading || !turnstileToken}>
             {loading ? <><span className="btn-spinner" /> Mendaftar...</> : <><LogIn size={18} /> Daftar Sekarang</>}
           </button>
         </form>
