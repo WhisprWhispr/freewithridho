@@ -300,10 +300,20 @@ const Checkout = () => {
   };
 
   const handleResumePendingPayment = () => {
-    if (!pendingTransaction?.qrCodeSvg) {
+    if (!pendingTransaction?.qrCodeSvg && pendingTransaction?.paymentMethod !== 'crypto') {
       toast.error('Kode QR tidak ditemukan. Silakan buat transaksi baru.');
       return;
     }
+    
+    // Set radio button ke method transaksi sebelumnya
+    const method = pendingTransaction.paymentMethod || 'qris';
+    setPaymentMethod(method);
+    
+    if (method === 'crypto') {
+       window.location.href = pendingTransaction.paymentUrl;
+       return;
+    }
+
     setPaymentDetails({
       qrCodeSvg: pendingTransaction.qrCodeSvg,
       qrisString: pendingTransaction.qrisString,
