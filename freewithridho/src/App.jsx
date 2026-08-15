@@ -40,6 +40,7 @@ import ArtikelIslamiDetail from './pages/ArtikelIslamiDetail';
 import Footer from './components/Footer';
 import InstallPWA from './components/InstallPWA';
 import WhatsAppFloat from './components/WhatsAppFloat';
+import Safelink from './pages/Safelink';
 import './App.css';
 
 function App() {
@@ -130,6 +131,7 @@ function App() {
               <Route path="/hubungi-kami" element={<Contact />} />
               <Route path="/sumber-data" element={<DataSource />} />
               <Route path="/donasi-masjid" element={<MosqueDonation />} />
+              <Route path="/safelink/:id" element={<Safelink />} />
               <Route
                 path="/admin"
                 element={

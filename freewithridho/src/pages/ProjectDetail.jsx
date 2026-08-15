@@ -161,7 +161,7 @@ const ProjectDetail = () => {
 
   const proceedToDownload = () => {
     setShowAdModal(false);
-    window.open(project.downloadUrl, '_blank', 'noopener,noreferrer');
+    navigate(`/safelink/${id}`);
   };
 
   // Toggle wishlist (Firestore-based)
