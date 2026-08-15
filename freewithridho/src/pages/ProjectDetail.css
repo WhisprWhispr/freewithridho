@@ -774,7 +774,11 @@
   .action-btn { width: 100%; justify-content: center; }
 
   .detail-gallery {
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
   }
 
   .lightbox-nav { display: none; }
@@ -1065,7 +1069,11 @@
   }
 
   .detail-gallery {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
   }
 
   .markdown-body {
@@ -1109,7 +1117,11 @@
   }
 
   .detail-gallery {
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
   }
 
   .markdown-body {
