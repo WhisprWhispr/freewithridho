@@ -117,27 +117,21 @@ const ProjectDetail = () => {
     setCheckingDomain(true);
     setDomainStatus(null);
     
-    // Bypass DNS check for wildcard subdomain providers where DNS always resolves
-    const wildcardExtensions = ['.netlify.app', '.vercel.app', '.web.app', '.firebaseapp.com'];
-    if (wildcardExtensions.includes(ext)) {
-      setTimeout(() => {
-        setDomainStatus('available');
-        toast.success(`Domain ${fullDomain} bisa digunakan!`);
-        setCheckingDomain(false);
-      }, 600);
-      return;
-    }
-    
     try {
-      // Using Google DNS over HTTPS (JSON format)
-      const response = await fetch(`https://dns.google/resolve?name=${fullDomain}&type=A`);
+      const response = await fetch('/.netlify/functions/check-domain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ domain: fullDomain })
+      });
+      
       const data = await response.json();
       
-      // Status: 0 = NOERROR (exists/registered), 3 = NXDOMAIN (doesn't exist/might be available)
-      if (data.Status === 3) {
+      if (data.available) {
          setDomainStatus('available');
          toast.success(`Domain ${fullDomain} tersedia!`);
-      } else if (data.Status === 0) {
+      } else if (data.available === false) {
          setDomainStatus('unavailable');
          toast.error(`Maaf, domain ${fullDomain} sudah terdaftar.`);
       } else {

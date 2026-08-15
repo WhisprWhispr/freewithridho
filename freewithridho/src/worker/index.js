@@ -2,6 +2,7 @@ import { createTransaction } from './create-transaction.js';
 import { instanpayWebhook } from './instanpay-webhook.js';
 import { deleteUser } from './delete-user.js';
 import { checkPayment } from './check-payment.js';
+import { checkDomain } from './check-domain.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -33,6 +34,9 @@ export default {
         }
         if (path === '/.netlify/functions/delete-user') {
           return await deleteUser(request, env);
+        }
+        if (path === '/.netlify/functions/check-domain') {
+          return await checkDomain(request, env);
         }
       }
     } catch (err) {
