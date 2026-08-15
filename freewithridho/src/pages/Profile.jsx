@@ -16,7 +16,7 @@ import { generatePartnerCertificatePDF, generatePartnerPDF } from '../utils/pdfG
 import ProjectCard from '../components/ProjectCard';
 import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import AvatarModal from '../components/AvatarModal';
-import { Edit2, ShieldCheck } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
 import './Profile.css';
 
 const STATUS_CONFIG = {
