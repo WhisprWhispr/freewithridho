@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ShieldCheck, Star, Crown, X, Award, Trophy } from 'lucide-react';
 import './PartnerBadge.css';
 
@@ -92,7 +93,7 @@ const PartnerBadge = ({ tier, size = 'md' }) => {
         <span>{config.label}</span>
       </button>
 
-      {showPopup && (
+      {showPopup && createPortal(
         <div className="badge-popup-overlay" onClick={() => setShowPopup(false)}>
           <div
             className="badge-popup"
@@ -113,7 +114,8 @@ const PartnerBadge = ({ tier, size = 'md' }) => {
               FREEWITHRIDHO Achievement System
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
