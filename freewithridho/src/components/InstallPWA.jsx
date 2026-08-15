@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
+import { Download } from 'lucide-react';
 import './InstallPWA.css';
 
 export default function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showBanner, setShowBanner] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   useEffect(() => {
-    // Cek apakah sudah diinstall (standalone mode)
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       window.navigator.standalone === true;
@@ -20,35 +19,20 @@ export default function InstallPWA() {
       return;
     }
 
-    // Cek apakah user sudah dismiss sebelumnya
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (dismissed) return;
-
-    // Detect iOS
     const ios =
       /iphone|ipad|ipod/i.test(navigator.userAgent) &&
       !window.MSStream;
     setIsIOS(ios);
 
-    if (ios) {
-      // iOS tidak support beforeinstallprompt, tampilkan panduan manual
-      setTimeout(() => setShowBanner(true), 3000);
-      return;
-    }
-
-    // Android / Desktop: tangkap event beforeinstallprompt
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setTimeout(() => setShowBanner(true), 2000);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    // Listener saat app berhasil diinstall
     window.addEventListener('appinstalled', () => {
       setIsInstalled(true);
-      setShowBanner(false);
       setDeferredPrompt(null);
     });
 
@@ -63,66 +47,53 @@ export default function InstallPWA() {
       return;
     }
 
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      // Prompt not caught yet or browser doesn't support
+      alert('Pemasangan aplikasi sedang diproses atau browser tidak mendukung fitur ini secara langsung. Silakan cek menu browser Anda dan cari opsi "Install App" / "Tambahkan ke Layar Utama".');
+      return;
+    }
 
     setInstalling(true);
     deferredPrompt.prompt();
 
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      setShowBanner(false);
+      console.log('App Installed');
     }
 
     setInstalling(false);
     setDeferredPrompt(null);
   };
 
-  const handleDismiss = () => {
-    setShowBanner(false);
-    localStorage.setItem('pwa-install-dismissed', 'true');
-  };
-
-  if (isInstalled || !showBanner) return null;
+  if (isInstalled) return null;
 
   return (
     <>
-      {/* Install Banner */}
-      <div className={`pwa-banner ${showBanner ? 'pwa-banner--visible' : ''}`}>
-        <div className="pwa-banner__icon">
-          <img src="/FREEWITHRIDHO.png" alt="FreeWithRidho" />
-        </div>
-        <div className="pwa-banner__content">
-          <p className="pwa-banner__title">Install FreeWithRidho</p>
-          <p className="pwa-banner__desc">
-            {isIOS
-              ? 'Tambahkan ke Home Screen untuk akses lebih cepat!'
-              : 'Install app untuk akses offline & notifikasi!'}
-          </p>
-        </div>
-        <div className="pwa-banner__actions">
-          <button
-            className="pwa-banner__btn pwa-banner__btn--install"
-            onClick={handleInstall}
-            disabled={installing}
-            id="pwa-install-btn"
-          >
-            {installing ? (
-              <span className="pwa-spinner" />
-            ) : isIOS ? (
-              '📲 Cara Install'
-            ) : (
-              '⚡ Install'
-            )}
-          </button>
-          <button
-            className="pwa-banner__btn pwa-banner__btn--dismiss"
-            onClick={handleDismiss}
-            id="pwa-dismiss-btn"
-          >
-            ✕
-          </button>
-        </div>
-      </div>
+      <li>
+        <button 
+          onClick={handleInstall} 
+          disabled={installing}
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            color: '#cbd5e1', 
+            padding: 0, 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            fontSize: '0.9rem', 
+            transition: 'color 0.2s', 
+            width: '100%', 
+            textAlign: 'left',
+            fontFamily: 'inherit'
+          }}
+          onMouseOver={e => e.currentTarget.style.color = '#fff'}
+          onMouseOut={e => e.currentTarget.style.color = '#cbd5e1'}
+        >
+          <Download size={14} /> {isIOS ? 'Cara Install App' : 'Install Aplikasi'}
+        </button>
+      </li>
 
       {/* iOS Install Guide Modal */}
       {showIOSGuide && (
@@ -167,10 +138,7 @@ export default function InstallPWA() {
             </ol>
             <button
               className="pwa-ios-modal__cta"
-              onClick={() => {
-                setShowIOSGuide(false);
-                handleDismiss();
-              }}
+              onClick={() => setShowIOSGuide(false)}
             >
               Mengerti!
             </button>

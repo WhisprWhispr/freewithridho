@@ -149,7 +149,6 @@ function App() {
             </Routes>
           </main>
           <Footer />
-          <InstallPWA />
           <WhatsAppFloat />
         </div>
       </Router>

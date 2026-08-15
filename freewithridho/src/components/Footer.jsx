@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Scale, Code, Users, Clock, Coffee, Mail, Info, BookOpen } from 'lucide-react';
+import InstallPWA from './InstallPWA';
 import './Footer.css';
 
 const Footer = () => {
@@ -32,6 +33,7 @@ const Footer = () => {
                 <Clock size={14} /> Jadwal Sholat
               </Link>
             </li>
+            <InstallPWA />
           </ul>
         </div>
 
