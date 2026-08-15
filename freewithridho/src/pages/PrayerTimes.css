@@ -645,3 +645,93 @@
   background: rgba(16, 185, 129, 0.2);
   transform: translateY(-1px);
 }
+
+/* Location Modal */
+.location-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.location-modal {
+  background: #1e293b;
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  animation: slideUpFade 0.3s ease;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.location-modal-icon {
+  width: 70px;
+  height: 70px;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.location-modal h3 {
+  color: white;
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.location-modal p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.location-modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.location-modal-actions button {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-deny {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+}
+
+.btn-deny:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.btn-allow {
+  background: #8b5cf6;
+  color: white;
+}
+
+.btn-allow:hover {
+  background: #7c3aed;
+}

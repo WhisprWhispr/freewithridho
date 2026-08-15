@@ -20,6 +20,7 @@ const PrayerTimes = () => {
   const [nextPrayer, setNextPrayer] = useState(null);
   const [countdown, setCountdown] = useState('');
 
+  const [showLocationModal, setShowLocationModal] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -36,10 +37,16 @@ const PrayerTimes = () => {
     // Fetch a daily quote
     fetchQuote();
     
-    // Default load Jakarta (-6.2088, 106.8456)
-    if (!times && permission === 'default') {
-      setLoading(true);
-      fetchPrayerTimes(-6.2088, 106.8456);
+    // Handle location logic
+    const prompted = localStorage.getItem('prayerLocPrompted');
+    if (!prompted) {
+      setShowLocationModal(true);
+    } else {
+      // Default load Jakarta (-6.2088, 106.8456)
+      if (!times && permission === 'default') {
+        setLoading(true);
+        fetchPrayerTimes(-6.2088, 106.8456);
+      }
     }
 
     return () => {
@@ -208,6 +215,19 @@ const PrayerTimes = () => {
     );
   };
 
+  const handleModalAllow = () => {
+    localStorage.setItem('prayerLocPrompted', 'true');
+    setShowLocationModal(false);
+    handleGrantPermission();
+  };
+
+  const handleModalDeny = () => {
+    localStorage.setItem('prayerLocPrompted', 'true');
+    setShowLocationModal(false);
+    setLoading(true);
+    fetchPrayerTimes(-6.2088, 106.8456); // Load Jakarta
+  };
+
   const fetchPrayerTimes = async (lat, lng) => {
     try {
       // Fetch city name
@@ -267,6 +287,22 @@ const PrayerTimes = () => {
 
   return (
     <div className="prayer-times-wrapper" ref={containerRef}>
+        {showLocationModal && (
+          <div className="location-modal-overlay">
+            <div className="location-modal">
+              <div className="location-modal-icon">
+                <MapPin size={36} color="#8b5cf6" />
+              </div>
+              <h3>Izin Akses Lokasi</h3>
+              <p>Untuk menampilkan jadwal sholat yang paling akurat, kami membutuhkan izin untuk mengakses lokasi perangkat Anda.</p>
+              <div className="location-modal-actions">
+                <button className="btn-deny" onClick={handleModalDeny}>Lain Kali</button>
+                <button className="btn-allow" onClick={handleModalAllow}>Izinkan Lokasi</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Islamic Dashboard Internal Menu */}
         <div className={`islamic-menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)}></div>
         <div className={`islamic-side-menu ${isMenuOpen ? 'open' : ''}`}>
