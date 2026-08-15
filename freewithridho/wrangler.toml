@@ -1,9 +1,11 @@
 name = "freewithridho"
 compatibility_date = "2024-04-05"
+main = "src/worker/index.js"
 
 [build]
 command = "npm run build"
 
 [assets]
 directory = "./dist"
+binding = "ASSETS"
 not_found_handling = "single-page-application"
