@@ -48,12 +48,12 @@ const AdminProfile = ({ user, handleLogout, formatJoinDate }) => {
         {/* Admin Hero Card */}
         <div className="profile-hero-card admin-hero-card">
           <div className="profile-avatar-ring admin-ring" style={{ position: 'relative' }}>
-            <div className="profile-avatar admin-avatar" style={{ overflow: 'hidden', position: 'relative' }}>
+            <div className="profile-avatar admin-avatar" style={{ position: 'relative' }}>
               {currentUser.photoURL ? (
                 <>
-                  <img src={currentUser.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={currentUser.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                   {currentUser.photoURL.includes('#verified') && (
-                    <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '2px solid #0f172a', display: 'flex', zIndex: 5 }}>
+                    <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '3px solid #0f172a', display: 'flex', zIndex: 5, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}>
                       <ShieldCheck size={16} color="white" />
                     </div>
                   )}
@@ -242,12 +242,12 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
         {/* Header Card */}
         <div className="profile-hero-card">
           <div className="profile-avatar-ring" style={{ position: 'relative' }}>
-            <div className="profile-avatar" style={{ overflow: 'hidden', position: 'relative' }}>
+            <div className="profile-avatar" style={{ position: 'relative' }}>
               {currentUser.photoURL ? (
                 <>
-                  <img src={currentUser.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={currentUser.photoURL} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                   {currentUser.photoURL.includes('#verified') && (
-                    <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '2px solid #0f172a', display: 'flex', zIndex: 5 }}>
+                    <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '3px solid #0f172a', display: 'flex', zIndex: 5, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}>
                       <ShieldCheck size={16} color="white" />
                     </div>
                   )}

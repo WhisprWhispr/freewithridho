@@ -91,12 +91,12 @@ const PublicProfile = () => {
         <div className="public-profile-header admin-profile-header">
           <div className="public-profile-cover admin-cover"></div>
           <div className="public-profile-info-container">
-            <div className="public-profile-avatar admin-avatar-icon" style={{ overflow: 'hidden', position: 'relative', padding: profileUser?.photoURL ? 0 : undefined, background: profileUser?.photoURL ? '#1e293b' : undefined }}>
+            <div className="public-profile-avatar admin-avatar-icon" style={{ position: 'relative', padding: profileUser?.photoURL ? 0 : undefined, background: profileUser?.photoURL ? '#1e293b' : undefined }}>
               {profileUser?.photoURL ? (
                 <>
-                  <img src={profileUser.photoURL} alt="Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={profileUser.photoURL} alt="Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                   {profileUser.photoURL.includes('#verified') && (
-                    <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '2px solid #0f172a', display: 'flex', zIndex: 5 }}>
+                    <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '3px solid #0f172a', display: 'flex', zIndex: 5, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}>
                       <ShieldCheck size={16} color="white" />
                     </div>
                   )}
@@ -218,12 +218,12 @@ const PublicProfile = () => {
       <div className="public-profile-header">
         <div className="public-profile-cover"></div>
         <div className="public-profile-info-container">
-          <div className="public-profile-avatar" style={{ overflow: 'hidden', position: 'relative', padding: profileUser?.photoURL ? 0 : undefined, background: profileUser?.photoURL ? '#1e293b' : undefined }}>
+          <div className="public-profile-avatar" style={{ position: 'relative', padding: profileUser?.photoURL ? 0 : undefined, background: profileUser?.photoURL ? '#1e293b' : undefined }}>
             {profileUser?.photoURL ? (
               <>
-                <img src={profileUser.photoURL} alt="Partner Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={profileUser.photoURL} alt="Partner Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                 {profileUser.photoURL.includes('#verified') && (
-                  <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '2px solid #0f172a', display: 'flex', zIndex: 5 }}>
+                  <div style={{ position: 'absolute', bottom: '0px', right: '0px', background: '#3b82f6', borderRadius: '50%', padding: '4px', border: '3px solid #0f172a', display: 'flex', zIndex: 5, boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }}>
                     <ShieldCheck size={16} color="white" />
                   </div>
                 )}
