@@ -7,7 +7,8 @@ import {
   query,
   orderBy,
   where,
-  getDoc
+  getDoc,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -273,3 +274,29 @@ export async function restorePartner(partnerId) {
     restoredAt: new Date().toISOString()
   });
 }
+
+/**
+ * Auto-Ban System for Content Moderation
+ */
+export async function autoBanPartner(partnerId, userEmail) {
+  if (!userEmail) return;
+
+  // 1. Add email to banned_users collection
+  const bannedRef = doc(db, 'banned_users', userEmail.toLowerCase());
+  await setDoc(bannedRef, {
+    bannedAt: new Date().toISOString(),
+    reason: 'Sistem Moderasi Otomatis (Anti-Judol/Konten Ilegal)',
+    bannedBy: 'AUTO_MODERATOR'
+  });
+
+  // 2. Set partner status to banned
+  if (partnerId) {
+    const partnerRef = doc(db, COLLECTION, partnerId);
+    await updateDoc(partnerRef, {
+      status: 'banned',
+      bannedAt: new Date().toISOString(),
+      banReason: 'Mengunggah konten yang melanggar kebijakan larangan berat.'
+    });
+  }
+}
+

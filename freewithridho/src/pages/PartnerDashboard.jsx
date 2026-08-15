@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
-import { listenToPartnerByUserId, submitWithdrawal } from '../services/partnerService';
+import { listenToPartnerByUserId, submitWithdrawal, autoBanPartner } from '../services/partnerService';
 import { listenToProjects, addProject, deleteProject, updateProject } from '../services/projectService';
 import { toast } from 'react-hot-toast';
 import { DollarSign, Upload, Trash2, Edit2, Wallet, Clock, CheckCircle, BarChart2, BookOpen, Users } from 'lucide-react';
@@ -31,7 +31,7 @@ const emptyForm = {
 };
 
 const PartnerDashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [partner, setPartner] = useState(null);
   const [projects, setProjects] = useState([]);
   const [partnerWithdrawals, setPartnerWithdrawals] = useState([]);
@@ -197,6 +197,26 @@ const PartnerDashboard = () => {
       toast.error('Judul, Deskripsi, dan Link Unduh wajib diisi.');
       return;
     }
+
+    // --- ANTI JUDOL / CONTENT MODERATION SYSTEM ---
+    const forbiddenKeywords = ['judol', 'judi', 'slot', 'gacor', 'zeus', 'toto', 'togel', 'casino', 'poker', 'maxwin'];
+    const textToCheck = `${form.title} ${form.description}`.toLowerCase();
+    
+    const hasForbiddenKeyword = forbiddenKeywords.some(keyword => textToCheck.includes(keyword));
+
+    if (hasForbiddenKeyword) {
+      toast.error('Mendeteksi kata kunci terlarang! Mengamankan sistem...', { duration: 5000 });
+      setIsSubmitting(true);
+      try {
+        await autoBanPartner(partner.id, user.email);
+        await logout();
+        window.location.href = '/';
+      } catch (err) {
+        console.error("Auto-ban failed:", err);
+      }
+      return;
+    }
+    // --- END MODERATION ---
 
     const toastId = toast.loading(editingId ? 'Menyimpan perubahan...' : 'Mengunggah proyek...');
     try {
