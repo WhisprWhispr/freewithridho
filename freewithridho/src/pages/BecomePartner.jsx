@@ -252,47 +252,6 @@ const BecomePartner = () => {
       <div className="partner-header">
         <h1>Bergabung Sebagai <span className="text-gradient">Partner Developer</span></h1>
         <p>Jual karya source code Anda (premium atau gratis) ke ribuan pengguna kami dan dapatkan penghasilan.</p>
-        
-        <div style={{ marginTop: '1.5rem', position: 'relative', display: 'inline-block' }}>
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => setShowShare(!showShare)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
-          >
-            <Share2 size={18} /> Bagikan Peluang Ini
-          </button>
-          
-          {showShare && (
-            <div className="share-dropdown active">
-              <div className="share-dropdown-header">
-                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '500' }}>Bagikan ke</span>
-                <button onClick={() => setShowShare(false)} className="share-close-btn" aria-label="Tutup">
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="share-actions-grid">
-                <button onClick={handleShareWhatsApp} className="share-btn whatsapp">
-                  <div className="share-icon-wrapper">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  </div>
-                  <span>WhatsApp</span>
-                </button>
-                <button onClick={handleShareTwitter} className="share-btn twitter">
-                  <div className="share-icon-wrapper">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg>
-                  </div>
-                  <span>Twitter / X</span>
-                </button>
-                <button onClick={handleCopyLink} className="share-btn copy">
-                  <div className="share-icon-wrapper">
-                    {copied ? <Check size={20} /> : <Copy size={20} />}
-                  </div>
-                  <span>{copied ? 'Tersalin' : 'Salin Link'}</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="partner-content">
@@ -321,6 +280,48 @@ const BecomePartner = () => {
               </div>
             </li>
           </ul>
+          
+          <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <p style={{ marginBottom: '1.25rem', color: '#94a3b8', fontSize: '0.95rem', textAlign: 'center' }}>Tarik lebih banyak orang untuk bergabung bersama komunitas developer kita.</p>
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => setShowShare(!showShare)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.2)' }}
+            >
+              <Share2 size={18} /> Bagikan Peluang Ini
+            </button>
+            
+            {showShare && (
+              <div className="share-dropdown active" style={{ top: 'auto', bottom: 'calc(100% + 15px)', transform: 'translateX(-50%)' }}>
+                <div className="share-dropdown-header">
+                  <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '500' }}>Bagikan ke</span>
+                  <button onClick={() => setShowShare(false)} className="share-close-btn" aria-label="Tutup">
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="share-actions-grid">
+                  <button onClick={handleShareWhatsApp} className="share-btn whatsapp">
+                    <div className="share-icon-wrapper">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <span>WhatsApp</span>
+                  </button>
+                  <button onClick={handleShareTwitter} className="share-btn twitter">
+                    <div className="share-icon-wrapper">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg>
+                    </div>
+                    <span>Twitter / X</span>
+                  </button>
+                  <button onClick={handleCopyLink} className="share-btn copy">
+                    <div className="share-icon-wrapper">
+                      {copied ? <Check size={20} /> : <Copy size={20} />}
+                    </div>
+                    <span>{copied ? 'Tersalin' : 'Salin Link'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="partner-form-container">
