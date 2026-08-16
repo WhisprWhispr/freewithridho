@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getProjectById } from '../services/projectService';
 import { Download, ArrowRight, Clock, ShieldCheck, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import AdSense from '../components/AdSense';
 import './Safelink.css';
 
 const Safelink = () => {
@@ -105,11 +106,8 @@ const Safelink = () => {
         <p>Anda sedang berada di halaman tunggu. Mohon bersabar.</p>
       </div>
 
-      {/* Placeholder Iklan Atas */}
-      <div className="ad-placeholder top-ad">
-        <span>IKLAN (ATAS)</span>
-        <small>Silakan pasang script AdSense Anda di sini</small>
-      </div>
+      {/* Iklan Atas */}
+      <AdSense slot="" />
 
       <div className="safelink-content">
         <div className="step-indicator">
@@ -155,11 +153,8 @@ const Safelink = () => {
         </button>
       </div>
 
-      {/* Placeholder Iklan Bawah */}
-      <div className="ad-placeholder bottom-ad">
-        <span>IKLAN (BAWAH)</span>
-        <small>Silakan pasang script AdSense Anda di sini</small>
-      </div>
+      {/* Iklan Bawah */}
+      <AdSense slot="" />
     </div>
   );
 };

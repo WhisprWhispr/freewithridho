@@ -299,16 +299,37 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
-.share-btn.whatsapp:hover {
-  color: #10b981;
+/* WhatsApp Branding */
+.share-btn.whatsapp .share-icon-wrapper {
+  color: #25D366;
+  background: rgba(37, 211, 102, 0.15);
+}
+.share-btn.whatsapp:hover .share-icon-wrapper {
+  background: #25D366;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(37, 211, 102, 0.4);
 }
 
-.share-btn.twitter:hover {
-  color: #3b82f6;
+/* Twitter/X Branding */
+.share-btn.twitter .share-icon-wrapper {
+  color: #e2e8f0;
+  background: rgba(226, 232, 240, 0.15);
+}
+.share-btn.twitter:hover .share-icon-wrapper {
+  background: #e2e8f0;
+  color: #0f172a;
+  box-shadow: 0 0 15px rgba(226, 232, 240, 0.4);
 }
 
-.share-btn.copy:hover {
-  color: #a855f7;
+/* Copy Link Branding */
+.share-btn.copy .share-icon-wrapper {
+  color: #818cf8;
+  background: rgba(129, 140, 248, 0.15);
+}
+.share-btn.copy:hover .share-icon-wrapper {
+  background: #818cf8;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(129, 140, 248, 0.4);
 }
 
 /* --- RESPONSIVE MEDIA QUERIES --- */
