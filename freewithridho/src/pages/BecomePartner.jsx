@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { submitPartnerApplication } from '../services/partnerService';
+import { ensureReferralCode } from '../services/referralService';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle, PenTool, Share2, Copy, Check, X } from 'lucide-react';
@@ -117,17 +118,20 @@ const BecomePartner = () => {
   const [hasSignature, setHasSignature] = useState(false);
   const [signatureData, setSignatureData] = useState(null);
 
-  // Auto-fill email if logged in
+  const [refCode, setRefCode] = useState('');
+
+  // Auto-fill email if logged in & fetch referral code
   useEffect(() => {
-    if (user && user.email) {
-      setForm(prev => ({ ...prev, email: user.email }));
+    if (user) {
+      if (user.email) setForm(prev => ({ ...prev, email: user.email }));
+      if (user.uid) ensureReferralCode(user.uid).then(setRefCode).catch(console.error);
     }
   }, [user]);
 
   const [showShare, setShowShare] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = window.location.href;
+  const shareUrl = refCode ? `${window.location.origin}/register?ref=${refCode}` : window.location.href;
   const shareText = "Halo! Saya baru saja menemukan platform keren bernama FREEWITHRIDHO. Di sini kita bisa menjadi Partner Developer untuk menjual dan membagikan karya Source Code kita ke ribuan pengguna secara aman. Yuk daftar dan mulai bangun portofolio digitalmu sekarang! 🚀";
 
   const handleShareWhatsApp = () => {
