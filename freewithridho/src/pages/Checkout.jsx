@@ -346,14 +346,34 @@ const Checkout = () => {
 
   const handleDownloadQR = () => {
     if (!paymentDetails?.qrCodeSvg) return;
+    
     const svgBlob = new Blob([paymentDetails.qrCodeSvg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `QRIS-${paymentDetails.merchantRef}.svg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1000;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
+      
+      // Berikan background putih agar QR bisa dibaca scanner
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      const pngUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = pngUrl;
+      link.download = `QRIS-${paymentDetails.merchantRef}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
   };
 
   if (loading) return (
