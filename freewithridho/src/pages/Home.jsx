@@ -272,9 +272,21 @@ const Home = () => {
         </div>
 
         {loading && (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p>Memuat proyek...</p>
+          <div className="projects-grid">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="skeleton-card">
+                <div className="skeleton-thumbnail"></div>
+                <div style={{ padding: '16px' }}>
+                  <div className="skeleton-title"></div>
+                  <div className="skeleton-text"></div>
+                  <div className="skeleton-text short"></div>
+                </div>
+                <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
+                  <div className="skeleton-avatar"></div>
+                  <div className="skeleton-button"></div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
