@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import { submitPartnerApplication } from '../services/partnerService';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle, PenTool, Share2, Twitter, Copy, Check } from 'lucide-react';
+import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle, PenTool, Share2, Copy, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { generatePartnerPDF } from '../utils/pdfGenerator';
 import './BecomePartner.css';
@@ -268,7 +268,7 @@ const BecomePartner = () => {
                 WhatsApp
               </button>
               <button onClick={handleShareTwitter} className="share-btn twitter">
-                <Twitter size={16} /> Twitter
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg> Twitter
               </button>
               <button onClick={handleCopyLink} className="share-btn copy">
                 {copied ? <><Check size={16} /> Tersalin</> : <><Copy size={16} /> Salin Link</>}
