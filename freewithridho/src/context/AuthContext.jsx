@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     // tetap terjaga saat halaman di-refresh. Banned-check hanya di login().
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser || null);
-      const adminEmail = 'supportfreewithridho@gmail.com';
+      const adminEmail = 'ridhosandhika18022022@gmail.com';
       setIsAdmin(!!firebaseUser && firebaseUser.email === adminEmail);
       setLoading(false);
     });
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
     // Tolak login jika email belum diverifikasi (kecuali Admin)
-    const adminEmail = 'supportfreewithridho@gmail.com';
+    const adminEmail = 'ridhosandhika18022022@gmail.com';
     if (!userCredential.user.emailVerified && email !== adminEmail) {
       await signOut(auth);
       throw new Error('Email belum diverifikasi. Silakan cek kotak masuk email Anda dan klik link verifikasi.');

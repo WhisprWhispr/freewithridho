@@ -16,7 +16,7 @@ const Contact = () => {
         
         <ul className="info-list">
           <li>
-            <strong>Email:</strong> <em>supportfreewithridho@gmail.com</em>
+            <strong>Email:</strong> <em>ridhosandhika18022022@gmail.com</em>
           </li>
           <li>
             <strong>WhatsApp:</strong> <em>+62 823-7132-6584</em>
@@ -27,7 +27,7 @@ const Contact = () => {
         </ul>
 
         <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="mailto:supportfreewithridho@gmail.com?subject=Pertanyaan/Dukungan%20Layanan%20FreeWithRidho&body=Halo%20Tim%20FreeWithRidho,%0A%0ASaya%20menghubungi%20Anda%20terkait%20layanan%20yang%20diberikan.%20Berikut%20adalah%20detail%20pesan%20saya:%0A%0A[Silakan%20tulis%20pesan%20Anda%20di%20sini]%0A%0ATerima%20kasih." className="info-btn" style={{ background: '#ef4444' }}>
+          <a href="mailto:ridhosandhika18022022@gmail.com?subject=Pertanyaan/Dukungan%20Layanan%20FreeWithRidho&body=Halo%20Tim%20FreeWithRidho,%0A%0ASaya%20menghubungi%20Anda%20terkait%20layanan%20yang%20diberikan.%20Berikut%20adalah%20detail%20pesan%20saya:%0A%0A[Silakan%20tulis%20pesan%20Anda%20di%20sini]%0A%0ATerima%20kasih." className="info-btn" style={{ background: '#ef4444' }}>
             <Mail size={20} />
             Kirim Email
           </a>

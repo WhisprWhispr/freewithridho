@@ -24,7 +24,7 @@ const Login = () => {
         return;
       }
 
-      const adminEmail = 'supportfreewithridho@gmail.com';
+      const adminEmail = 'ridhosandhika18022022@gmail.com';
       if (user.email === adminEmail) {
         navigate('/admin');
       } else {
@@ -45,7 +45,7 @@ const Login = () => {
       setLoading(true);
       await login(email, password);
       
-      const adminEmail = 'supportfreewithridho@gmail.com';
+      const adminEmail = 'ridhosandhika18022022@gmail.com';
       if (email === adminEmail) {
         toast.success('Login Admin berhasil!', { id: toastId });
         navigate('/admin');

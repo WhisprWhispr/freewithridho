@@ -224,7 +224,7 @@ const Admin = () => {
       return;
     }
 
-    const adminEmail = 'supportfreewithridho@gmail.com';
+    const adminEmail = 'ridhosandhika18022022@gmail.com';
     if (user.email !== adminEmail) {
       navigate('/');
       return;

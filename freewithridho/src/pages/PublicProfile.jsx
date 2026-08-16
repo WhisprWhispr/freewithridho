@@ -8,7 +8,7 @@ import PartnerBadge, { getBadgeTier } from '../components/PartnerBadge';
 import { User, Briefcase, ExternalLink, ShieldCheck, Star, Crown, MessageCircle, Mail, ArrowLeft } from 'lucide-react';
 import './PublicProfile.css';
 
-const ADMIN_EMAIL = 'supportfreewithridho@gmail.com';
+const ADMIN_EMAIL = 'ridhosandhika18022022@gmail.com';
 
 const PublicProfile = () => {
   const { userId } = useParams();

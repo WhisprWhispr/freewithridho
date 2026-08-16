@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import { listenToComments, sendComment, deleteComment } from '../services/discussionService';
 import './DiscussionModal.css';
 
-const ADMIN_EMAIL = 'supportfreewithridho@gmail.com';
+const ADMIN_EMAIL = 'ridhosandhika18022022@gmail.com';
 
 /**
  * Format timestamp to HH:MM
