@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import { submitPartnerApplication } from '../services/partnerService';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle, PenTool } from 'lucide-react';
+import { Briefcase, Mail, User, Phone, Link2, FileText, Send, CheckCircle, Download, AlertCircle, PenTool, Share2, Twitter, Copy, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { generatePartnerPDF } from '../utils/pdfGenerator';
 import './BecomePartner.css';
@@ -124,6 +124,27 @@ const BecomePartner = () => {
     }
   }, [user]);
 
+  const [showShare, setShowShare] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const shareUrl = window.location.href;
+  const shareText = "Halo! Saya baru saja menemukan platform keren bernama FREEWITHRIDHO. Di sini kita bisa menjadi Partner Developer untuk menjual dan membagikan karya Source Code kita ke ribuan pengguna secara aman. Yuk daftar dan mulai bangun portofolio digitalmu sekarang! 🚀";
+
+  const handleShareWhatsApp = () => {
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + shareUrl)}`, '_blank');
+  };
+
+  const handleShareTwitter = () => {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast.success('Link berhasil disalin!');
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -231,6 +252,30 @@ const BecomePartner = () => {
       <div className="partner-header">
         <h1>Bergabung Sebagai <span className="text-gradient">Partner Developer</span></h1>
         <p>Jual karya source code Anda (premium atau gratis) ke ribuan pengguna kami dan dapatkan penghasilan.</p>
+        
+        <div style={{ marginTop: '1.5rem', position: 'relative', display: 'inline-block' }}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setShowShare(!showShare)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <Share2 size={18} /> Bagikan Peluang Ini
+          </button>
+          
+          {showShare && (
+            <div className="share-dropdown active">
+              <button onClick={handleShareWhatsApp} className="share-btn whatsapp">
+                WhatsApp
+              </button>
+              <button onClick={handleShareTwitter} className="share-btn twitter">
+                <Twitter size={16} /> Twitter
+              </button>
+              <button onClick={handleCopyLink} className="share-btn copy">
+                {copied ? <><Check size={16} /> Tersalin</> : <><Copy size={16} /> Salin Link</>}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="partner-content">
