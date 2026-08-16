@@ -535,7 +535,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         `✅ Dukungan komunitas developer aktif\n\n` +
                         `Gunakan kode referral saya saat mendaftar dan kita sama-sama dapat keuntungan!\n\n` +
                         `🎁 Kode Referral: *${referralData.code}*\n\n` +
-                        `👉 Daftar sekarang di: ${window.location.origin}`
+                        `👉 Daftar sekarang di: ${window.location.origin}/register?ref=${referralData.code}`
                       );
                       window.open(`https://wa.me/?text=${text}`, '_blank');
                     }}
@@ -560,9 +560,9 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         `Bergabunglah bersama saya di FREEWITHRIDHO! Platform marketplace source code terpercaya untuk para developer profesional.\n\n` +
                         `✅ Ribuan source code premium\n✅ Harga kompetitif\n✅ Komunitas developer aktif\n\n` +
                         `Gunakan kode referral saya: ${referralData.code}\n\n` +
-                        `Daftar sekarang: ${window.location.origin}`
+                        `Daftar sekarang: ${window.location.origin}/register?ref=${referralData.code}`
                       );
-                      window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${text}`, '_blank');
+                      window.open(`https://t.me/share/url?url=${encodeURIComponent(`${window.location.origin}/register?ref=${referralData.code}`)}&text=${text}`, '_blank');
                     }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '0.4rem',
@@ -584,7 +584,7 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         `🚀 Saya baru saja bergabung di @FreeWithRidho — marketplace source code premium terbaik!\n\n` +
                         `Gunakan kode referral saya dan dapatkan keuntungan bersama! 🎁\n` +
                         `Kode: ${referralData.code}\n\n` +
-                        `👉 ${window.location.origin} #developer #sourcecode #webdev`
+                        `👉 ${window.location.origin}/register?ref=${referralData.code} #developer #sourcecode #webdev`
                       );
                       window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
                     }}
@@ -615,14 +615,14 @@ const MemberProfile = ({ user, handleLogout, formatJoinDate, formatDate, partner
                         `🎁 Gunakan kode referral saya saat mendaftar:\n` +
                         `   ➤  Kode: ${referralData.code}\n\n` +
                         `🔗 Daftar & Mulai Jelajahi Sekarang:\n` +
-                        `   ${window.location.origin}\n\n` +
+                        `   ${window.location.origin}/register?ref=${referralData.code}\n\n` +
                         `— Salam dari sesama developer 👨‍💻`;
 
                       if (navigator.share) {
                         navigator.share({
                           title: 'FREEWITHRIDHO — Premium Source Code Marketplace',
                           text: proMessage,
-                          url: window.location.origin
+                          url: `${window.location.origin}/register?ref=${referralData.code}`
                         }).catch(() => {});
                       } else {
                         navigator.clipboard.writeText(proMessage);

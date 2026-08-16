@@ -22,6 +22,15 @@ const Register = () => {
 
   const [turnstileToken, setTurnstileToken] = useState(null);
 
+  // Parse referral code from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refParam = params.get('ref');
+    if (refParam) {
+      setReferralCode(refParam.toUpperCase());
+    }
+  }, []);
+
   // Load Turnstile Script
   useEffect(() => {
     window.handleTurnstileSuccess = (token) => {

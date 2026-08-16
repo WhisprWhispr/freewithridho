@@ -607,32 +607,59 @@ const PartnerDashboard = () => {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => {
-              const code = affiliateData.code || partner.referralCode;
-              navigator.clipboard.writeText(code);
-              setCopiedRef(true);
-              setTimeout(() => setCopiedRef(false), 2000);
-              toast.success('Kode referral berhasil disalin! 🎉');
-            }}
-            style={{
-              background: copiedRef ? '#10b981' : 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
-              border: 'none',
-              color: 'white',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.2s',
-              flexShrink: 0
-            }}
-          >
-            {copiedRef ? '✅ Disalin!' : '📋 Salin Kode'}
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+            <button
+              onClick={() => {
+                const code = affiliateData.code || partner.referralCode;
+                navigator.clipboard.writeText(code);
+                setCopiedRef(true);
+                setTimeout(() => setCopiedRef(false), 2000);
+                toast.success('Kode referral berhasil disalin! 🎉');
+              }}
+              style={{
+                background: copiedRef ? '#10b981' : 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
+                border: 'none',
+                color: 'white',
+                padding: '0.75rem 1rem',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s',
+              }}
+            >
+              {copiedRef ? '✅ Disalin!' : '📋 Salin Kode'}
+            </button>
+            <button
+              onClick={() => {
+                const code = affiliateData.code || partner.referralCode;
+                const link = `${window.location.origin}/register?ref=${code}`;
+                navigator.clipboard.writeText(link);
+                toast.success('🔗 Link referral berhasil disalin!');
+              }}
+              style={{
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.4)',
+                color: '#60a5fa',
+                padding: '0.75rem 1rem',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+            >
+              🔗 Salin Link
+            </button>
+          </div>
         </div>
       )}
 
