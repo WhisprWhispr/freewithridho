@@ -206,10 +206,10 @@
   background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
-  padding: 0.75rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -217,7 +217,7 @@
   visibility: hidden;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 100;
-  min-width: 200px;
+  min-width: 280px;
 }
 
 .share-dropdown.active {
@@ -253,28 +253,50 @@
   color: #f8fafc;
 }
 
+.share-actions-grid {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
 .share-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid transparent;
   color: #f8fafc;
-  font-size: 0.95rem;
+  font-size: 0.75rem;
   font-weight: 500;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
-  text-align: left;
-  white-space: nowrap;
+  text-align: center;
+}
+
+.share-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
 }
 
 .share-btn:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.1);
-  transform: scale(1.02);
+  transform: translateY(-2px);
+}
+
+.share-btn:hover .share-icon-wrapper {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .share-btn.whatsapp:hover {
