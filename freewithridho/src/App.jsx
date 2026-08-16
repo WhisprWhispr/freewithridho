@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -41,11 +42,15 @@ import Footer from './components/Footer';
 import InstallPWA from './components/InstallPWA';
 import WhatsAppFloat from './components/WhatsAppFloat';
 import Safelink from './pages/Safelink';
+import SplashScreen from './components/SplashScreen';
 import './App.css';
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <AuthProvider>
+      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       <Toaster 
         position="bottom-center" 
         toastOptions={{
